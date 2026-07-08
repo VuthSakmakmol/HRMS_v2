@@ -32,6 +32,32 @@ const router = createRouter({
                         titleKey: "nav.overview",
                     },
                 },
+
+                {
+                    path: "organization/companies",
+                    name: "organization-companies",
+                    component: () =>
+                        import(
+                            "@/modules/organization/views/CompanyListView.vue"
+                        ),
+                    meta: {
+                        titleKey: "nav.companies",
+                        permissionCode: "ORGANIZATION.COMPANY.VIEW",
+                    },
+                },
+
+                {
+                    path: "organization/branches",
+                    name: "organization-branches",
+                    component: () =>
+                        import(
+                            "@/modules/organization/views/BranchListView.vue"
+                        ),
+                    meta: {
+                        titleKey: "nav.branches",
+                        permissionCode: "ORGANIZATION.BRANCH.VIEW",
+                    },
+                },
             ],
         },
 
@@ -67,6 +93,20 @@ router.beforeEach(async (to) => {
     }
 
     if (guestOnly && authStore.isAuthenticated) {
+        return {
+            name: "workspace",
+        }
+    }
+
+    const permissionCode = [...to.matched]
+        .reverse()
+        .find((route) => route.meta.permissionCode)?.meta.permissionCode
+
+    if (
+        requiresAuth &&
+        permissionCode &&
+        !authStore.hasPermission(permissionCode)
+    ) {
         return {
             name: "workspace",
         }

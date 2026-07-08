@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n"
 import { useRoute, useRouter } from "vue-router"
 
 import Button from "primevue/button"
+import Tag from "primevue/tag"
 
 import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
@@ -29,15 +30,62 @@ const roleLabel = computed(() => {
     return authStore.user?.roleCodes?.join(", ") || "-"
 })
 
-const navItems = [
-    {
-        labelKey: "nav.overview",
-        icon: "pi pi-th-large",
-        to: {
-            name: "workspace",
+const navGroups = computed(() => {
+    const groups = [
+        {
+            labelKey: "nav.workspace",
+            items: [
+                {
+                    labelKey: "nav.overview",
+                    icon: "pi pi-th-large",
+                    to: {
+                        name: "workspace",
+                    },
+                },
+            ],
         },
-    },
-]
+
+        {
+            labelKey: "nav.organization",
+            items: [
+                {
+                    labelKey: "nav.companies",
+                    icon: "pi pi-building",
+                    to: {
+                        name: "organization-companies",
+                    },
+                    permissionCode: "ORGANIZATION.COMPANY.VIEW",
+                },
+
+                {
+                    labelKey: "nav.branches",
+                    icon: "pi pi-sitemap",
+                    to: {
+                        name: "organization-branches",
+                    },
+                    permissionCode: "ORGANIZATION.BRANCH.VIEW",
+                },
+            ],
+        },
+    ]
+
+    return groups
+        .map((group) => ({
+            ...group,
+            items: group.items.filter((item) => {
+                if (item.disabled) {
+                    return true
+                }
+
+                if (!item.permissionCode) {
+                    return true
+                }
+
+                return authStore.hasPermission(item.permissionCode)
+            }),
+        }))
+        .filter((group) => group.items.length > 0)
+})
 
 function closeSidebar() {
     sidebarOpen.value = false
@@ -83,21 +131,44 @@ async function logout() {
             </div>
 
             <nav class="app-sidebar__nav">
-                <span class="app-sidebar__section-label">
-                    {{ t("nav.workspace") }}
-                </span>
-
-                <RouterLink
-                    v-for="item in navItems"
-                    :key="item.labelKey"
-                    :to="item.to"
-                    class="app-sidebar__link"
-                    active-class="app-sidebar__link--active"
-                    @click="closeSidebar"
+                <div
+                    v-for="group in navGroups"
+                    :key="group.labelKey"
+                    class="app-sidebar__group"
                 >
-                    <i :class="item.icon" />
-                    <span>{{ t(item.labelKey) }}</span>
-                </RouterLink>
+                    <span class="app-sidebar__section-label">
+                        {{ t(group.labelKey) }}
+                    </span>
+
+                    <template
+                        v-for="item in group.items"
+                        :key="item.labelKey"
+                    >
+                        <RouterLink
+                            v-if="!item.disabled"
+                            :to="item.to"
+                            class="app-sidebar__link"
+                            active-class="app-sidebar__link--active"
+                            @click="closeSidebar"
+                        >
+                            <i :class="item.icon" />
+                            <span>{{ t(item.labelKey) }}</span>
+                        </RouterLink>
+
+                        <span
+                            v-else
+                            class="app-sidebar__link app-sidebar__link--disabled"
+                        >
+                            <i :class="item.icon" />
+                            <span>{{ t(item.labelKey) }}</span>
+                            <Tag
+                                class="app-sidebar__soon"
+                                severity="secondary"
+                                :value="t('common.next')"
+                            />
+                        </span>
+                    </template>
+                </div>
             </nav>
 
             <div class="app-sidebar__bottom">
@@ -255,8 +326,13 @@ async function logout() {
 
 .app-sidebar__nav {
     display: grid;
-    gap: 0.25rem;
+    gap: 0.85rem;
     padding: var(--hrms-space-4) var(--hrms-space-3);
+}
+
+.app-sidebar__group {
+    display: grid;
+    gap: 0.25rem;
 }
 
 .app-sidebar__section-label {
@@ -289,6 +365,16 @@ async function logout() {
 .app-sidebar__link--active {
     color: white;
     background: var(--hrms-primary);
+}
+
+.app-sidebar__link--disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.app-sidebar__soon {
+    margin-left: auto;
+    font-size: 0.6rem;
 }
 
 .app-sidebar__bottom {
