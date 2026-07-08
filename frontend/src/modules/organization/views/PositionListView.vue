@@ -1,0 +1,2066 @@
+<script setup>
+import { computed, onMounted, reactive, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
+import { useToast } from "primevue/usetoast"
+
+import Button from "primevue/button"
+import Card from "primevue/card"
+import Checkbox from "primevue/checkbox"
+import Column from "primevue/column"
+import DataTable from "primevue/datatable"
+import Dialog from "primevue/dialog"
+import InputNumber from "primevue/inputnumber"
+import InputText from "primevue/inputtext"
+import ProgressBar from "primevue/progressbar"
+import Select from "primevue/select"
+import Tag from "primevue/tag"
+import Textarea from "primevue/textarea"
+
+import { useAuthStore } from "@/app/stores/auth.store.js"
+import { useUiStore } from "@/app/stores/ui.store.js"
+import { fetchBranches } from "../services/branch.api.js"
+import { fetchCompanies } from "../services/company.api.js"
+import { fetchDepartments } from "../services/department.api.js"
+import { fetchPositions } from "../services/position.api.js"
+import { usePositionStore } from "../stores/position.store.js"
+
+const { t } = useI18n()
+const toast = useToast()
+
+const authStore = useAuthStore()
+const uiStore = useUiStore()
+const positionStore = usePositionStore()
+
+const POSITION_PERMISSIONS = Object.freeze({
+    VIEW: "ORGANIZATION.POSITION.VIEW",
+    CREATE: "ORGANIZATION.POSITION.CREATE",
+    UPDATE: "ORGANIZATION.POSITION.UPDATE",
+    ARCHIVE: "ORGANIZATION.POSITION.ARCHIVE",
+    IMPORT: "ORGANIZATION.POSITION.IMPORT",
+    EXPORT: "ORGANIZATION.POSITION.EXPORT",
+})
+
+const companies = ref([])
+const branches = ref([])
+const departments = ref([])
+const reportsToPositions = ref([])
+
+const companyLoading = ref(false)
+const branchLoading = ref(false)
+const departmentLoading = ref(false)
+const reportsToLoading = ref(false)
+
+const dialogVisible = ref(false)
+const dialogMode = ref("create")
+const selectedPositionId = ref(null)
+
+const archiveDialogVisible = ref(false)
+const archiveCandidate = ref(null)
+
+const importDialogVisible = ref(false)
+const importResultDialogVisible = ref(false)
+const selectedImportFile = ref(null)
+const fileInputRef = ref(null)
+
+const formErrors = ref({})
+
+const filters = reactive({
+    search: "",
+    status: "ALL",
+    companyId: "",
+    branchId: "",
+    departmentId: "",
+})
+
+const form = reactive(createEmptyForm())
+
+const canCreate = computed(() =>
+    authStore.hasPermission(POSITION_PERMISSIONS.CREATE),
+)
+
+const canUpdate = computed(() =>
+    authStore.hasPermission(POSITION_PERMISSIONS.UPDATE),
+)
+
+const canArchive = computed(() =>
+    authStore.hasPermission(POSITION_PERMISSIONS.ARCHIVE),
+)
+
+const canImport = computed(() =>
+    authStore.hasPermission(POSITION_PERMISSIONS.IMPORT),
+)
+
+const canExport = computed(() =>
+    authStore.hasPermission(POSITION_PERMISSIONS.EXPORT),
+)
+
+const dialogTitle = computed(() => {
+    return dialogMode.value === "create"
+        ? t("organization.position.createTitle")
+        : t("organization.position.editTitle")
+})
+
+const companyOptions = computed(() =>
+    companies.value.map((company) => ({
+        label: `${company.code} - ${company.displayName}`,
+        value: company.id,
+    })),
+)
+
+const companyFilterOptions = computed(() => [
+    {
+        label: t("organization.position.allCompanies"),
+        value: "",
+    },
+    ...companyOptions.value,
+])
+
+const branchOptions = computed(() =>
+    branches.value
+        .filter((branch) => {
+            if (!form.companyId) {
+                return true
+            }
+
+            return branch.companyId === form.companyId
+        })
+        .map((branch) => ({
+            label: `${branch.code} - ${branch.name}`,
+            value: branch.id,
+        })),
+)
+
+const branchFilterOptions = computed(() => [
+    {
+        label: t("organization.position.allBranches"),
+        value: "",
+    },
+    ...branches.value
+        .filter((branch) => {
+            if (!filters.companyId) {
+                return true
+            }
+
+            return branch.companyId === filters.companyId
+        })
+        .map((branch) => ({
+            label: `${branch.code} - ${branch.name}`,
+            value: branch.id,
+        })),
+])
+
+const departmentOptions = computed(() =>
+    departments.value
+        .filter((department) => {
+            if (form.branchId && department.branchId !== form.branchId) {
+                return false
+            }
+
+            if (form.companyId && department.companyId !== form.companyId) {
+                return false
+            }
+
+            return true
+        })
+        .map((department) => ({
+            label: `${department.code} - ${department.name}`,
+            value: department.id,
+        })),
+)
+
+const departmentFilterOptions = computed(() => [
+    {
+        label: t("organization.position.allDepartments"),
+        value: "",
+    },
+    ...departments.value
+        .filter((department) => {
+            if (
+                filters.branchId &&
+                department.branchId !== filters.branchId
+            ) {
+                return false
+            }
+
+            if (
+                filters.companyId &&
+                department.companyId !== filters.companyId
+            ) {
+                return false
+            }
+
+            return true
+        })
+        .map((department) => ({
+            label: `${department.code} - ${department.name}`,
+            value: department.id,
+        })),
+])
+
+const reportsToOptions = computed(() => [
+    {
+        label: t("organization.position.noReportsTo"),
+        value: "",
+    },
+    ...reportsToPositions.value
+        .filter((position) => position.id !== selectedPositionId.value)
+        .map((position) => ({
+            label: `${position.code} - ${position.title}`,
+            value: position.id,
+        })),
+])
+
+const statusOptions = computed(() => [
+    {
+        label: t("organization.position.statusAll"),
+        value: "ALL",
+    },
+    {
+        label: t("organization.position.statusActive"),
+        value: "ACTIVE",
+    },
+    {
+        label: t("organization.position.statusInactive"),
+        value: "INACTIVE",
+    },
+    {
+        label: t("organization.position.statusArchived"),
+        value: "ARCHIVED",
+    },
+])
+
+const editableStatusOptions = computed(() => [
+    {
+        label: t("organization.position.statusActive"),
+        value: "ACTIVE",
+    },
+    {
+        label: t("organization.position.statusInactive"),
+        value: "INACTIVE",
+    },
+])
+
+function createEmptyForm() {
+    return {
+        companyId: "",
+        branchId: "",
+        departmentId: "",
+        reportsToPositionId: "",
+        code: "",
+        title: "",
+        shortName: "",
+        level: 0,
+        isManager: false,
+        description: "",
+        status: "ACTIVE",
+    }
+}
+
+function assignForm(source) {
+    const nextForm = source || createEmptyForm()
+
+    form.companyId = nextForm.companyId || ""
+    form.branchId = nextForm.branchId || ""
+    form.departmentId = nextForm.departmentId || ""
+    form.reportsToPositionId = nextForm.reportsToPositionId || ""
+    form.code = nextForm.code || ""
+    form.title = nextForm.title || ""
+    form.shortName = nextForm.shortName || ""
+    form.level = Number(nextForm.level || 0)
+    form.isManager = Boolean(nextForm.isManager)
+    form.description = nextForm.description || ""
+    form.status = nextForm.status === "INACTIVE" ? "INACTIVE" : "ACTIVE"
+}
+
+function buildCreatePayload() {
+    return {
+        companyId: form.companyId,
+        branchId: form.branchId,
+        departmentId: form.departmentId,
+        reportsToPositionId: form.reportsToPositionId || null,
+        code: form.code,
+        title: form.title,
+        shortName: form.shortName,
+        level: form.level,
+        isManager: form.isManager,
+        description: form.description,
+        status: form.status,
+    }
+}
+
+function buildUpdatePayload() {
+    return {
+        reportsToPositionId: form.reportsToPositionId || null,
+        code: form.code,
+        title: form.title,
+        shortName: form.shortName,
+        level: form.level,
+        isManager: form.isManager,
+        description: form.description,
+        status: form.status,
+    }
+}
+
+function getErrorMessage(error) {
+    const messageKey = error?.response?.data?.error?.messageKey
+
+    if (messageKey) {
+        const translated = t(messageKey)
+
+        return translated === messageKey ? t("errors.internal") : translated
+    }
+
+    return t("errors.internal")
+}
+
+function applyBackendFieldErrors(error) {
+    const fields = error?.response?.data?.error?.fields || {}
+    const nextErrors = {}
+
+    for (const [field, messages] of Object.entries(fields)) {
+        nextErrors[field] = Array.isArray(messages)
+            ? messages.map((messageKey) => {
+                  const translated = t(messageKey)
+
+                  return translated === messageKey
+                      ? t("errors.validationFailed")
+                      : translated
+              })
+            : [t("errors.validationFailed")]
+    }
+
+    formErrors.value = nextErrors
+}
+
+function getFieldError(fieldName) {
+    const messages = formErrors.value[fieldName]
+
+    if (!messages?.length) {
+        return ""
+    }
+
+    return messages[0]
+}
+
+function clearFieldError(fieldName) {
+    if (!formErrors.value[fieldName]) {
+        return
+    }
+
+    formErrors.value = {
+        ...formErrors.value,
+        [fieldName]: undefined,
+    }
+}
+
+function normalizeCodeInput() {
+    form.code = form.code
+        .toUpperCase()
+        .replace(/\s+/g, "_")
+        .replace(/[^A-Z0-9_-]/g, "")
+
+    clearFieldError("code")
+}
+
+function getStatusSeverity(status) {
+    if (status === "ACTIVE") {
+        return "success"
+    }
+
+    if (status === "INACTIVE") {
+        return "warn"
+    }
+
+    if (status === "ARCHIVED") {
+        return "danger"
+    }
+
+    return "secondary"
+}
+
+function getStatusLabel(status) {
+    if (status === "ACTIVE") {
+        return t("organization.position.statusActive")
+    }
+
+    if (status === "INACTIVE") {
+        return t("organization.position.statusInactive")
+    }
+
+    if (status === "ARCHIVED") {
+        return t("organization.position.statusArchived")
+    }
+
+    return status || "-"
+}
+
+function formatDateTime(value) {
+    if (!value) {
+        return "-"
+    }
+
+    const date = new Date(value)
+
+    if (Number.isNaN(date.getTime())) {
+        return "-"
+    }
+
+    return new Intl.DateTimeFormat(uiStore.locale, {
+        dateStyle: "medium",
+        timeStyle: "short",
+    }).format(date)
+}
+
+async function loadCompanies() {
+    companyLoading.value = true
+
+    try {
+        const result = await fetchCompanies({
+            page: 1,
+            limit: 100,
+            status: "ACTIVE",
+            search: "",
+        })
+
+        companies.value = result.items || []
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: t("organization.position.companyLoadFailed"),
+            detail: getErrorMessage(error),
+            life: 4500,
+        })
+    } finally {
+        companyLoading.value = false
+    }
+}
+
+async function loadBranches(companyId = "") {
+    branchLoading.value = true
+
+    try {
+        const result = await fetchBranches({
+            page: 1,
+            limit: 100,
+            status: "ACTIVE",
+            companyId: companyId || undefined,
+            search: "",
+        })
+
+        branches.value = result.items || []
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: t("organization.position.branchLoadFailed"),
+            detail: getErrorMessage(error),
+            life: 4500,
+        })
+    } finally {
+        branchLoading.value = false
+    }
+}
+
+async function loadDepartments(companyId = "", branchId = "") {
+    departmentLoading.value = true
+
+    try {
+        const result = await fetchDepartments({
+            page: 1,
+            limit: 100,
+            status: "ACTIVE",
+            companyId: companyId || undefined,
+            branchId: branchId || undefined,
+            search: "",
+        })
+
+        departments.value = result.items || []
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: t("organization.position.departmentLoadFailed"),
+            detail: getErrorMessage(error),
+            life: 4500,
+        })
+    } finally {
+        departmentLoading.value = false
+    }
+}
+
+async function loadReportsToPositions() {
+    if (!form.companyId || !form.branchId) {
+        reportsToPositions.value = []
+        return
+    }
+
+    reportsToLoading.value = true
+
+    try {
+        const result = await fetchPositions({
+            page: 1,
+            limit: 100,
+            status: "ACTIVE",
+            companyId: form.companyId,
+            branchId: form.branchId,
+            search: "",
+        })
+
+        reportsToPositions.value = result.items || []
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: t("organization.position.reportsToLoadFailed"),
+            detail: getErrorMessage(error),
+            life: 4500,
+        })
+    } finally {
+        reportsToLoading.value = false
+    }
+}
+
+async function loadPositions(params = {}) {
+    try {
+        await positionStore.loadPositions(params)
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: t("organization.position.loadFailed"),
+            detail: getErrorMessage(error),
+            life: 4500,
+        })
+    }
+}
+
+function applyFilters() {
+    loadPositions({
+        page: 1,
+        limit: positionStore.filters.limit,
+        search: filters.search,
+        status: filters.status,
+        companyId: filters.companyId || undefined,
+        branchId: filters.branchId || undefined,
+        departmentId: filters.departmentId || undefined,
+    })
+}
+
+function clearFilters() {
+    filters.search = ""
+    filters.status = "ALL"
+    filters.companyId = ""
+    filters.branchId = ""
+    filters.departmentId = ""
+
+    loadPositions({
+        page: 1,
+        search: "",
+        status: "ALL",
+        companyId: undefined,
+        branchId: undefined,
+        departmentId: undefined,
+    })
+}
+
+function onPage(event) {
+    loadPositions({
+        page: event.page + 1,
+        limit: event.rows,
+    })
+}
+
+async function onFilterCompanyChange() {
+    filters.branchId = ""
+    filters.departmentId = ""
+
+    await Promise.all([
+        loadBranches(filters.companyId),
+        loadDepartments(filters.companyId, ""),
+    ])
+
+    applyFilters()
+}
+
+async function onFilterBranchChange() {
+    filters.departmentId = ""
+
+    await loadDepartments(filters.companyId, filters.branchId)
+    applyFilters()
+}
+
+async function onFormCompanyChange() {
+    form.branchId = ""
+    form.departmentId = ""
+    form.reportsToPositionId = ""
+
+    clearFieldError("companyId")
+
+    await Promise.all([
+        loadBranches(form.companyId),
+        loadDepartments(form.companyId, ""),
+    ])
+
+    await loadReportsToPositions()
+}
+
+async function onFormBranchChange() {
+    form.departmentId = ""
+    form.reportsToPositionId = ""
+
+    clearFieldError("branchId")
+
+    await Promise.all([
+        loadDepartments(form.companyId, form.branchId),
+        loadReportsToPositions(),
+    ])
+}
+
+async function onFormDepartmentChange() {
+    clearFieldError("departmentId")
+}
+
+async function openCreateDialog() {
+    if (companies.value.length === 0) {
+        await loadCompanies()
+    }
+
+    if (branches.value.length === 0) {
+        await loadBranches()
+    }
+
+    if (departments.value.length === 0) {
+        await loadDepartments()
+    }
+
+    dialogMode.value = "create"
+    selectedPositionId.value = null
+    formErrors.value = {}
+
+    assignForm(createEmptyForm())
+
+    if (companies.value.length === 1) {
+        form.companyId = companies.value[0].id
+        await loadBranches(form.companyId)
+        await loadDepartments(form.companyId, "")
+    }
+
+    if (branchOptions.value.length === 1) {
+        form.branchId = branchOptions.value[0].value
+        await loadDepartments(form.companyId, form.branchId)
+    }
+
+    if (departmentOptions.value.length === 1) {
+        form.departmentId = departmentOptions.value[0].value
+    }
+
+    await loadReportsToPositions()
+
+    dialogVisible.value = true
+}
+
+async function openEditDialog(position) {
+    dialogMode.value = "edit"
+    selectedPositionId.value = position.id
+    formErrors.value = {}
+
+    assignForm(position)
+
+    await Promise.all([
+        loadBranches(form.companyId),
+        loadDepartments(form.companyId, form.branchId),
+    ])
+
+    await loadReportsToPositions()
+
+    dialogVisible.value = true
+}
+
+function closeDialog() {
+    dialogVisible.value = false
+    selectedPositionId.value = null
+    formErrors.value = {}
+}
+
+async function savePosition() {
+    formErrors.value = {}
+
+    try {
+        if (dialogMode.value === "create") {
+            await positionStore.createPosition(buildCreatePayload())
+
+            toast.add({
+                severity: "success",
+                summary: t("organization.position.created"),
+                detail: t("organization.position.createdDetail"),
+                life: 3000,
+            })
+        } else {
+            await positionStore.updatePosition(
+                selectedPositionId.value,
+                buildUpdatePayload(),
+            )
+
+            toast.add({
+                severity: "success",
+                summary: t("organization.position.updated"),
+                detail: t("organization.position.updatedDetail"),
+                life: 3000,
+            })
+        }
+
+        closeDialog()
+        await loadPositions()
+    } catch (error) {
+        applyBackendFieldErrors(error)
+
+        toast.add({
+            severity: "error",
+            summary: t("organization.position.saveFailed"),
+            detail: getErrorMessage(error),
+            life: 5000,
+        })
+    }
+}
+
+function openArchiveDialog(position) {
+    archiveCandidate.value = position
+    archiveDialogVisible.value = true
+}
+
+function closeArchiveDialog() {
+    archiveDialogVisible.value = false
+    archiveCandidate.value = null
+}
+
+async function confirmArchivePosition() {
+    if (!archiveCandidate.value?.id) {
+        return
+    }
+
+    try {
+        await positionStore.archivePosition(archiveCandidate.value.id)
+
+        toast.add({
+            severity: "success",
+            summary: t("organization.position.archived"),
+            detail: t("organization.position.archivedDetail"),
+            life: 3000,
+        })
+
+        closeArchiveDialog()
+        await loadPositions()
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: t("organization.position.archiveFailed"),
+            detail: getErrorMessage(error),
+            life: 5000,
+        })
+    }
+}
+
+async function downloadSample() {
+    try {
+        await positionStore.downloadImportTemplate()
+
+        toast.add({
+            severity: "success",
+            summary: t("organization.position.sampleDownloaded"),
+            detail: t("organization.position.sampleDownloadedDetail"),
+            life: 3000,
+        })
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: t("organization.position.sampleDownloadFailed"),
+            detail: getErrorMessage(error),
+            life: 5000,
+        })
+    }
+}
+
+async function exportExcel() {
+    try {
+        await positionStore.exportPositions()
+
+        toast.add({
+            severity: "success",
+            summary: t("organization.position.exported"),
+            detail: t("organization.position.exportedDetail"),
+            life: 3000,
+        })
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: t("organization.position.exportFailed"),
+            detail: getErrorMessage(error),
+            life: 5000,
+        })
+    }
+}
+
+function openImportDialog() {
+    selectedImportFile.value = null
+    importDialogVisible.value = true
+}
+
+function closeImportDialog() {
+    if (positionStore.importing) {
+        return
+    }
+
+    importDialogVisible.value = false
+    selectedImportFile.value = null
+
+    if (fileInputRef.value) {
+        fileInputRef.value.value = ""
+    }
+}
+
+function onImportFileChange(event) {
+    const file = event.target.files?.[0]
+
+    if (!file) {
+        selectedImportFile.value = null
+        return
+    }
+
+    selectedImportFile.value = file
+}
+
+async function submitImport() {
+    if (!selectedImportFile.value) {
+        toast.add({
+            severity: "warn",
+            summary: t("organization.position.importFileRequired"),
+            detail: t("organization.position.importFileRequiredDetail"),
+            life: 3500,
+        })
+
+        return
+    }
+
+    try {
+        await positionStore.importPositions(selectedImportFile.value)
+
+        importDialogVisible.value = false
+        importResultDialogVisible.value = true
+
+        await loadPositions()
+
+        toast.add({
+            severity:
+                positionStore.importSummary?.errors?.length > 0
+                    ? "warn"
+                    : "success",
+            summary: t("organization.position.importFinished"),
+            detail:
+                positionStore.importSummary?.errors?.length > 0
+                    ? t("organization.position.importFinishedWithErrors")
+                    : t("organization.position.importFinishedSuccess"),
+            life: 4500,
+        })
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: t("organization.position.importFailed"),
+            detail: getErrorMessage(error),
+            life: 5000,
+        })
+    }
+}
+
+function translateImportError(error) {
+    const translated = t(error.messageKey)
+
+    return translated === error.messageKey
+        ? t("errors.validationFailed")
+        : translated
+}
+
+watch(
+    () => filters.companyId,
+    () => {
+        if (
+            filters.branchId &&
+            !branchFilterOptions.value.some(
+                (option) => option.value === filters.branchId,
+            )
+        ) {
+            filters.branchId = ""
+        }
+
+        if (
+            filters.departmentId &&
+            !departmentFilterOptions.value.some(
+                (option) => option.value === filters.departmentId,
+            )
+        ) {
+            filters.departmentId = ""
+        }
+    },
+)
+
+watch(
+    () => filters.branchId,
+    () => {
+        if (
+            filters.departmentId &&
+            !departmentFilterOptions.value.some(
+                (option) => option.value === filters.departmentId,
+            )
+        ) {
+            filters.departmentId = ""
+        }
+    },
+)
+
+onMounted(async () => {
+    await Promise.all([
+        loadCompanies(),
+        loadBranches(),
+        loadDepartments(),
+        loadPositions(),
+    ])
+})
+</script>
+
+<template>
+    <section class="position-page">
+        <div class="position-page__header">
+            <div>
+                <span class="position-page__eyebrow">
+                    {{ t("organization.position.eyebrow") }}
+                </span>
+
+                <h2>{{ t("organization.position.title") }}</h2>
+
+                <p>
+                    {{ t("organization.position.description") }}
+                </p>
+            </div>
+
+            <div class="position-page__header-actions">
+                <Button
+                    v-if="canImport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-download"
+                    :loading="positionStore.downloadingTemplate"
+                    :label="t('organization.position.downloadSample')"
+                    @click="downloadSample"
+                />
+
+                <Button
+                    v-if="canImport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-upload"
+                    :label="t('organization.position.importExcel')"
+                    @click="openImportDialog"
+                />
+
+                <Button
+                    v-if="canExport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-file-export"
+                    :loading="positionStore.exporting"
+                    :label="t('organization.position.exportExcel')"
+                    @click="exportExcel"
+                />
+
+                <Button
+                    v-if="canCreate"
+                    icon="pi pi-plus"
+                    :label="t('organization.position.newPosition')"
+                    @click="openCreateDialog"
+                />
+            </div>
+        </div>
+
+        <Card class="position-card">
+            <template #content>
+                <div class="position-toolbar">
+                    <div class="position-toolbar__filters">
+                        <span class="position-search">
+                            <i class="pi pi-search" />
+
+                            <InputText
+                                v-model="filters.search"
+                                class="position-search__input"
+                                :placeholder="
+                                    t('organization.position.searchPlaceholder')
+                                "
+                                @keyup.enter="applyFilters"
+                            />
+                        </span>
+
+                        <Select
+                            v-model="filters.companyId"
+                            class="position-company-filter"
+                            :options="companyFilterOptions"
+                            option-label="label"
+                            option-value="value"
+                            :loading="companyLoading"
+                            @change="onFilterCompanyChange"
+                        />
+
+                        <Select
+                            v-model="filters.branchId"
+                            class="position-branch-filter"
+                            :options="branchFilterOptions"
+                            option-label="label"
+                            option-value="value"
+                            :loading="branchLoading"
+                            @change="onFilterBranchChange"
+                        />
+
+                        <Select
+                            v-model="filters.departmentId"
+                            class="position-department-filter"
+                            :options="departmentFilterOptions"
+                            option-label="label"
+                            option-value="value"
+                            :loading="departmentLoading"
+                            @change="applyFilters"
+                        />
+
+                        <Select
+                            v-model="filters.status"
+                            class="position-status-filter"
+                            :options="statusOptions"
+                            option-label="label"
+                            option-value="value"
+                            @change="applyFilters"
+                        />
+                    </div>
+
+                    <div class="position-toolbar__actions">
+                        <Button
+                            size="small"
+                            icon="pi pi-filter"
+                            :label="t('common.apply')"
+                            @click="applyFilters"
+                        />
+
+                        <Button
+                            size="small"
+                            severity="secondary"
+                            outlined
+                            icon="pi pi-times"
+                            :label="t('common.clear')"
+                            @click="clearFilters"
+                        />
+
+                        <Button
+                            size="small"
+                            severity="secondary"
+                            outlined
+                            icon="pi pi-refresh"
+                            :label="t('common.refresh')"
+                            @click="loadPositions"
+                        />
+                    </div>
+                </div>
+
+                <div class="position-table-wrap">
+                    <DataTable
+                        lazy
+                        paginator
+                        striped-rows
+                        data-key="id"
+                        size="small"
+                        scrollable
+                        scroll-height="flex"
+                        :value="positionStore.items"
+                        :loading="positionStore.loading"
+                        :rows="positionStore.pagination.limit"
+                        :first="
+                            (positionStore.pagination.page - 1) *
+                            positionStore.pagination.limit
+                        "
+                        :total-records="positionStore.pagination.total"
+                        :rows-per-page-options="[10, 20, 50, 100]"
+                        :empty-message="t('organization.position.empty')"
+                        @page="onPage"
+                    >
+                        <Column
+                            field="code"
+                            :header="t('organization.position.code')"
+                            frozen
+                            style="min-width: 9rem"
+                        >
+                            <template #body="{ data }">
+                                <strong class="position-code">
+                                    {{ data.code }}
+                                </strong>
+                            </template>
+                        </Column>
+
+                        <Column
+                            :header="t('organization.position.positionTitle')"
+                            style="min-width: 15rem"
+                        >
+                            <template #body="{ data }">
+                                <div class="position-name-cell">
+                                    <strong>{{ data.title }}</strong>
+                                    <span>{{ data.shortName || "-" }}</span>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column
+                            :header="t('organization.position.department')"
+                            style="min-width: 13rem"
+                        >
+                            <template #body="{ data }">
+                                <div class="position-muted-cell">
+                                    <strong>
+                                        {{ data.department?.name || "-" }}
+                                    </strong>
+                                    <span>
+                                        {{ data.department?.code || "-" }}
+                                    </span>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column
+                            :header="t('organization.position.branch')"
+                            style="min-width: 13rem"
+                        >
+                            <template #body="{ data }">
+                                <div class="position-muted-cell">
+                                    <strong>
+                                        {{ data.branch?.name || "-" }}
+                                    </strong>
+                                    <span>
+                                        {{ data.branch?.code || "-" }}
+                                    </span>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column
+                            :header="t('organization.position.reportsTo')"
+                            style="min-width: 14rem"
+                        >
+                            <template #body="{ data }">
+                                <div
+                                    v-if="data.reportsToPosition"
+                                    class="position-muted-cell"
+                                >
+                                    <strong>
+                                        {{ data.reportsToPosition.title }}
+                                    </strong>
+                                    <span>
+                                        {{ data.reportsToPosition.code }}
+                                    </span>
+                                </div>
+
+                                <span v-else class="position-muted-text">
+                                    {{ t("organization.position.noReportsTo") }}
+                                </span>
+                            </template>
+                        </Column>
+
+                        <Column
+                            field="level"
+                            :header="t('organization.position.level')"
+                            style="min-width: 7rem"
+                        >
+                            <template #body="{ data }">
+                                <Tag
+                                    severity="secondary"
+                                    :value="String(data.level ?? 0)"
+                                />
+                            </template>
+                        </Column>
+
+                        <Column
+                            :header="t('organization.position.manager')"
+                            style="min-width: 8rem"
+                        >
+                            <template #body="{ data }">
+                                <Tag
+                                    v-if="data.isManager"
+                                    severity="info"
+                                    :value="t('common.yes')"
+                                />
+
+                                <span v-else class="position-muted-text">
+                                    {{ t("common.no") }}
+                                </span>
+                            </template>
+                        </Column>
+
+                        <Column
+                            field="status"
+                            :header="t('organization.position.status')"
+                            style="min-width: 9rem"
+                        >
+                            <template #body="{ data }">
+                                <Tag
+                                    :severity="getStatusSeverity(data.status)"
+                                    :value="getStatusLabel(data.status)"
+                                />
+                            </template>
+                        </Column>
+
+                        <Column
+                            field="updatedAt"
+                            :header="t('organization.position.updatedAt')"
+                            style="min-width: 11rem"
+                        >
+                            <template #body="{ data }">
+                                <span class="position-date">
+                                    {{ formatDateTime(data.updatedAt) }}
+                                </span>
+                            </template>
+                        </Column>
+
+                        <Column
+                            :header="t('common.actions')"
+                            align-frozen="right"
+                            frozen
+                            style="min-width: 10rem"
+                        >
+                            <template #body="{ data }">
+                                <div class="position-actions">
+                                    <Button
+                                        v-if="
+                                            canUpdate &&
+                                            data.status !== 'ARCHIVED'
+                                        "
+                                        size="small"
+                                        text
+                                        rounded
+                                        icon="pi pi-pencil"
+                                        :aria-label="t('common.edit')"
+                                        @click="openEditDialog(data)"
+                                    />
+
+                                    <Button
+                                        v-if="
+                                            canArchive &&
+                                            data.status !== 'ARCHIVED'
+                                        "
+                                        size="small"
+                                        text
+                                        rounded
+                                        severity="danger"
+                                        icon="pi pi-archive"
+                                        :aria-label="t('common.archive')"
+                                        @click="openArchiveDialog(data)"
+                                    />
+
+                                    <span
+                                        v-if="data.status === 'ARCHIVED'"
+                                        class="position-archived-text"
+                                    >
+                                        {{ t("organization.position.readOnly") }}
+                                    </span>
+                                </div>
+                            </template>
+                        </Column>
+                    </DataTable>
+                </div>
+            </template>
+        </Card>
+
+        <Dialog
+            v-model:visible="dialogVisible"
+            modal
+            class="position-dialog"
+            :header="dialogTitle"
+            :draggable="false"
+        >
+            <div class="position-form">
+                <div class="position-form__section">
+                    <h3>{{ t("organization.position.basicInfo") }}</h3>
+
+                    <div class="position-form__grid">
+                        <label class="position-field">
+                            <span>{{ t("organization.position.company") }}</span>
+
+                            <Select
+                                v-model="form.companyId"
+                                :disabled="dialogMode === 'edit'"
+                                :invalid="Boolean(getFieldError('companyId'))"
+                                :options="companyOptions"
+                                option-label="label"
+                                option-value="value"
+                                :placeholder="
+                                    t('organization.position.selectCompany')
+                                "
+                                :loading="companyLoading"
+                                @change="onFormCompanyChange"
+                            />
+
+                            <small v-if="getFieldError('companyId')">
+                                {{ getFieldError("companyId") }}
+                            </small>
+                        </label>
+
+                        <label class="position-field">
+                            <span>{{ t("organization.position.branch") }}</span>
+
+                            <Select
+                                v-model="form.branchId"
+                                :disabled="
+                                    dialogMode === 'edit' || !form.companyId
+                                "
+                                :invalid="Boolean(getFieldError('branchId'))"
+                                :options="branchOptions"
+                                option-label="label"
+                                option-value="value"
+                                :placeholder="
+                                    t('organization.position.selectBranch')
+                                "
+                                :loading="branchLoading"
+                                @change="onFormBranchChange"
+                            />
+
+                            <small v-if="getFieldError('branchId')">
+                                {{ getFieldError("branchId") }}
+                            </small>
+                        </label>
+
+                        <label class="position-field">
+                            <span>
+                                {{ t("organization.position.department") }}
+                            </span>
+
+                            <Select
+                                v-model="form.departmentId"
+                                :disabled="
+                                    dialogMode === 'edit' || !form.branchId
+                                "
+                                :invalid="
+                                    Boolean(getFieldError('departmentId'))
+                                "
+                                :options="departmentOptions"
+                                option-label="label"
+                                option-value="value"
+                                :placeholder="
+                                    t('organization.position.selectDepartment')
+                                "
+                                :loading="departmentLoading"
+                                @change="onFormDepartmentChange"
+                            />
+
+                            <small v-if="getFieldError('departmentId')">
+                                {{ getFieldError("departmentId") }}
+                            </small>
+                        </label>
+
+                        <label class="position-field">
+                            <span>{{ t("organization.position.reportsTo") }}</span>
+
+                            <Select
+                                v-model="form.reportsToPositionId"
+                                :disabled="!form.companyId || !form.branchId"
+                                :options="reportsToOptions"
+                                option-label="label"
+                                option-value="value"
+                                :loading="reportsToLoading"
+                                @change="
+                                    clearFieldError('reportsToPositionId')
+                                "
+                            />
+
+                            <small
+                                v-if="getFieldError('reportsToPositionId')"
+                            >
+                                {{ getFieldError("reportsToPositionId") }}
+                            </small>
+                        </label>
+
+                        <label class="position-field">
+                            <span>{{ t("organization.position.code") }}</span>
+
+                            <InputText
+                                v-model="form.code"
+                                :invalid="Boolean(getFieldError('code'))"
+                                autocomplete="off"
+                                placeholder="HR_MANAGER"
+                                @input="normalizeCodeInput"
+                            />
+
+                            <small v-if="getFieldError('code')">
+                                {{ getFieldError("code") }}
+                            </small>
+                        </label>
+
+                        <label class="position-field">
+                            <span>
+                                {{ t("organization.position.shortName") }}
+                            </span>
+
+                            <InputText
+                                v-model="form.shortName"
+                                autocomplete="off"
+                                placeholder="HR Manager"
+                            />
+                        </label>
+
+                        <label class="position-field position-field--wide">
+                            <span>{{ t("organization.position.titleField") }}</span>
+
+                            <InputText
+                                v-model="form.title"
+                                :invalid="Boolean(getFieldError('title'))"
+                                autocomplete="off"
+                                placeholder="HR Manager"
+                                @input="clearFieldError('title')"
+                            />
+
+                            <small v-if="getFieldError('title')">
+                                {{ getFieldError("title") }}
+                            </small>
+                        </label>
+
+                        <label class="position-field">
+                            <span>{{ t("organization.position.level") }}</span>
+
+                            <InputNumber
+                                v-model="form.level"
+                                :min="0"
+                                :max="99"
+                                :use-grouping="false"
+                                input-class="position-input-number"
+                            />
+                        </label>
+
+                        <label class="position-field">
+                            <span>{{ t("organization.position.status") }}</span>
+
+                            <Select
+                                v-model="form.status"
+                                :options="editableStatusOptions"
+                                option-label="label"
+                                option-value="value"
+                            />
+                        </label>
+
+                        <div class="position-field position-field--wide">
+                            <div class="position-checkbox-row">
+                                <Checkbox
+                                    v-model="form.isManager"
+                                    input-id="isManager"
+                                    binary
+                                />
+
+                                <label for="isManager">
+                                    {{
+                                        t(
+                                            "organization.position.markAsManager",
+                                        )
+                                    }}
+                                </label>
+                            </div>
+                        </div>
+
+                        <label class="position-field position-field--wide">
+                            <span>
+                                {{
+                                    t(
+                                        "organization.position.descriptionLabel",
+                                    )
+                                }}
+                            </span>
+
+                            <Textarea
+                                v-model="form.description"
+                                rows="3"
+                                auto-resize
+                            />
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button
+                    severity="secondary"
+                    outlined
+                    :label="t('common.cancel')"
+                    @click="closeDialog"
+                />
+
+                <Button
+                    icon="pi pi-save"
+                    :loading="positionStore.saving"
+                    :label="t('common.save')"
+                    @click="savePosition"
+                />
+            </template>
+        </Dialog>
+
+        <Dialog
+            v-model:visible="archiveDialogVisible"
+            modal
+            class="position-archive-dialog"
+            :header="t('organization.position.archiveTitle')"
+            :draggable="false"
+        >
+            <p class="position-archive-text">
+                {{
+                    t("organization.position.archiveMessage", {
+                        name: archiveCandidate?.title || "-",
+                    })
+                }}
+            </p>
+
+            <template #footer>
+                <Button
+                    severity="secondary"
+                    outlined
+                    :label="t('common.cancel')"
+                    @click="closeArchiveDialog"
+                />
+
+                <Button
+                    severity="danger"
+                    icon="pi pi-archive"
+                    :loading="positionStore.archiving"
+                    :label="t('common.archive')"
+                    @click="confirmArchivePosition"
+                />
+            </template>
+        </Dialog>
+
+        <Dialog
+            v-model:visible="importDialogVisible"
+            modal
+            class="position-import-dialog"
+            :header="t('organization.position.importTitle')"
+            :draggable="false"
+            :closable="!positionStore.importing"
+        >
+            <div class="position-import">
+                <p>
+                    {{ t("organization.position.importDescription") }}
+                </p>
+
+                <input
+                    ref="fileInputRef"
+                    type="file"
+                    accept=".xlsx"
+                    :disabled="positionStore.importing"
+                    @change="onImportFileChange"
+                />
+
+                <div
+                    v-if="selectedImportFile"
+                    class="position-import__file"
+                >
+                    <i class="pi pi-file-excel" />
+                    <span>{{ selectedImportFile.name }}</span>
+                </div>
+
+                <div
+                    v-if="positionStore.importing"
+                    class="position-import__progress"
+                >
+                    <ProgressBar :value="positionStore.importProgress" />
+
+                    <span>
+                        {{
+                            t("organization.position.importProgress", {
+                                percent: positionStore.importProgress,
+                            })
+                        }}
+                    </span>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button
+                    severity="secondary"
+                    outlined
+                    :disabled="positionStore.importing"
+                    :label="t('common.cancel')"
+                    @click="closeImportDialog"
+                />
+
+                <Button
+                    icon="pi pi-upload"
+                    :loading="positionStore.importing"
+                    :label="t('organization.position.importExcel')"
+                    @click="submitImport"
+                />
+            </template>
+        </Dialog>
+
+        <Dialog
+            v-model:visible="importResultDialogVisible"
+            modal
+            class="position-import-result-dialog"
+            :header="t('organization.position.importResultTitle')"
+            :draggable="false"
+        >
+            <div
+                v-if="positionStore.importSummary"
+                class="position-import-result"
+            >
+                <div class="position-import-result__grid">
+                    <div>
+                        <span>{{ t("organization.position.totalRows") }}</span>
+                        <strong>
+                            {{ positionStore.importSummary.totalRows }}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>{{ t("organization.position.createdRows") }}</span>
+                        <strong>
+                            {{ positionStore.importSummary.created }}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>{{ t("organization.position.updatedRows") }}</span>
+                        <strong>
+                            {{ positionStore.importSummary.updated }}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>{{ t("organization.position.skippedRows") }}</span>
+                        <strong>
+                            {{ positionStore.importSummary.skipped }}
+                        </strong>
+                    </div>
+                </div>
+
+                <div
+                    v-if="positionStore.importSummary.errors?.length"
+                    class="position-import-result__errors"
+                >
+                    <h4>
+                        {{ t("organization.position.validationErrors") }}
+                    </h4>
+
+                    <DataTable
+                        size="small"
+                        :value="positionStore.importSummary.errors"
+                    >
+                        <Column
+                            field="rowNumber"
+                            :header="t('organization.position.rowNumber')"
+                            style="width: 7rem"
+                        />
+
+                        <Column
+                            field="field"
+                            :header="t('organization.position.field')"
+                            style="width: 12rem"
+                        />
+
+                        <Column :header="t('organization.position.issue')">
+                            <template #body="{ data }">
+                                {{ translateImportError(data) }}
+                            </template>
+                        </Column>
+                    </DataTable>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button
+                    :label="t('common.close')"
+                    @click="importResultDialogVisible = false"
+                />
+            </template>
+        </Dialog>
+    </section>
+</template>
+
+<style scoped>
+.position-page {
+    width: 100%;
+    display: grid;
+    gap: 1rem;
+}
+
+.position-page__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.position-page__header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.position-page__eyebrow {
+    color: var(--hrms-primary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.position-page h2 {
+    margin: 0.35rem 0;
+    color: var(--hrms-text);
+    font-size: 1.45rem;
+    line-height: 1.2;
+}
+
+.position-page p {
+    max-width: 54rem;
+    margin: 0;
+    color: var(--hrms-text-muted);
+    font-size: 0.78rem;
+    line-height: 1.6;
+}
+
+.position-card {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--hrms-border);
+    box-shadow: var(--hrms-shadow-sm);
+}
+
+.position-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.position-toolbar__filters,
+.position-toolbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.position-toolbar__filters {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.position-toolbar__actions {
+    flex: 0 0 auto;
+}
+
+.position-search {
+    width: min(100%, 20rem);
+    position: relative;
+    display: block;
+}
+
+.position-search i {
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    transform: translateY(-50%);
+    color: var(--hrms-text-muted);
+    font-size: 0.78rem;
+}
+
+.position-search__input {
+    width: 100%;
+    padding-left: 2.1rem;
+}
+
+.position-company-filter,
+.position-branch-filter,
+.position-department-filter {
+    width: 13rem;
+}
+
+.position-status-filter {
+    width: 11rem;
+}
+
+.position-table-wrap {
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.position-code {
+    color: var(--hrms-primary);
+    font-size: 0.78rem;
+}
+
+.position-name-cell,
+.position-muted-cell {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.position-name-cell strong,
+.position-muted-cell strong,
+.position-muted-cell span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.position-name-cell strong,
+.position-muted-cell strong {
+    color: var(--hrms-text);
+    font-size: 0.78rem;
+}
+
+.position-name-cell span,
+.position-muted-cell span,
+.position-date,
+.position-muted-text,
+.position-archived-text {
+    color: var(--hrms-text-muted);
+    font-size: 0.72rem;
+}
+
+.position-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.position-dialog {
+    width: min(62rem, calc(100vw - 2rem));
+}
+
+.position-archive-dialog,
+.position-import-dialog,
+.position-import-result-dialog {
+    width: min(36rem, calc(100vw - 2rem));
+}
+
+.position-form {
+    display: grid;
+    gap: 1rem;
+}
+
+.position-form__section {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.9rem;
+    background: var(--hrms-surface-muted);
+    border: 1px solid var(--hrms-border);
+    border-radius: var(--hrms-radius-md);
+}
+
+.position-form__section h3 {
+    margin: 0;
+    color: var(--hrms-text);
+    font-size: 0.82rem;
+}
+
+.position-form__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.position-field {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.position-field--wide {
+    grid-column: 1 / -1;
+}
+
+.position-field span,
+.position-checkbox-row label {
+    color: var(--hrms-text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.position-field small {
+    color: var(--hrms-danger);
+    font-size: 0.68rem;
+}
+
+.position-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 2.4rem;
+}
+
+.position-archive-text {
+    margin: 0;
+    color: var(--hrms-text);
+    font-size: 0.82rem;
+    line-height: 1.6;
+}
+
+.position-import {
+    display: grid;
+    gap: 1rem;
+}
+
+.position-import__file {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0.75rem;
+    color: var(--hrms-text);
+    background: var(--hrms-surface-muted);
+    border: 1px solid var(--hrms-border);
+    border-radius: var(--hrms-radius-md);
+    font-size: 0.78rem;
+}
+
+.position-import__file span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.position-import__progress {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.position-import__progress span {
+    color: var(--hrms-text-muted);
+    font-size: 0.72rem;
+    text-align: center;
+}
+
+.position-import-result {
+    display: grid;
+    gap: 1rem;
+}
+
+.position-import-result__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.position-import-result__grid div {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    text-align: center;
+    background: var(--hrms-surface-muted);
+    border: 1px solid var(--hrms-border);
+    border-radius: var(--hrms-radius-md);
+}
+
+.position-import-result__grid span {
+    color: var(--hrms-text-muted);
+    font-size: 0.68rem;
+}
+
+.position-import-result__grid strong {
+    color: var(--hrms-text);
+    font-size: 1rem;
+}
+
+.position-import-result__errors {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.position-import-result__errors h4 {
+    margin: 0;
+    color: var(--hrms-danger);
+    font-size: 0.78rem;
+}
+
+:deep(.p-card-body),
+:deep(.p-card-content) {
+    padding: 0;
+}
+
+:deep(.p-card-content) {
+    padding: 1rem;
+}
+
+:deep(.p-datatable) {
+    font-size: 0.74rem;
+}
+
+:deep(.p-datatable-thead > tr > th) {
+    color: var(--hrms-text);
+    background: var(--hrms-surface-muted);
+    font-size: 0.7rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+:deep(.p-datatable-tbody > tr > td),
+:deep(.p-datatable-thead > tr > th) {
+    text-align: center;
+    vertical-align: middle;
+}
+
+:deep(.p-datatable-tbody > tr > td) {
+    border-color: var(--hrms-border);
+}
+
+:deep(.position-input-number) {
+    width: 100%;
+}
+
+:deep(.p-dialog-header),
+:deep(.p-dialog-footer) {
+    padding: 1rem;
+}
+
+:deep(.p-dialog-content) {
+    padding: 0 1rem 1rem;
+}
+
+@media (max-width: 1250px) {
+    .position-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .position-toolbar__filters,
+    .position-toolbar__actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .position-search,
+    .position-company-filter,
+    .position-branch-filter,
+    .position-department-filter,
+    .position-status-filter {
+        width: 100%;
+    }
+}
+
+@media (max-width: 900px) {
+    .position-page__header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .position-page__header-actions {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 650px) {
+    .position-form__grid,
+    .position-import-result__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .position-page h2 {
+        font-size: 1.2rem;
+    }
+}
+</style>

@@ -23,6 +23,9 @@ export default {
         close: "បិទ",
         save: "រក្សាទុក",
         next: "បន្ទាប់",
+        yes: "បាទ/ចាស",
+        no: "ទេ",
+        close: "បិទ",
     },
 
     nav: {
@@ -32,6 +35,7 @@ export default {
         companies: "ក្រុមហ៊ុន",
         branches: "សាខា",
         departments: "នាយកដ្ឋាន",
+        positions: "តួនាទីការងារ",
     },
 
     auth: {
@@ -291,6 +295,96 @@ export default {
             exportStartedDetail: "ឯកសារ Department Export ត្រូវបានទាញយក។",
             exportFailed: "មិនអាច Export នាយកដ្ឋានបានទេ",
         },
+        position: {
+            eyebrow: "ការរៀបចំអង្គភាព",
+            title: "តួនាទីការងារ",
+            description:
+                "បង្កើត និងគ្រប់គ្រងតួនាទីការងារក្រោមនាយកដ្ឋាននីមួយៗ។ រចនាសម្ព័ន្ធតួនាទីនឹងប្រើសម្រាប់បុគ្គលិក ខ្សែអ្នកគ្រប់គ្រង ការអនុម័ត Dashboard និងសិទ្ធិចូលប្រើ។",
+            newPosition: "បង្កើតតួនាទី",
+            createTitle: "បង្កើតតួនាទីការងារ",
+            editTitle: "កែប្រែតួនាទីការងារ",
+            archiveTitle: "ដាក់តួនាទីក្នុងបណ្ណសារ",
+            archiveMessage:
+                "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ? តួនាទីដែលបានដាក់ក្នុងបណ្ណសារនឹងរក្សាទុកសម្រាប់ប្រវត្តិ និងមិនលុបចោលទាំងស្រុងទេ។",
+            searchPlaceholder:
+                "ស្វែងរក Code, ឈ្មោះតួនាទី, ឈ្មោះខ្លី, ពិពណ៌នា...",
+            empty: "រកមិនឃើញតួនាទីការងារ។",
+            loadFailed: "មិនអាចទាញយកតួនាទីការងារបានទេ",
+            companyLoadFailed: "មិនអាចទាញយកក្រុមហ៊ុនបានទេ",
+            branchLoadFailed: "មិនអាចទាញយកសាខាបានទេ",
+            departmentLoadFailed: "មិនអាចទាញយកនាយកដ្ឋានបានទេ",
+            reportsToLoadFailed:
+                "មិនអាចទាញយកតួនាទីរាយការណ៍ទៅបានទេ",
+            saveFailed: "មិនអាចរក្សាទុកតួនាទីការងារបានទេ",
+            archiveFailed: "មិនអាចដាក់តួនាទីក្នុងបណ្ណសារបានទេ",
+            created: "បានបង្កើតតួនាទី",
+            createdDetail: "តួនាទីការងារត្រូវបានបង្កើតដោយជោគជ័យ។",
+            updated: "បានកែប្រែតួនាទី",
+            updatedDetail: "តួនាទីការងារត្រូវបានកែប្រែដោយជោគជ័យ។",
+            archived: "បានដាក់តួនាទីក្នុងបណ្ណសារ",
+            archivedDetail:
+                "តួនាទីការងារត្រូវបានដាក់ក្នុងបណ្ណសារដោយជោគជ័យ។",
+            readOnly: "បានដាក់បណ្ណសារ",
+            basicInfo: "ព័ត៌មានមូលដ្ឋាន",
+            allCompanies: "ក្រុមហ៊ុនទាំងអស់",
+            allBranches: "សាខាទាំងអស់",
+            allDepartments: "នាយកដ្ឋានទាំងអស់",
+            selectCompany: "ជ្រើសរើសក្រុមហ៊ុន",
+            selectBranch: "ជ្រើសរើសសាខា",
+            selectDepartment: "ជ្រើសរើសនាយកដ្ឋាន",
+            company: "ក្រុមហ៊ុន",
+            branch: "សាខា",
+            department: "នាយកដ្ឋាន",
+            reportsTo: "រាយការណ៍ទៅ",
+            noReportsTo: "គ្មានការរាយការណ៍ទៅ",
+            code: "Code",
+            titleField: "ឈ្មោះតួនាទី",
+            positionTitle: "តួនាទី",
+            shortName: "ឈ្មោះខ្លី",
+            level: "កម្រិត",
+            manager: "អ្នកគ្រប់គ្រង",
+            markAsManager: "កំណត់ជាតួនាទីអ្នកគ្រប់គ្រង",
+            descriptionLabel: "ពិពណ៌នា",
+            status: "ស្ថានភាព",
+            statusAll: "ស្ថានភាពទាំងអស់",
+            statusActive: "សកម្ម",
+            statusInactive: "មិនសកម្ម",
+            statusArchived: "បណ្ណសារ",
+            updatedAt: "បានកែចុងក្រោយ",
+
+            downloadSample: "ទាញយក Sample",
+            importExcel: "Import Excel",
+            exportExcel: "Export Excel",
+            sampleDownloaded: "បានទាញយក Sample",
+            sampleDownloadedDetail:
+                "Sample សម្រាប់ Import តួនាទីត្រូវបានទាញយក។",
+            sampleDownloadFailed: "មិនអាចទាញយក Sample បានទេ",
+            exported: "បាន Export",
+            exportedDetail: "ឯកសារ Export តួនាទីត្រូវបានទាញយក។",
+            exportFailed: "មិនអាច Export តួនាទីបានទេ",
+            importTitle: "Import តួនាទីការងារ",
+            importDescription:
+                "Upload Excel template ដែលបានបំពេញ។ សូមរក្សា Columns ដូច Sample ដែលបានទាញយក។",
+            importFileRequired: "ត្រូវការ Excel file",
+            importFileRequiredDetail:
+                "សូមជ្រើសរើស Excel file មុនពេល Import។",
+            importProgress: "កំពុងដំណើរការ... {percent}%",
+            importFinished: "Import បានបញ្ចប់",
+            importFinishedSuccess:
+                "តួនាទីការងារត្រូវបាន Import ដោយជោគជ័យ។",
+            importFinishedWithErrors:
+                "Import បានបញ្ចប់ ប៉ុន្តែមានកំហុស Validate។ សូមពិនិត្យលទ្ធផល។",
+            importFailed: "មិនអាច Import តួនាទីបានទេ",
+            importResultTitle: "លទ្ធផល Import តួនាទី",
+            totalRows: "ជួរសរុប",
+            createdRows: "បានបង្កើត",
+            updatedRows: "បានកែប្រែ",
+            skippedRows: "បានរំលង",
+            validationErrors: "កំហុស Validate",
+            rowNumber: "ជួរ",
+            field: "Field",
+            issue: "បញ្ហា",
+        },
     },
 
     errors: {
@@ -369,6 +463,49 @@ export default {
                     "រកមិនឃើញ Branch Code ក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានដាក់បណ្ណសារ។",
                 duplicateInFile:
                     "មាន Department Code ស្ទួនក្នុងឯកសារ Excel សម្រាប់សាខាដូចគ្នា។",
+            },
+            position: {
+                invalidId: "Position ID មិនត្រឹមត្រូវ។",
+                notFound: "រកមិនឃើញតួនាទីការងារ។",
+                reportsToNotFound:
+                    "រកមិនឃើញតួនាទីដែលត្រូវរាយការណ៍ទៅក្នុងសាខាដែលបានជ្រើសរើស។",
+                reportsToSelf:
+                    "តួនាទីការងារមិនអាចរាយការណ៍ទៅខ្លួនឯងបានទេ។",
+                hasReportingPositions:
+                    "តួនាទីនេះមានតួនាទីកូនដែលកំពុងរាយការណ៍ទៅ ដូច្នេះមិនអាចដាក់ក្នុងបណ្ណសារបានទេ។",
+                codeExists:
+                    "Position Code នេះមានរួចហើយក្នុងនាយកដ្ឋានដែលបានជ្រើសរើស។",
+                duplicate: "តួនាទីការងារនេះមានរួចហើយ។",
+            },
+
+            positionImport: {
+                fileRequired: "សូមជ្រើសរើសឯកសារ Excel ដើម្បី Import។",
+                invalidTemplate:
+                    "Template Excel មិនត្រឹមត្រូវ។ សូមទាញយក Sample ហើយប្រើ Column ដូចគ្នា។",
+                emptyFile: "ឯកសារ Excel ទទេ។",
+                noDataRows:
+                    "ឯកសារ Excel មិនមានជួរតួនាទីសម្រាប់ Import។",
+                hasErrors:
+                    "ការ Import បានបញ្ចប់ដោយមានកំហុស Validate។ សូមពិនិត្យលទ្ធផល។",
+                companyCodeRequired: "ត្រូវបញ្ចូល Company Code។",
+                branchCodeRequired: "ត្រូវបញ្ចូល Branch Code។",
+                departmentCodeRequired: "ត្រូវបញ្ចូល Department Code។",
+                positionCodeRequired: "ត្រូវបញ្ចូល Position Code។",
+                positionCodeInvalid:
+                    "Position Code ត្រូវមាន 2-30 តួអក្សរ និងប្រើអក្សរ លេខ dash ឬ underscore ប៉ុណ្ណោះ។",
+                positionTitleRequired: "ត្រូវបញ្ចូលឈ្មោះតួនាទី។",
+                levelInvalid: "Level ត្រូវជាលេខគត់ពី 0 ដល់ 99។",
+                isManagerInvalid:
+                    "Is Manager ត្រូវតែជា YES, NO, TRUE, FALSE, 1 ឬ 0។",
+                statusInvalid: "Status ត្រូវតែជា ACTIVE ឬ INACTIVE។",
+                companyNotFound:
+                    "រកមិនឃើញ Company Code ឬក្រុមហ៊ុនត្រូវបានដាក់បណ្ណសារ។",
+                branchNotFound:
+                    "រកមិនឃើញ Branch Code ក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានដាក់បណ្ណសារ។",
+                departmentNotFound:
+                    "រកមិនឃើញ Department Code ក្នុងសាខាដែលបានជ្រើស ឬនាយកដ្ឋានត្រូវបានដាក់បណ្ណសារ។",
+                duplicateInFile:
+                    "មាន Position Code ស្ទួនក្នុងឯកសារ Excel សម្រាប់នាយកដ្ឋានដូចគ្នា។",
             },
         },
     },

@@ -74,6 +74,15 @@ const navGroups = computed(() => {
                     },
                     permissionCode: "ORGANIZATION.DEPARTMENT.VIEW",
                 },
+
+                {
+                    labelKey: "nav.positions",
+                    icon: "pi pi-id-card",
+                    to: {
+                        name: "organization-positions",
+                    },
+                    permissionCode: "ORGANIZATION.POSITION.VIEW",
+                },
             ],
         },
     ]

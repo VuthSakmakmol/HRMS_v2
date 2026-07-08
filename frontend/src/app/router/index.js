@@ -71,6 +71,17 @@ const router = createRouter({
                         permissionCode: "ORGANIZATION.DEPARTMENT.VIEW",
                     },
                 },
+                
+                {
+                    path: "organization/positions",
+                    name: "organization-positions",
+                    component: () =>
+                        import("@/modules/organization/views/PositionListView.vue"),
+                    meta: {
+                        titleKey: "nav.positions",
+                        permissionCode: "ORGANIZATION.POSITION.VIEW",
+                    },
+                },
             ],
         },
 

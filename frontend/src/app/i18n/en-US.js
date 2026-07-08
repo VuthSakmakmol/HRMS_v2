@@ -23,6 +23,9 @@ export default {
         close: "Close",
         save: "Save",
         next: "Next",
+        yes: "Yes",
+        no: "No",
+        close: "Close",
     },
 
     nav: {
@@ -32,6 +35,7 @@ export default {
         companies: "Companies",
         branches: "Branches",
         departments: "Departments",
+        positions: "Positions",
     },
 
     auth: {
@@ -284,6 +288,91 @@ export default {
             exportStartedDetail: "Department export file has been downloaded.",
             exportFailed: "Unable to export departments",
         },
+        position: {
+            eyebrow: "Organization Setup",
+            title: "Positions",
+            description:
+                "Create and manage job positions under each department. Position hierarchy is used later for employees, manager chains, approvals, dashboards, and access scope.",
+            newPosition: "New Position",
+            createTitle: "Create Position",
+            editTitle: "Edit Position",
+            archiveTitle: "Archive Position",
+            archiveMessage:
+                "Are you sure you want to archive {name}? Archived positions are kept for history and cannot be hard deleted.",
+            searchPlaceholder: "Search code, title, short name, description...",
+            empty: "No positions found.",
+            loadFailed: "Unable to load positions",
+            companyLoadFailed: "Unable to load companies",
+            branchLoadFailed: "Unable to load branches",
+            departmentLoadFailed: "Unable to load departments",
+            reportsToLoadFailed: "Unable to load reporting positions",
+            saveFailed: "Unable to save position",
+            archiveFailed: "Unable to archive position",
+            created: "Position created",
+            createdDetail: "The position was created successfully.",
+            updated: "Position updated",
+            updatedDetail: "The position was updated successfully.",
+            archived: "Position archived",
+            archivedDetail: "The position was archived successfully.",
+            readOnly: "Archived",
+            basicInfo: "Basic Information",
+            allCompanies: "All Companies",
+            allBranches: "All Branches",
+            allDepartments: "All Departments",
+            selectCompany: "Select company",
+            selectBranch: "Select branch",
+            selectDepartment: "Select department",
+            company: "Company",
+            branch: "Branch",
+            department: "Department",
+            reportsTo: "Reports To",
+            noReportsTo: "No Reports To",
+            code: "Code",
+            titleField: "Position Title",
+            positionTitle: "Position",
+            shortName: "Short Name",
+            level: "Level",
+            manager: "Manager",
+            markAsManager: "Mark as manager position",
+            descriptionLabel: "Description",
+            status: "Status",
+            statusAll: "All Statuses",
+            statusActive: "Active",
+            statusInactive: "Inactive",
+            statusArchived: "Archived",
+            updatedAt: "Updated",
+
+            downloadSample: "Download Sample",
+            importExcel: "Import Excel",
+            exportExcel: "Export Excel",
+            sampleDownloaded: "Sample downloaded",
+            sampleDownloadedDetail:
+                "The position import sample has been downloaded.",
+            sampleDownloadFailed: "Unable to download sample",
+            exported: "Export ready",
+            exportedDetail: "The positions export has been downloaded.",
+            exportFailed: "Unable to export positions",
+            importTitle: "Import Positions",
+            importDescription:
+                "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
+            importFileRequired: "Excel file required",
+            importFileRequiredDetail: "Please choose an Excel file before importing.",
+            importProgress: "Processing... {percent}%",
+            importFinished: "Import finished",
+            importFinishedSuccess: "Positions were imported successfully.",
+            importFinishedWithErrors:
+                "Import finished with validation errors. Please review the result.",
+            importFailed: "Unable to import positions",
+            importResultTitle: "Position Import Result",
+            totalRows: "Total Rows",
+            createdRows: "Created",
+            updatedRows: "Updated",
+            skippedRows: "Skipped",
+            validationErrors: "Validation Errors",
+            rowNumber: "Row",
+            field: "Field",
+            issue: "Issue",
+        },
     },
 
     errors: {
@@ -355,6 +444,47 @@ export default {
                     "Branch code was not found inside the selected company or the branch is archived.",
                 duplicateInFile:
                     "Duplicate department code found in this Excel file for the same branch.",
+            },
+            position: {
+                invalidId: "Invalid position ID.",
+                notFound: "Position was not found.",
+                reportsToNotFound:
+                    "Reports-to position was not found in the selected branch.",
+                reportsToSelf: "A position cannot report to itself.",
+                hasReportingPositions:
+                    "This position has active reporting positions and cannot be archived.",
+                codeExists:
+                    "This position code already exists inside the selected department.",
+                duplicate: "This position already exists.",
+            },
+
+            positionImport: {
+                fileRequired: "Please choose an Excel file to import.",
+                invalidTemplate:
+                    "Invalid Excel template. Please download the sample template and use the same columns.",
+                emptyFile: "The uploaded Excel file is empty.",
+                noDataRows: "The Excel file has no position rows to import.",
+                hasErrors:
+                    "The import finished with validation errors. Please review the result.",
+                companyCodeRequired: "Company code is required.",
+                branchCodeRequired: "Branch code is required.",
+                departmentCodeRequired: "Department code is required.",
+                positionCodeRequired: "Position code is required.",
+                positionCodeInvalid:
+                    "Position code must be 2-30 characters and use letters, numbers, dash, or underscore only.",
+                positionTitleRequired: "Position title is required.",
+                levelInvalid: "Level must be a whole number from 0 to 99.",
+                isManagerInvalid:
+                    "Is Manager must be YES, NO, TRUE, FALSE, 1, or 0.",
+                statusInvalid: "Status must be ACTIVE or INACTIVE.",
+                companyNotFound:
+                    "Company code was not found or the company is archived.",
+                branchNotFound:
+                    "Branch code was not found inside the selected company or the branch is archived.",
+                departmentNotFound:
+                    "Department code was not found inside the selected branch or the department is archived.",
+                duplicateInFile:
+                    "Duplicate position code found in this Excel file for the same department.",
             },
         },
     },
