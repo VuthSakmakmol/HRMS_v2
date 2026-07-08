@@ -3,7 +3,10 @@ import { defineStore } from "pinia"
 import {
     archiveDepartment,
     createDepartment,
+    downloadDepartmentImportTemplate,
+    exportDepartments,
     fetchDepartments,
+    importDepartments,
     updateDepartment,
 } from "../services/department.api.js"
 
@@ -30,6 +33,9 @@ export const useDepartmentStore = defineStore("department", {
         loading: false,
         saving: false,
         archiving: false,
+        importing: false,
+        exporting: false,
+        downloadingTemplate: false,
 
         error: null,
     }),
@@ -115,6 +121,48 @@ export const useDepartmentStore = defineStore("department", {
                 throw error
             } finally {
                 this.archiving = false
+            }
+        },
+
+        async downloadImportTemplate() {
+            this.downloadingTemplate = true
+            this.error = null
+
+            try {
+                await downloadDepartmentImportTemplate()
+            } catch (error) {
+                this.error = error
+                throw error
+            } finally {
+                this.downloadingTemplate = false
+            }
+        },
+
+        async exportDepartments(params = {}) {
+            this.exporting = true
+            this.error = null
+
+            try {
+                await exportDepartments(params)
+            } catch (error) {
+                this.error = error
+                throw error
+            } finally {
+                this.exporting = false
+            }
+        },
+
+        async importDepartments(file, options = {}) {
+            this.importing = true
+            this.error = null
+
+            try {
+                return await importDepartments(file, options)
+            } catch (error) {
+                this.error = error
+                throw error
+            } finally {
+                this.importing = false
             }
         },
     },

@@ -41,6 +41,8 @@ const DEPARTMENT_PERMISSIONS = Object.freeze({
     CREATE: "ORGANIZATION.DEPARTMENT.CREATE",
     UPDATE: "ORGANIZATION.DEPARTMENT.UPDATE",
     ARCHIVE: "ORGANIZATION.DEPARTMENT.ARCHIVE",
+    IMPORT: "ORGANIZATION.DEPARTMENT.IMPORT",
+    EXPORT: "ORGANIZATION.DEPARTMENT.EXPORT",
 })
 
 function parseRequest(schema, value) {
@@ -106,7 +108,7 @@ router.post(
 
 router.get(
     "/import-template",
-    requirePermission(DEPARTMENT_PERMISSIONS.VIEW),
+    requirePermission(DEPARTMENT_PERMISSIONS.EXPORT),
     async (req, res, next) => {
         try {
             const workbook = await buildDepartmentImportTemplateWorkbook()
@@ -130,7 +132,7 @@ router.get(
 
 router.get(
     "/export",
-    requirePermission(DEPARTMENT_PERMISSIONS.VIEW),
+    requirePermission(DEPARTMENT_PERMISSIONS.EXPORT),
     async (req, res, next) => {
         try {
             const query = parseRequest(departmentListQuerySchema, req.query)
@@ -163,7 +165,7 @@ router.get(
 
 router.post(
     "/import",
-    requirePermission(DEPARTMENT_PERMISSIONS.CREATE),
+    requirePermission(DEPARTMENT_PERMISSIONS.IMPORT),
     upload.single("file"),
     async (req, res, next) => {
         try {

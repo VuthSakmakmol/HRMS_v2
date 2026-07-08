@@ -1,10 +1,11 @@
 import ExcelJS from "exceljs"
 
+import { clearCacheByPrefix } from "../../../shared/cache/memoryCache.js"
 import { AppError } from "../../../shared/errors/AppError.js"
 import Branch from "../models/Branch.js"
 import Company from "../models/Company.js"
 import Department from "../models/Department.js"
-import { getDepartmentById } from "./department.service.js"
+import { listDepartments } from "./department.service.js"
 
 const TEMPLATE_HEADERS = [
     "companyCode",
@@ -84,9 +85,7 @@ function validateHeaderRow(worksheet) {
         normalizeText(getCellValue(headerRow, index + 1)),
     )
 
-    const expectedHeaders = TEMPLATE_HEADERS
-
-    const isValid = expectedHeaders.every(
+    const isValid = TEMPLATE_HEADERS.every(
         (header, index) => actualHeaders[index] === header,
     )
 
@@ -134,6 +133,7 @@ function buildWorkbookBase(title) {
     ]
 
     const headerRow = worksheet.getRow(1)
+    headerRow.height = 22
     headerRow.font = {
         bold: true,
         color: { argb: "FFFFFFFF" },
@@ -190,13 +190,13 @@ export async function buildDepartmentImportTemplateWorkbook() {
         description: "Payroll team under HR",
     })
 
-    worksheet.addWorksheet("Instructions").columns = [
+    const instructionSheet = workbook.addWorksheet("Instructions")
+
+    instructionSheet.columns = [
         { header: "Field", key: "field", width: 26 },
         { header: "Required", key: "required", width: 14 },
         { header: "Rule", key: "rule", width: 80 },
     ]
-
-    const instructionSheet = workbook.getWorksheet("Instructions")
 
     instructionSheet.addRows([
         {
@@ -294,6 +294,14 @@ export async function parseDepartmentImportWorkbook(buffer) {
 
         const raw = getRowObject(row)
 
+        const isEmpty = Object.values(raw).every(
+            (value) => normalizeText(value) === "",
+        )
+
+        if (isEmpty) {
+            return
+        }
+
         const normalized = {
             rowNumber,
             companyCode: normalizeCode(raw.companyCode),
@@ -304,14 +312,6 @@ export async function parseDepartmentImportWorkbook(buffer) {
             parentDepartmentCode: normalizeCode(raw.parentDepartmentCode),
             status: normalizeStatus(raw.status),
             description: normalizeText(raw.description),
-        }
-
-        const isEmpty = Object.values(raw).every(
-            (value) => normalizeText(value) === "",
-        )
-
-        if (isEmpty) {
-            return
         }
 
         if (!normalized.companyCode) {
@@ -342,9 +342,7 @@ export async function parseDepartmentImportWorkbook(buffer) {
                     "errors.organization.departmentImport.departmentCodeRequired",
                 ),
             )
-        }
-
-        if (!/^[A-Z0-9_-]{2,30}$/.test(normalized.departmentCode)) {
+        } else if (!/^[A-Z0-9_-]{2,30}$/.test(normalized.departmentCode)) {
             errors.push(
                 buildImportError(
                     rowNumber,
@@ -517,9 +515,7 @@ export async function importDepartmentsFromRows({ rows, parseErrors, user }) {
         return summary
     }
 
-    const branchIds = new Set(
-        resolvedRows.map((row) => row.branch._id),
-    )
+    const branchIds = new Set(resolvedRows.map((row) => row.branch._id))
 
     const departmentMap = await buildDepartmentMap({
         branchIds,
@@ -544,6 +540,44 @@ export async function importDepartmentsFromRows({ rows, parseErrors, user }) {
         }
 
         seenDepartmentKeys.add(departmentKey)
+    }
+
+    const importDepartmentKeys = new Set(
+        resolvedRows.map((row) =>
+            makeDepartmentKey(row.branch._id, row.departmentCode),
+        ),
+    )
+
+    for (const row of resolvedRows) {
+        if (!row.parentDepartmentCode) {
+            continue
+        }
+
+        if (row.parentDepartmentCode === row.departmentCode) {
+            errors.push(
+                buildImportError(
+                    row.rowNumber,
+                    "parentDepartmentCode",
+                    "errors.organization.department.parentSelf",
+                ),
+            )
+            continue
+        }
+
+        const parentKey = makeDepartmentKey(
+            row.branch._id,
+            row.parentDepartmentCode,
+        )
+
+        if (!departmentMap.has(parentKey) && !importDepartmentKeys.has(parentKey)) {
+            errors.push(
+                buildImportError(
+                    row.rowNumber,
+                    "parentDepartmentCode",
+                    "errors.organization.department.parentNotFound",
+                ),
+            )
+        }
     }
 
     if (errors.length > 0) {
@@ -619,34 +653,12 @@ export async function importDepartmentsFromRows({ rows, parseErrors, user }) {
             continue
         }
 
-        if (row.parentDepartmentCode === row.departmentCode) {
-            errors.push(
-                buildImportError(
-                    row.rowNumber,
-                    "parentDepartmentCode",
-                    "errors.organization.department.parentSelf",
-                ),
-            )
-            continue
-        }
-
         const parentKey = makeDepartmentKey(
             row.branch._id,
             row.parentDepartmentCode,
         )
 
         const parentDepartment = departmentMap.get(parentKey)
-
-        if (!parentDepartment) {
-            errors.push(
-                buildImportError(
-                    row.rowNumber,
-                    "parentDepartmentCode",
-                    "errors.organization.department.parentNotFound",
-                ),
-            )
-            continue
-        }
 
         await Department.findByIdAndUpdate(department._id, {
             $set: {
@@ -656,35 +668,20 @@ export async function importDepartmentsFromRows({ rows, parseErrors, user }) {
         })
     }
 
-    if (errors.length > 0) {
-        summary.errors = errors
-    }
+    clearCacheByPrefix("department:list:")
 
     return summary
 }
 
-export async function buildDepartmentExportRows({ departments }) {
-    return departments
-}
-
 export async function getExportDepartments({ query, user }) {
-    const result = await import("./department.service.js").then((module) =>
-        module.listDepartments({
-            query: {
-                ...query,
-                page: 1,
-                limit: 10000,
-            },
-            user,
-        }),
-    )
-
-    return result.items
-}
-
-export async function getDepartmentForExportById({ departmentId, user }) {
-    return await getDepartmentById({
-        departmentId,
+    const result = await listDepartments({
+        query: {
+            ...query,
+            page: 1,
+            limit: 10000,
+        },
         user,
     })
+
+    return result.items
 }

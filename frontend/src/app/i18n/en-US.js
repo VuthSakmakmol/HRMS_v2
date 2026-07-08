@@ -20,6 +20,7 @@ export default {
         edit: "Edit",
         archive: "Archive",
         cancel: "Cancel",
+        close: "Close",
         save: "Save",
         next: "Next",
     },
@@ -153,6 +154,7 @@ export default {
             postalCode: "Postal Code",
             countryCode: "Country Code",
         },
+
         branch: {
             eyebrow: "Organization Setup",
             title: "Branches",
@@ -207,11 +209,12 @@ export default {
             postalCode: "Postal Code",
             countryCode: "Country Code",
         },
+
         department: {
             eyebrow: "Organization Setup",
             title: "Departments",
             description:
-                "Create and manage departments under each company branch. Departments become the foundation for positions, employees, shifts, attendance, payroll, and dashboard reporting.",
+                "Create, import, export, and manage departments under each company branch. Departments become the foundation for positions, employees, shifts, attendance, payroll, and dashboard reporting.",
             newDepartment: "New Department",
             createTitle: "Create Department",
             editTitle: "Edit Department",
@@ -253,6 +256,33 @@ export default {
             statusInactive: "Inactive",
             statusArchived: "Archived",
             updatedAt: "Updated",
+            downloadSample: "Download Sample",
+            importExcel: "Import Excel",
+            exportExcel: "Export Excel",
+            importTitle: "Import Departments",
+            importDescription:
+                "Upload the Excel file using the exact sample template columns. Existing department codes in the same branch will be updated; new codes will be created.",
+            importFileMissing: "No file selected",
+            importCompleted: "Import completed",
+            importCompletedDetail: "Department import completed successfully.",
+            importHasErrors: "Import has errors",
+            importFailed: "Import failed",
+            importResultTitle: "Department Import Result",
+            totalRows: "Total Rows",
+            createdRows: "Created",
+            updatedRows: "Updated",
+            skippedRows: "Skipped",
+            rowNumber: "Row",
+            errorField: "Field",
+            errorMessage: "Message",
+            importClean: "No validation errors found.",
+            templateDownloaded: "Sample downloaded",
+            templateDownloadedDetail:
+                "Use this Excel template to prepare department imports.",
+            templateDownloadFailed: "Unable to download sample",
+            exportStarted: "Export downloaded",
+            exportStartedDetail: "Department export file has been downloaded.",
+            exportFailed: "Unable to export departments",
         },
     },
 
@@ -278,15 +308,18 @@ export default {
                 codeExists: "This company code already exists.",
                 duplicate: "This company already exists.",
             },
+
             branch: {
                 invalidId: "Invalid branch ID.",
                 notFound: "Branch was not found.",
-                codeExists: "This branch code already exists inside the selected company.",
+                archived: "This branch is archived and cannot be used.",
+                codeExists:
+                    "This branch code already exists inside the selected company.",
                 headOfficeExists:
                     "This company already has one Head Office branch.",
                 duplicate: "This branch already exists.",
-                archived: "This branch is archived and cannot be used.",
             },
+
             department: {
                 invalidId: "Invalid department ID.",
                 notFound: "Department was not found.",
@@ -298,6 +331,30 @@ export default {
                 codeExists:
                     "This department code already exists inside the selected branch.",
                 duplicate: "This department already exists.",
+            },
+
+            departmentImport: {
+                fileRequired: "Please choose an Excel file to import.",
+                invalidTemplate:
+                    "Invalid Excel template. Please download the sample template and use the same columns.",
+                emptyFile: "The uploaded Excel file is empty.",
+                noDataRows:
+                    "The Excel file has no department rows to import.",
+                hasErrors:
+                    "The import finished with validation errors. Please review the result.",
+                companyCodeRequired: "Company code is required.",
+                branchCodeRequired: "Branch code is required.",
+                departmentCodeRequired: "Department code is required.",
+                departmentCodeInvalid:
+                    "Department code must be 2-30 characters and use letters, numbers, dash, or underscore only.",
+                departmentNameRequired: "Department name is required.",
+                statusInvalid: "Status must be ACTIVE or INACTIVE.",
+                companyNotFound:
+                    "Company code was not found or the company is archived.",
+                branchNotFound:
+                    "Branch code was not found inside the selected company or the branch is archived.",
+                duplicateInFile:
+                    "Duplicate department code found in this Excel file for the same branch.",
             },
         },
     },

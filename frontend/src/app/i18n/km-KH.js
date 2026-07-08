@@ -20,6 +20,7 @@ export default {
         edit: "កែប្រែ",
         archive: "ដាក់ក្នុងបណ្ណសារ",
         cancel: "បោះបង់",
+        close: "បិទ",
         save: "រក្សាទុក",
         next: "បន្ទាប់",
     },
@@ -158,6 +159,7 @@ export default {
             postalCode: "លេខប្រៃសណីយ៍",
             countryCode: "កូដប្រទេស",
         },
+
         branch: {
             eyebrow: "ការរៀបចំអង្គភាព",
             title: "សាខា",
@@ -213,11 +215,12 @@ export default {
             postalCode: "លេខប្រៃសណីយ៍",
             countryCode: "កូដប្រទេស",
         },
+
         department: {
             eyebrow: "ការរៀបចំអង្គភាព",
             title: "នាយកដ្ឋាន",
             description:
-                "បង្កើត និងគ្រប់គ្រងនាយកដ្ឋានក្រោមសាខាក្រុមហ៊ុននីមួយៗ។ នាយកដ្ឋានជាមូលដ្ឋានសម្រាប់តួនាទី បុគ្គលិក វេន ការចូលធ្វើការ ប្រាក់ខែ និងរបាយការណ៍ Dashboard។",
+                "បង្កើត Import Export និងគ្រប់គ្រងនាយកដ្ឋានក្រោមសាខាក្រុមហ៊ុននីមួយៗ។ នាយកដ្ឋានជាមូលដ្ឋានសម្រាប់តួនាទី បុគ្គលិក វេន ការចូលធ្វើការ ប្រាក់ខែ និងរបាយការណ៍ Dashboard។",
             newDepartment: "បង្កើតនាយកដ្ឋាន",
             createTitle: "បង្កើតនាយកដ្ឋាន",
             editTitle: "កែប្រែនាយកដ្ឋាន",
@@ -230,20 +233,15 @@ export default {
             loadFailed: "មិនអាចទាញយកនាយកដ្ឋានបានទេ",
             companyLoadFailed: "មិនអាចទាញយកក្រុមហ៊ុនបានទេ",
             branchLoadFailed: "មិនអាចទាញយកសាខាបានទេ",
-            parentLoadFailed:
-                "មិនអាចទាញយកនាយកដ្ឋានមេបានទេ",
+            parentLoadFailed: "មិនអាចទាញយកនាយកដ្ឋានមេបានទេ",
             saveFailed: "មិនអាចរក្សាទុកនាយកដ្ឋានបានទេ",
-            archiveFailed:
-                "មិនអាចដាក់នាយកដ្ឋានក្នុងបណ្ណសារបានទេ",
+            archiveFailed: "មិនអាចដាក់នាយកដ្ឋានក្នុងបណ្ណសារបានទេ",
             created: "បានបង្កើតនាយកដ្ឋាន",
-            createdDetail:
-                "នាយកដ្ឋានត្រូវបានបង្កើតដោយជោគជ័យ។",
+            createdDetail: "នាយកដ្ឋានត្រូវបានបង្កើតដោយជោគជ័យ។",
             updated: "បានកែប្រែនាយកដ្ឋាន",
-            updatedDetail:
-                "នាយកដ្ឋានត្រូវបានកែប្រែដោយជោគជ័យ។",
+            updatedDetail: "នាយកដ្ឋានត្រូវបានកែប្រែដោយជោគជ័យ។",
             archived: "បានដាក់នាយកដ្ឋានក្នុងបណ្ណសារ",
-            archivedDetail:
-                "នាយកដ្ឋានត្រូវបានដាក់ក្នុងបណ្ណសារដោយជោគជ័យ។",
+            archivedDetail: "នាយកដ្ឋានត្រូវបានដាក់ក្នុងបណ្ណសារដោយជោគជ័យ។",
             readOnly: "បានដាក់បណ្ណសារ",
             basicInfo: "ព័ត៌មានមូលដ្ឋាន",
             allCompanies: "ក្រុមហ៊ុនទាំងអស់",
@@ -265,6 +263,33 @@ export default {
             statusInactive: "មិនសកម្ម",
             statusArchived: "បណ្ណសារ",
             updatedAt: "បានកែចុងក្រោយ",
+            downloadSample: "ទាញយក Sample",
+            importExcel: "Import Excel",
+            exportExcel: "Export Excel",
+            importTitle: "Import នាយកដ្ឋាន",
+            importDescription:
+                "Upload ឯកសារ Excel ដោយប្រើ Column ដូច Sample Template។ Department Code ដែលមានរួចក្នុងសាខាដូចគ្នា នឹងត្រូវ Update ហើយ Code ថ្មីនឹងត្រូវ Create។",
+            importFileMissing: "មិនទាន់បានជ្រើសឯកសារ",
+            importCompleted: "Import រួចរាល់",
+            importCompletedDetail: "Import នាយកដ្ឋានបានជោគជ័យ។",
+            importHasErrors: "Import មានកំហុស",
+            importFailed: "Import បរាជ័យ",
+            importResultTitle: "លទ្ធផល Import នាយកដ្ឋាន",
+            totalRows: "ជួរសរុប",
+            createdRows: "បានបង្កើត",
+            updatedRows: "បានកែប្រែ",
+            skippedRows: "បានរំលង",
+            rowNumber: "ជួរ",
+            errorField: "Field",
+            errorMessage: "សារ",
+            importClean: "មិនមានកំហុស Validate ទេ។",
+            templateDownloaded: "បានទាញយក Sample",
+            templateDownloadedDetail:
+                "ប្រើ Excel Template នេះសម្រាប់រៀបចំ Department Import។",
+            templateDownloadFailed: "មិនអាចទាញយក Sample បានទេ",
+            exportStarted: "បានទាញយក Export",
+            exportStartedDetail: "ឯកសារ Department Export ត្រូវបានទាញយក។",
+            exportFailed: "មិនអាច Export នាយកដ្ឋានបានទេ",
         },
     },
 
@@ -290,20 +315,24 @@ export default {
             company: {
                 invalidId: "Company ID មិនត្រឹមត្រូវ។",
                 notFound: "រកមិនឃើញក្រុមហ៊ុន។",
-                archived: "ក្រុមហ៊ុននេះត្រូវបានដាក់ក្នុងបណ្ណសារ ហើយមិនអាចប្រើបានទេ។",
+                archived:
+                    "ក្រុមហ៊ុននេះត្រូវបានដាក់ក្នុងបណ្ណសារ ហើយមិនអាចប្រើបានទេ។",
                 codeExists: "Company Code នេះមានរួចហើយ។",
                 duplicate: "ក្រុមហ៊ុននេះមានរួចហើយ។",
-                archived: "សាខានេះត្រូវបានដាក់ក្នុងបណ្ណសារ ហើយមិនអាចប្រើបានទេ។",
             },
+
             branch: {
                 invalidId: "Branch ID មិនត្រឹមត្រូវ។",
                 notFound: "រកមិនឃើញសាខា។",
+                archived:
+                    "សាខានេះត្រូវបានដាក់ក្នុងបណ្ណសារ ហើយមិនអាចប្រើបានទេ។",
                 codeExists:
                     "Branch Code នេះមានរួចហើយក្នុងក្រុមហ៊ុនដែលបានជ្រើសរើស។",
                 headOfficeExists:
                     "ក្រុមហ៊ុននេះមានការិយាល័យកណ្ដាលរួចហើយ។",
                 duplicate: "សាខានេះមានរួចហើយ។",
             },
+
             department: {
                 invalidId: "Department ID មិនត្រឹមត្រូវ។",
                 notFound: "រកមិនឃើញនាយកដ្ឋាន។",
@@ -316,6 +345,30 @@ export default {
                 codeExists:
                     "Department Code នេះមានរួចហើយក្នុងសាខាដែលបានជ្រើសរើស។",
                 duplicate: "នាយកដ្ឋាននេះមានរួចហើយ។",
+            },
+
+            departmentImport: {
+                fileRequired: "សូមជ្រើសរើសឯកសារ Excel ដើម្បី Import។",
+                invalidTemplate:
+                    "Template Excel មិនត្រឹមត្រូវ។ សូមទាញយក Sample ហើយប្រើ Column ដូចគ្នា។",
+                emptyFile: "ឯកសារ Excel ទទេ។",
+                noDataRows:
+                    "ឯកសារ Excel មិនមានជួរនាយកដ្ឋានសម្រាប់ Import។",
+                hasErrors:
+                    "ការ Import បានបញ្ចប់ដោយមានកំហុស Validate។ សូមពិនិត្យលទ្ធផល។",
+                companyCodeRequired: "ត្រូវបញ្ចូល Company Code។",
+                branchCodeRequired: "ត្រូវបញ្ចូល Branch Code។",
+                departmentCodeRequired: "ត្រូវបញ្ចូល Department Code។",
+                departmentCodeInvalid:
+                    "Department Code ត្រូវមាន 2-30 តួអក្សរ និងប្រើអក្សរ លេខ dash ឬ underscore ប៉ុណ្ណោះ។",
+                departmentNameRequired: "ត្រូវបញ្ចូលឈ្មោះនាយកដ្ឋាន។",
+                statusInvalid: "Status ត្រូវតែជា ACTIVE ឬ INACTIVE។",
+                companyNotFound:
+                    "រកមិនឃើញ Company Code ឬក្រុមហ៊ុនត្រូវបានដាក់បណ្ណសារ។",
+                branchNotFound:
+                    "រកមិនឃើញ Branch Code ក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានដាក់បណ្ណសារ។",
+                duplicateInFile:
+                    "មាន Department Code ស្ទួនក្នុងឯកសារ Excel សម្រាប់សាខាដូចគ្នា។",
             },
         },
     },

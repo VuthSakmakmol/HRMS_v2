@@ -10,8 +10,6 @@ import Branch from "../models/Branch.js"
 import Company from "../models/Company.js"
 import Department from "../models/Department.js"
 
-
-
 function escapeRegExp(value) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
@@ -226,8 +224,7 @@ function serializeDepartment(department) {
             : null
 
     const populatedParentDepartment =
-        raw.parentDepartmentId &&
-        typeof raw.parentDepartmentId === "object"
+        raw.parentDepartmentId && typeof raw.parentDepartmentId === "object"
             ? serializeParentDepartment(raw.parentDepartmentId)
             : null
 
@@ -425,7 +422,6 @@ async function ensureParentDepartmentExists({
 
 export async function listDepartments({ query, user }) {
     const cacheKey = `department:list:${user?.accountId || "anonymous"}:${JSON.stringify(query)}`
-
     const cachedResult = getCache(cacheKey)
 
     if (cachedResult) {

@@ -9,6 +9,7 @@ import Column from "primevue/column"
 import DataTable from "primevue/datatable"
 import Dialog from "primevue/dialog"
 import InputText from "primevue/inputtext"
+import ProgressBar from "primevue/progressbar"
 import Select from "primevue/select"
 import Tag from "primevue/tag"
 import Textarea from "primevue/textarea"
@@ -32,6 +33,8 @@ const DEPARTMENT_PERMISSIONS = Object.freeze({
     CREATE: "ORGANIZATION.DEPARTMENT.CREATE",
     UPDATE: "ORGANIZATION.DEPARTMENT.UPDATE",
     ARCHIVE: "ORGANIZATION.DEPARTMENT.ARCHIVE",
+    IMPORT: "ORGANIZATION.DEPARTMENT.IMPORT",
+    EXPORT: "ORGANIZATION.DEPARTMENT.EXPORT",
 })
 
 const companies = ref([])
@@ -48,6 +51,16 @@ const selectedDepartmentId = ref(null)
 
 const archiveDialogVisible = ref(false)
 const archiveCandidate = ref(null)
+
+const importDialogVisible = ref(false)
+const importResultDialogVisible = ref(false)
+const selectedImportFile = ref(null)
+const importFileInput = ref(null)
+const importSummary = ref(null)
+const importProgress = ref(0)
+const importProgressVisible = ref(false)
+
+let importProgressTimer = null
 
 const formErrors = ref({})
 
@@ -70,6 +83,14 @@ const canUpdate = computed(() =>
 
 const canArchive = computed(() =>
     authStore.hasPermission(DEPARTMENT_PERMISSIONS.ARCHIVE),
+)
+
+const canImport = computed(() =>
+    authStore.hasPermission(DEPARTMENT_PERMISSIONS.IMPORT),
+)
+
+const canExport = computed(() =>
+    authStore.hasPermission(DEPARTMENT_PERMISSIONS.EXPORT),
 )
 
 const dialogTitle = computed(() => {
@@ -230,6 +251,16 @@ function getErrorMessage(error) {
     }
 
     return t("errors.internal")
+}
+
+function getImportErrorText(messageKey) {
+    if (!messageKey) {
+        return "-"
+    }
+
+    const translated = t(messageKey)
+
+    return translated === messageKey ? messageKey : translated
 }
 
 function applyBackendFieldErrors(error) {
@@ -423,15 +454,19 @@ async function loadDepartments(params = {}) {
     }
 }
 
-function applyFilters() {
-    loadDepartments({
+function getCleanFilterPayload() {
+    return {
         page: 1,
         limit: departmentStore.filters.limit,
         search: filters.search,
         status: filters.status,
         companyId: filters.companyId || undefined,
         branchId: filters.branchId || undefined,
-    })
+    }
+}
+
+function applyFilters() {
+    loadDepartments(getCleanFilterPayload())
 }
 
 function clearFilters() {
@@ -604,6 +639,193 @@ async function confirmArchiveDepartment() {
     }
 }
 
+async function downloadTemplate() {
+    try {
+        await departmentStore.downloadImportTemplate()
+
+        toast.add({
+            severity: "success",
+            summary: t("organization.department.templateDownloaded"),
+            detail: t("organization.department.templateDownloadedDetail"),
+            life: 3000,
+        })
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: t("organization.department.templateDownloadFailed"),
+            detail: getErrorMessage(error),
+            life: 4500,
+        })
+    }
+}
+
+async function exportDepartmentExcel() {
+    try {
+        await departmentStore.exportDepartments({
+            search: filters.search,
+            status: filters.status,
+            companyId: filters.companyId || undefined,
+            branchId: filters.branchId || undefined,
+        })
+
+        toast.add({
+            severity: "success",
+            summary: t("organization.department.exportStarted"),
+            detail: t("organization.department.exportStartedDetail"),
+            life: 3000,
+        })
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: t("organization.department.exportFailed"),
+            detail: getErrorMessage(error),
+            life: 4500,
+        })
+    }
+}
+
+function openImportDialog() {
+    selectedImportFile.value = null
+    importSummary.value = null
+
+    if (importFileInput.value) {
+        importFileInput.value.value = ""
+    }
+
+    importDialogVisible.value = true
+}
+
+function closeImportDialog() {
+    importDialogVisible.value = false
+    selectedImportFile.value = null
+}
+
+function onImportFileChange(event) {
+    const file = event.target.files?.[0]
+    selectedImportFile.value = file || null
+}
+
+function stopImportProgressTimer() {
+    if (importProgressTimer) {
+        window.clearInterval(importProgressTimer)
+        importProgressTimer = null
+    }
+}
+
+function startImportProgress() {
+    stopImportProgressTimer()
+
+    importProgress.value = 1
+    importProgressVisible.value = true
+
+    importProgressTimer = window.setInterval(() => {
+        if (importProgress.value < 35) {
+            importProgress.value += 2
+            return
+        }
+
+        if (importProgress.value < 90) {
+            importProgress.value += 1
+            return
+        }
+
+        if (importProgress.value < 95) {
+            importProgress.value += 1
+        }
+    }, 700)
+}
+
+function updateImportUploadProgress(uploadPercent) {
+    const stagedPercent = Math.max(1, Math.min(35, Math.round(uploadPercent * 0.35)))
+
+    if (stagedPercent > importProgress.value) {
+        importProgress.value = stagedPercent
+    }
+}
+
+function finishImportProgress() {
+    stopImportProgressTimer()
+    importProgress.value = 100
+
+    window.setTimeout(() => {
+        importProgressVisible.value = false
+        importProgress.value = 0
+    }, 700)
+}
+
+function failImportProgress() {
+    stopImportProgressTimer()
+
+    window.setTimeout(() => {
+        importProgressVisible.value = false
+        importProgress.value = 0
+    }, 700)
+}
+
+async function submitImport() {
+    if (!selectedImportFile.value) {
+        toast.add({
+            severity: "warn",
+            summary: t("organization.department.importFileMissing"),
+            detail: t("errors.organization.departmentImport.fileRequired"),
+            life: 3500,
+        })
+
+        return
+    }
+
+    try {
+        startImportProgress()
+
+        const summary = await departmentStore.importDepartments(
+            selectedImportFile.value,
+            {
+                onUploadProgress: updateImportUploadProgress,
+            },
+        )
+
+        finishImportProgress()
+        importSummary.value = summary
+        closeImportDialog()
+        importResultDialogVisible.value = true
+
+        if (summary.errors?.length > 0) {
+            toast.add({
+                severity: "warn",
+                summary: t("organization.department.importHasErrors"),
+                detail: t("errors.organization.departmentImport.hasErrors"),
+                life: 5000,
+            })
+        } else {
+            toast.add({
+                severity: "success",
+                summary: t("organization.department.importCompleted"),
+                detail: t("organization.department.importCompletedDetail"),
+                life: 3500,
+            })
+        }
+
+        await Promise.all([loadDepartments(), loadParentDepartments()])
+    } catch (error) {
+        failImportProgress()
+
+        const summary = error?.response?.data?.data?.summary
+
+        if (summary) {
+            importSummary.value = summary
+            closeImportDialog()
+            importResultDialogVisible.value = true
+        }
+
+        toast.add({
+            severity: "error",
+            summary: t("organization.department.importFailed"),
+            detail: getErrorMessage(error),
+            life: 5000,
+        })
+    }
+}
+
 watch(
     () => filters.companyId,
     () => {
@@ -638,12 +860,43 @@ onMounted(async () => {
                 </p>
             </div>
 
-            <Button
-                v-if="canCreate"
-                icon="pi pi-plus"
-                :label="t('organization.department.newDepartment')"
-                @click="openCreateDialog"
-            />
+            <div class="department-header-actions">
+                <Button
+                    v-if="canExport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-download"
+                    :loading="departmentStore.downloadingTemplate"
+                    :label="t('organization.department.downloadSample')"
+                    @click="downloadTemplate"
+                />
+
+                <Button
+                    v-if="canImport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-upload"
+                    :label="t('organization.department.importExcel')"
+                    @click="openImportDialog"
+                />
+
+                <Button
+                    v-if="canExport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-file-export"
+                    :loading="departmentStore.exporting"
+                    :label="t('organization.department.exportExcel')"
+                    @click="exportDepartmentExcel"
+                />
+
+                <Button
+                    v-if="canCreate"
+                    icon="pi pi-plus"
+                    :label="t('organization.department.newDepartment')"
+                    @click="openCreateDialog"
+                />
+            </div>
         </div>
 
         <Card class="department-card">
@@ -1133,6 +1386,134 @@ onMounted(async () => {
                 />
             </template>
         </Dialog>
+
+        <Dialog
+            v-model:visible="importDialogVisible"
+            modal
+            class="department-import-dialog"
+            :header="t('organization.department.importTitle')"
+            :draggable="false"
+        >
+            <div class="department-import-box">
+                <p>
+                    {{ t("organization.department.importDescription") }}
+                </p>
+
+                <input
+                    ref="importFileInput"
+                    type="file"
+                    accept=".xlsx,.xls"
+                    class="department-file-input"
+                    :disabled="departmentStore.importing"
+                    @change="onImportFileChange"
+                />
+
+                <div
+                    v-if="selectedImportFile"
+                    class="department-selected-file"
+                >
+                    <i class="pi pi-file-excel" />
+                    <span>{{ selectedImportFile.name }}</span>
+                </div>
+
+                <div
+                    v-if="importProgressVisible"
+                    class="department-import-progress"
+                >
+                    <div class="department-import-progress__label">
+                        <span>{{ t("organization.department.importExcel") }}</span>
+                        <strong>{{ importProgress }}%</strong>
+                    </div>
+
+                    <ProgressBar :value="importProgress" />
+                </div>
+            </div>
+
+            <template #footer>
+                <Button
+                    severity="secondary"
+                    outlined
+                    :disabled="departmentStore.importing"
+                    :label="t('common.cancel')"
+                    @click="closeImportDialog"
+                />
+
+                <Button
+                    icon="pi pi-upload"
+                    :loading="departmentStore.importing"
+                    :label="t('organization.department.importExcel')"
+                    @click="submitImport"
+                />
+            </template>
+        </Dialog>
+
+        <Dialog
+            v-model:visible="importResultDialogVisible"
+            modal
+            class="department-import-result-dialog"
+            :header="t('organization.department.importResultTitle')"
+            :draggable="false"
+        >
+            <div v-if="importSummary" class="department-import-result">
+                <div class="department-import-summary-grid">
+                    <div>
+                        <span>{{ t("organization.department.totalRows") }}</span>
+                        <strong>{{ importSummary.totalRows }}</strong>
+                    </div>
+
+                    <div>
+                        <span>{{ t("organization.department.createdRows") }}</span>
+                        <strong>{{ importSummary.created }}</strong>
+                    </div>
+
+                    <div>
+                        <span>{{ t("organization.department.updatedRows") }}</span>
+                        <strong>{{ importSummary.updated }}</strong>
+                    </div>
+
+                    <div>
+                        <span>{{ t("organization.department.skippedRows") }}</span>
+                        <strong>{{ importSummary.skipped }}</strong>
+                    </div>
+                </div>
+
+                <DataTable
+                    v-if="importSummary.errors?.length"
+                    size="small"
+                    :value="importSummary.errors"
+                    class="department-import-error-table"
+                >
+                    <Column
+                        field="rowNumber"
+                        :header="t('organization.department.rowNumber')"
+                        style="width: 7rem"
+                    />
+
+                    <Column
+                        field="field"
+                        :header="t('organization.department.errorField')"
+                        style="width: 12rem"
+                    />
+
+                    <Column :header="t('organization.department.errorMessage')">
+                        <template #body="{ data }">
+                            {{ getImportErrorText(data.messageKey) }}
+                        </template>
+                    </Column>
+                </DataTable>
+
+                <p v-else class="department-import-clean">
+                    {{ t("organization.department.importClean") }}
+                </p>
+            </div>
+
+            <template #footer>
+                <Button
+                    :label="t('common.close')"
+                    @click="importResultDialogVisible = false"
+                />
+            </template>
+        </Dialog>
     </section>
 </template>
 
@@ -1171,6 +1552,13 @@ onMounted(async () => {
     color: var(--hrms-text-muted);
     font-size: 0.78rem;
     line-height: 1.6;
+}
+
+.department-header-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .department-card {
@@ -1285,8 +1673,13 @@ onMounted(async () => {
     width: min(58rem, calc(100vw - 2rem));
 }
 
-.department-archive-dialog {
+.department-archive-dialog,
+.department-import-dialog {
     width: min(31rem, calc(100vw - 2rem));
+}
+
+.department-import-result-dialog {
+    width: min(52rem, calc(100vw - 2rem));
 }
 
 .department-form {
@@ -1340,6 +1733,90 @@ onMounted(async () => {
     color: var(--hrms-text);
     font-size: 0.82rem;
     line-height: 1.6;
+}
+
+.department-import-box {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.department-file-input {
+    width: 100%;
+    color: var(--hrms-text);
+    font-size: 0.78rem;
+}
+
+.department-selected-file {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem;
+    color: var(--hrms-text);
+    background: var(--hrms-surface-muted);
+    border: 1px solid var(--hrms-border);
+    border-radius: var(--hrms-radius-md);
+    font-size: 0.78rem;
+}
+
+.department-import-progress {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.75rem;
+    background: var(--hrms-surface-muted);
+    border: 1px solid var(--hrms-border);
+    border-radius: var(--hrms-radius-md);
+}
+
+.department-import-progress__label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    color: var(--hrms-text-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.department-import-progress__label strong {
+    color: var(--hrms-primary);
+    font-size: 0.82rem;
+}
+
+.department-import-result {
+    display: grid;
+    gap: 1rem;
+}
+
+.department-import-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.department-import-summary-grid div {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.85rem;
+    background: var(--hrms-surface-muted);
+    border: 1px solid var(--hrms-border);
+    border-radius: var(--hrms-radius-md);
+}
+
+.department-import-summary-grid span {
+    color: var(--hrms-text-muted);
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.department-import-summary-grid strong {
+    color: var(--hrms-text);
+    font-size: 1.2rem;
+}
+
+.department-import-clean {
+    color: var(--hrms-success);
+    font-weight: 700;
 }
 
 :deep(.p-card-body),
@@ -1407,10 +1884,15 @@ onMounted(async () => {
         flex-direction: column;
         align-items: stretch;
     }
+
+    .department-header-actions {
+        justify-content: flex-start;
+    }
 }
 
 @media (max-width: 650px) {
-    .department-form__grid {
+    .department-form__grid,
+    .department-import-summary-grid {
         grid-template-columns: 1fr;
     }
 

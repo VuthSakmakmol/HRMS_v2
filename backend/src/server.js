@@ -6,6 +6,13 @@ import { env } from "./config/env.js"
 
 const server = http.createServer(app)
 
+// Long Excel imports/exports should not silently die while the UI is waiting.
+// Keep reverse-proxy timeouts in production aligned with this setting.
+server.requestTimeout = 0
+server.headersTimeout = 0
+server.timeout = 0
+server.keepAliveTimeout = 65_000
+
 async function startServer() {
     try {
         await connectDatabase()
