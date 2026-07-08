@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --watch src --ext js,json --exec node src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "seed:access": "node scripts/seedAccess.js"
   },
   "keywords": [],
   "author": "",

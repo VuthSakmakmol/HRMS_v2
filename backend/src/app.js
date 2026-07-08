@@ -4,7 +4,10 @@ import helmet from "helmet"
 import morgan from "morgan"
 
 import { env } from "./config/env.js"
+
 import systemRoutes from "./modules/system/system.routes.js"
+import authRoutes from "./modules/access/routes/auth.routes.js"
+
 import { AppError } from "./shared/errors/AppError.js"
 import { errorHandler } from "./shared/middleware/errorHandler.js"
 import { notFound } from "./shared/middleware/notFound.js"
@@ -60,6 +63,7 @@ app.use(
 )
 
 app.use("/api/v1", systemRoutes)
+app.use("/api/v1/auth", authRoutes)
 
 app.use(notFound)
 app.use(errorHandler)

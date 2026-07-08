@@ -4,421 +4,401 @@ import { useI18n } from "vue-i18n"
 
 import Button from "primevue/button"
 import Card from "primevue/card"
-import Message from "primevue/message"
 import Tag from "primevue/tag"
 
+import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
 import { apiClient } from "@/shared/services/apiClient.js"
 
 const { t } = useI18n()
+
+const authStore = useAuthStore()
 const uiStore = useUiStore()
 
 const apiState = ref("loading")
-const apiResult = ref(null)
-const apiError = ref("")
+const lastCheckedAt = ref(null)
 
 const apiSeverity = computed(() => {
-    if (apiState.value === "success") return "success"
-    if (apiState.value === "error") return "danger"
+    if (apiState.value === "success") {
+        return "success"
+    }
+
+    if (apiState.value === "error") {
+        return "danger"
+    }
+
     return "info"
 })
 
 const apiStatusText = computed(() => {
-    if (apiState.value === "success") return t("foundation.apiConnected")
-    if (apiState.value === "error") return t("foundation.apiUnavailable")
-    return t("foundation.apiChecking")
-})
-
-const databaseStatusText = computed(() => {
-    if (!apiResult.value?.database?.configured) {
-        return t("foundation.databasePending")
+    if (apiState.value === "success") {
+        return t("workspace.apiConnected")
     }
 
-    if (apiResult.value.database.state === "connected") {
-        return t("foundation.databaseConnected")
+    if (apiState.value === "error") {
+        return t("workspace.apiUnavailable")
     }
 
-    return apiResult.value.database.state
+    return t("workspace.apiChecking")
 })
 
 const lastCheckedText = computed(() => {
-    if (!apiResult.value?.timestamp) {
-        return t("foundation.noCheckYet")
+    if (!lastCheckedAt.value) {
+        return t("workspace.notChecked")
     }
 
     return new Intl.DateTimeFormat(uiStore.locale, {
         dateStyle: "medium",
         timeStyle: "medium",
-    }).format(new Date(apiResult.value.timestamp))
+    }).format(lastCheckedAt.value)
 })
 
-async function checkApi() {
+const permissionCount = computed(
+    () => authStore.user?.effectivePermissionCodes?.length || 0,
+)
+
+const displayedPermissions = computed(() =>
+    (authStore.user?.effectivePermissionCodes || []).slice(0, 6),
+)
+
+async function checkApiHealth() {
     apiState.value = "loading"
-    apiError.value = ""
 
     try {
         const response = await apiClient.get("/health")
 
-        apiResult.value = response.data.data
+        lastCheckedAt.value = new Date(response.data?.data?.timestamp)
         apiState.value = "success"
-    } catch (error) {
+    } catch {
         apiState.value = "error"
-
-        const messageKey = error.response?.data?.error?.messageKey
-
-        apiError.value = messageKey
-            ? t(messageKey)
-            : t("foundation.apiUnavailable")
     }
 }
 
-onMounted(checkApi)
+onMounted(checkApiHealth)
 </script>
 
 <template>
-    <main class="foundation-page">
-        <header class="foundation-topbar">
-            <div class="foundation-brand">
-                <div class="foundation-brand__icon">
-                    <i class="pi pi-building" />
-                </div>
-
-                <div>
-                    <strong>{{ t("app.name") }}</strong>
-                    <span>{{ t("app.subtitle") }}</span>
-                </div>
+    <section class="workspace">
+        <div class="workspace__heading">
+            <div>
+                <span>{{ t("workspace.eyebrow") }}</span>
+                <h2>
+                    {{
+                        t("workspace.welcome", {
+                            name: authStore.user?.displayName || "",
+                        })
+                    }}
+                </h2>
+                <p>{{ t("workspace.description") }}</p>
             </div>
 
-            <div class="foundation-actions">
-                <Button
-                    size="small"
-                    :outlined="uiStore.locale !== 'en-US'"
-                    label="EN"
-                    @click="uiStore.setLocale('en-US')"
-                />
+            <Tag
+                :severity="authStore.isRootAdmin ? 'success' : 'info'"
+                :value="
+                    authStore.isRootAdmin
+                        ? t('auth.rootAdministrator')
+                        : t('workspace.authorizedUser')
+                "
+            />
+        </div>
 
-                <Button
-                    size="small"
-                    :outlined="uiStore.locale !== 'km-KH'"
-                    label="ខ្មែរ"
-                    @click="uiStore.setLocale('km-KH')"
-                />
+        <section class="workspace__grid">
+            <Card class="workspace-card">
+                <template #title>
+                    <div class="workspace-card__title">
+                        <i class="pi pi-link" />
+                        <span>{{ t("workspace.backendConnection") }}</span>
+                    </div>
+                </template>
 
-                <Button
-                    rounded
-                    text
-                    :icon="
-                        uiStore.colorMode === 'dark'
-                            ? 'pi pi-sun'
-                            : 'pi pi-moon'
-                    "
-                    :aria-label="
-                        uiStore.colorMode === 'dark'
-                            ? t('common.lightMode')
-                            : t('common.darkMode')
-                    "
-                    @click="uiStore.toggleColorMode()"
-                />
-            </div>
-        </header>
+                <template #content>
+                    <div class="workspace-card__content">
+                        <div class="workspace-card__status">
+                            <strong>{{ apiStatusText }}</strong>
 
-        <section class="foundation-content">
-            <div class="foundation-heading">
-                <span>{{ t("foundation.eyebrow") }}</span>
-                <h1>{{ t("foundation.title") }}</h1>
-                <p>{{ t("foundation.description") }}</p>
-            </div>
-
-            <section class="foundation-grid">
-                <Card class="foundation-card">
-                    <template #title>
-                        <div class="foundation-card__title">
-                            <i class="pi pi-server" />
-                            <span>{{ t("foundation.apiConnection") }}</span>
-                        </div>
-                    </template>
-
-                    <template #content>
-                        <div class="foundation-card__content">
-                            <div class="foundation-status-row">
-                                <div>
-                                    <strong>{{ apiStatusText }}</strong>
-                                    <span>{{ t("foundation.lastChecked") }}</span>
-                                </div>
-
-                                <Tag
-                                    :severity="apiSeverity"
-                                    :value="apiStatusText"
-                                />
-                            </div>
-
-                            <div class="foundation-value">
-                                {{ lastCheckedText }}
-                            </div>
-
-                            <Message
-                                v-if="apiState === 'error'"
-                                severity="error"
-                                :closable="false"
-                            >
-                                {{ apiError }}
-                            </Message>
-
-                            <Button
-                                size="small"
-                                :loading="apiState === 'loading'"
-                                :label="t('common.retry')"
-                                icon="pi pi-refresh"
-                                @click="checkApi"
+                            <Tag
+                                :severity="apiSeverity"
+                                :value="apiStatusText"
                             />
                         </div>
-                    </template>
-                </Card>
 
-                <Card class="foundation-card">
-                    <template #title>
-                        <div class="foundation-card__title">
-                            <i class="pi pi-database" />
-                            <span>{{ t("foundation.databaseConnection") }}</span>
-                        </div>
-                    </template>
+                        <span class="workspace-card__muted">
+                            {{ t("workspace.lastChecked") }}
+                        </span>
 
-                    <template #content>
-                        <div class="foundation-card__content">
-                            <div class="foundation-status-row">
-                                <div>
-                                    <strong>{{ databaseStatusText }}</strong>
-                                    <span>
-                                        {{ t("foundation.databaseConnection") }}
-                                    </span>
-                                </div>
+                        <strong class="workspace-card__value">
+                            {{ lastCheckedText }}
+                        </strong>
 
-                                <Tag
-                                    :severity="
-                                        apiResult?.database?.configured
-                                            ? 'success'
-                                            : 'warn'
-                                    "
-                                    :value="databaseStatusText"
-                                />
-                            </div>
+                        <Button
+                            size="small"
+                            icon="pi pi-refresh"
+                            :label="t('common.retry')"
+                            :loading="apiState === 'loading'"
+                            @click="checkApiHealth"
+                        />
+                    </div>
+                </template>
+            </Card>
 
-                            <div class="foundation-value">
-                                {{
-                                    apiResult?.database?.configured
-                                        ? apiResult.database.state
-                                        : "MONGO_URI"
-                                }}
-                            </div>
-                        </div>
-                    </template>
-                </Card>
+            <Card class="workspace-card">
+                <template #title>
+                    <div class="workspace-card__title">
+                        <i class="pi pi-user" />
+                        <span>{{ t("workspace.signedInAccount") }}</span>
+                    </div>
+                </template>
 
-                <Card class="foundation-card">
-                    <template #title>
-                        <div class="foundation-card__title">
-                            <i class="pi pi-language" />
-                            <span>{{ t("foundation.language") }}</span>
-                        </div>
-                    </template>
+                <template #content>
+                    <div class="workspace-card__content">
+                        <span class="workspace-card__muted">
+                            {{ t("auth.loginId") }}
+                        </span>
 
-                    <template #content>
-                        <div class="foundation-card__content">
-                            <div class="foundation-value">
-                                {{
-                                    uiStore.locale === "km-KH"
-                                        ? t("common.khmer")
-                                        : t("common.english")
-                                }}
-                            </div>
+                        <strong class="workspace-card__value">
+                            {{ authStore.user?.loginId }}
+                        </strong>
 
-                            <span class="foundation-muted">
-                                English and Khmer are controlled from shared
-                                locale files.
-                            </span>
-                        </div>
-                    </template>
-                </Card>
+                        <span class="workspace-card__muted">
+                            {{ t("workspace.role") }}
+                        </span>
 
-                <Card class="foundation-card">
-                    <template #title>
-                        <div class="foundation-card__title">
-                            <i class="pi pi-palette" />
-                            <span>{{ t("foundation.theme") }}</span>
-                        </div>
-                    </template>
+                        <strong class="workspace-card__value">
+                            {{
+                                authStore.isRootAdmin
+                                    ? t("auth.rootAdministrator")
+                                    : authStore.user?.roleCodes?.join(", ")
+                            }}
+                        </strong>
+                    </div>
+                </template>
+            </Card>
 
-                    <template #content>
-                        <div class="foundation-card__content">
-                            <div class="foundation-value">
-                                {{
-                                    uiStore.colorMode === "dark"
-                                        ? t("common.darkMode")
-                                        : t("common.lightMode")
-                                }}
-                            </div>
+            <Card class="workspace-card">
+                <template #title>
+                    <div class="workspace-card__title">
+                        <i class="pi pi-shield" />
+                        <span>{{ t("workspace.accessControl") }}</span>
+                    </div>
+                </template>
 
-                            <span class="foundation-muted">
-                                Colors, fonts, surfaces, and status colors
-                                come from one brand configuration.
-                            </span>
-                        </div>
-                    </template>
-                </Card>
-            </section>
+                <template #content>
+                    <div class="workspace-card__content">
+                        <span class="workspace-card__muted">
+                            {{ t("workspace.effectivePermissions") }}
+                        </span>
+
+                        <strong class="workspace-card__number">
+                            {{ permissionCount }}
+                        </strong>
+
+                        <span class="workspace-card__muted">
+                            {{ t("workspace.permissionDescription") }}
+                        </span>
+                    </div>
+                </template>
+            </Card>
+
+            <Card class="workspace-card">
+                <template #title>
+                    <div class="workspace-card__title">
+                        <i class="pi pi-sitemap" />
+                        <span>{{ t("workspace.nextModule") }}</span>
+                    </div>
+                </template>
+
+                <template #content>
+                    <div class="workspace-card__content">
+                        <strong class="workspace-card__value">
+                            {{ t("workspace.organizationTitle") }}
+                        </strong>
+
+                        <span class="workspace-card__muted">
+                            {{ t("workspace.organizationDescription") }}
+                        </span>
+                    </div>
+                </template>
+            </Card>
         </section>
-    </main>
+
+        <section class="workspace-permissions">
+            <div class="workspace-permissions__heading">
+                <div>
+                    <h3>{{ t("workspace.permissionPreview") }}</h3>
+                    <p>{{ t("workspace.permissionPreviewDescription") }}</p>
+                </div>
+
+                <Tag
+                    severity="info"
+                    :value="String(permissionCount)"
+                />
+            </div>
+
+            <div class="workspace-permissions__items">
+                <Tag
+                    v-for="permissionCode in displayedPermissions"
+                    :key="permissionCode"
+                    severity="secondary"
+                    :value="permissionCode"
+                />
+
+                <span
+                    v-if="permissionCount > displayedPermissions.length"
+                    class="workspace-card__muted"
+                >
+                    {{
+                        t("workspace.morePermissions", {
+                            count:
+                                permissionCount - displayedPermissions.length,
+                        })
+                    }}
+                </span>
+            </div>
+        </section>
+    </section>
 </template>
 
 <style scoped>
-.foundation-page {
-    min-height: 100vh;
-    background: var(--hrms-app-background);
+.workspace {
+    width: 100%;
 }
 
-.foundation-topbar {
-    min-height: 4.25rem;
+.workspace__heading {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: var(--hrms-space-4);
-    padding: var(--hrms-space-3) var(--hrms-space-5);
-    background: var(--hrms-surface);
-    border-bottom: 1px solid var(--hrms-border);
+    margin-bottom: 1.25rem;
 }
 
-.foundation-brand {
-    display: flex;
-    align-items: center;
-    gap: var(--hrms-space-3);
+.workspace__heading > div {
+    min-width: 0;
 }
 
-.foundation-brand__icon {
-    width: 2.25rem;
-    height: 2.25rem;
-    display: grid;
-    place-items: center;
-    color: white;
-    border-radius: var(--hrms-radius-md);
-    background: var(--hrms-primary);
-}
-
-.foundation-brand strong,
-.foundation-brand span {
-    display: block;
-}
-
-.foundation-brand strong {
-    font-size: 0.9rem;
-}
-
-.foundation-brand span,
-.foundation-muted,
-.foundation-status-row span {
-    color: var(--hrms-text-muted);
-    font-size: 0.75rem;
-}
-
-.foundation-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--hrms-space-2);
-}
-
-.foundation-content {
-    width: 100%;
-    padding: 2rem;
-}
-
-.foundation-heading {
-    max-width: 50rem;
-    margin-bottom: 1.5rem;
-}
-
-.foundation-heading > span {
+.workspace__heading span {
     color: var(--hrms-primary);
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: 0.7rem;
+    font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 
-.foundation-heading h1 {
-    margin: 0.5rem 0;
+.workspace__heading h2 {
+    margin: 0.45rem 0;
     color: var(--hrms-text);
-    font-size: clamp(1.35rem, 2vw, 2rem);
+    font-size: clamp(1.25rem, 2vw, 1.8rem);
 }
 
-.foundation-heading p {
-    max-width: 46rem;
+.workspace__heading p {
+    max-width: 48rem;
     margin: 0;
     color: var(--hrms-text-muted);
     line-height: 1.6;
 }
 
-.foundation-grid {
+.workspace__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 1rem;
 }
 
-.foundation-card {
+.workspace-card {
     min-width: 0;
     border: 1px solid var(--hrms-border);
     box-shadow: var(--hrms-shadow-sm);
 }
 
-.foundation-card__title {
+.workspace-card__title {
     display: flex;
     align-items: center;
     gap: var(--hrms-space-2);
     color: var(--hrms-text);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
 }
 
-.foundation-card__content {
+.workspace-card__content {
     display: grid;
-    gap: var(--hrms-space-3);
+    gap: var(--hrms-space-2);
 }
 
-.foundation-status-row {
+.workspace-card__status {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    gap: var(--hrms-space-2);
+}
+
+.workspace-card__status strong,
+.workspace-card__value {
+    color: var(--hrms-text);
+    font-size: 0.84rem;
+}
+
+.workspace-card__number {
+    color: var(--hrms-primary);
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.workspace-card__muted {
+    color: var(--hrms-text-muted);
+    font-size: 0.74rem;
+    line-height: 1.5;
+}
+
+.workspace-permissions {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--hrms-surface);
+    border: 1px solid var(--hrms-border);
+    border-radius: var(--hrms-radius-md);
+    box-shadow: var(--hrms-shadow-sm);
+}
+
+.workspace-permissions__heading {
+    display: flex;
+    justify-content: space-between;
     gap: var(--hrms-space-3);
+    margin-bottom: 0.9rem;
 }
 
-.foundation-status-row strong {
-    display: block;
+.workspace-permissions__heading h3,
+.workspace-permissions__heading p {
+    margin: 0;
+}
+
+.workspace-permissions__heading h3 {
     color: var(--hrms-text);
-    font-size: 0.85rem;
+    font-size: 0.86rem;
 }
 
-.foundation-value {
-    color: var(--hrms-text);
-    font-weight: 600;
-    word-break: break-word;
+.workspace-permissions__heading p {
+    margin-top: 0.25rem;
+    color: var(--hrms-text-muted);
+    font-size: 0.74rem;
 }
 
-@media (max-width: 1100px) {
-    .foundation-grid {
+.workspace-permissions__items {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@media (max-width: 1200px) {
+    .workspace__grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
-@media (max-width: 640px) {
-    .foundation-topbar,
-    .foundation-content {
-        padding-left: 1rem;
-        padding-right: 1rem;
+@media (max-width: 650px) {
+    .workspace__heading {
+        align-items: flex-start;
+        flex-direction: column;
     }
 
-    .foundation-grid {
+    .workspace__grid {
         grid-template-columns: 1fr;
-    }
-
-    .foundation-brand span {
-        display: none;
     }
 }
 </style>

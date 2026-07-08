@@ -1,0 +1,93 @@
+function permissionGroup(module, actions) {
+    return actions.map((action) => ({
+        code: `${module}.${action}`,
+        module,
+        action,
+        name: `${module.replaceAll(".", " ")} ${action}`,
+        description: `Allows ${action.toLowerCase()} access for ${module.replaceAll(".", " ")}.`,
+    }))
+}
+
+export const PERMISSION_REGISTRY = Object.freeze([
+    ...permissionGroup("SYSTEM.HEALTH", ["VIEW"]),
+
+    ...permissionGroup("ACCESS.PERMISSION", ["VIEW"]),
+    ...permissionGroup("ACCESS.ROLE", ["VIEW", "CREATE", "UPDATE", "DELETE"]),
+    ...permissionGroup("ACCESS.ACCOUNT", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "DISABLE",
+        "RESET_PASSWORD",
+    ]),
+    ...permissionGroup("ACCESS.AUDIT_LOG", ["VIEW"]),
+
+    ...permissionGroup("ORGANIZATION.COMPANY", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "ARCHIVE",
+    ]),
+    ...permissionGroup("ORGANIZATION.BRANCH", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "ARCHIVE",
+    ]),
+    ...permissionGroup("ORGANIZATION.DEPARTMENT", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "ARCHIVE",
+    ]),
+    ...permissionGroup("ORGANIZATION.POSITION", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "ARCHIVE",
+    ]),
+
+    ...permissionGroup("EMPLOYEE.PROFILE", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "ARCHIVE",
+        "IMPORT",
+        "EXPORT",
+    ]),
+
+    ...permissionGroup("ATTENDANCE.RECORD", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "IMPORT",
+        "EXPORT",
+    ]),
+
+    ...permissionGroup("LEAVE.REQUEST", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "APPROVE",
+        "REJECT",
+    ]),
+
+    ...permissionGroup("OVERTIME.REQUEST", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "APPROVE",
+        "REJECT",
+        "EXPORT",
+    ]),
+
+    ...permissionGroup("PAYROLL.PERIOD", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "APPROVE",
+        "EXPORT",
+    ]),
+
+    ...permissionGroup("REPORT.HR_ANALYTICS", ["VIEW", "EXPORT"]),
+])
