@@ -65,6 +65,15 @@ const navGroups = computed(() => {
                     },
                     permissionCode: "ORGANIZATION.BRANCH.VIEW",
                 },
+
+                {
+                    labelKey: "nav.departments",
+                    icon: "pi pi-objects-column",
+                    to: {
+                        name: "organization-departments",
+                    },
+                    permissionCode: "ORGANIZATION.DEPARTMENT.VIEW",
+                },
             ],
         },
     ]

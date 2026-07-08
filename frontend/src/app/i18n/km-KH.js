@@ -30,6 +30,7 @@ export default {
         organization: "អង្គភាព",
         companies: "ក្រុមហ៊ុន",
         branches: "សាខា",
+        departments: "នាយកដ្ឋាន",
     },
 
     auth: {
@@ -212,6 +213,59 @@ export default {
             postalCode: "លេខប្រៃសណីយ៍",
             countryCode: "កូដប្រទេស",
         },
+        department: {
+            eyebrow: "ការរៀបចំអង្គភាព",
+            title: "នាយកដ្ឋាន",
+            description:
+                "បង្កើត និងគ្រប់គ្រងនាយកដ្ឋានក្រោមសាខាក្រុមហ៊ុននីមួយៗ។ នាយកដ្ឋានជាមូលដ្ឋានសម្រាប់តួនាទី បុគ្គលិក វេន ការចូលធ្វើការ ប្រាក់ខែ និងរបាយការណ៍ Dashboard។",
+            newDepartment: "បង្កើតនាយកដ្ឋាន",
+            createTitle: "បង្កើតនាយកដ្ឋាន",
+            editTitle: "កែប្រែនាយកដ្ឋាន",
+            archiveTitle: "ដាក់នាយកដ្ឋានក្នុងបណ្ណសារ",
+            archiveMessage:
+                "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ? នាយកដ្ឋានដែលបានដាក់ក្នុងបណ្ណសារនឹងរក្សាទុកសម្រាប់ប្រវត្តិ និងមិនលុបចោលទាំងស្រុងទេ។",
+            searchPlaceholder:
+                "ស្វែងរក Code, ឈ្មោះ, ឈ្មោះខ្លី, ពិពណ៌នា...",
+            empty: "រកមិនឃើញនាយកដ្ឋាន។",
+            loadFailed: "មិនអាចទាញយកនាយកដ្ឋានបានទេ",
+            companyLoadFailed: "មិនអាចទាញយកក្រុមហ៊ុនបានទេ",
+            branchLoadFailed: "មិនអាចទាញយកសាខាបានទេ",
+            parentLoadFailed:
+                "មិនអាចទាញយកនាយកដ្ឋានមេបានទេ",
+            saveFailed: "មិនអាចរក្សាទុកនាយកដ្ឋានបានទេ",
+            archiveFailed:
+                "មិនអាចដាក់នាយកដ្ឋានក្នុងបណ្ណសារបានទេ",
+            created: "បានបង្កើតនាយកដ្ឋាន",
+            createdDetail:
+                "នាយកដ្ឋានត្រូវបានបង្កើតដោយជោគជ័យ។",
+            updated: "បានកែប្រែនាយកដ្ឋាន",
+            updatedDetail:
+                "នាយកដ្ឋានត្រូវបានកែប្រែដោយជោគជ័យ។",
+            archived: "បានដាក់នាយកដ្ឋានក្នុងបណ្ណសារ",
+            archivedDetail:
+                "នាយកដ្ឋានត្រូវបានដាក់ក្នុងបណ្ណសារដោយជោគជ័យ។",
+            readOnly: "បានដាក់បណ្ណសារ",
+            basicInfo: "ព័ត៌មានមូលដ្ឋាន",
+            allCompanies: "ក្រុមហ៊ុនទាំងអស់",
+            allBranches: "សាខាទាំងអស់",
+            selectCompany: "ជ្រើសរើសក្រុមហ៊ុន",
+            selectBranch: "ជ្រើសរើសសាខា",
+            company: "ក្រុមហ៊ុន",
+            branch: "សាខា",
+            parent: "នាយកដ្ឋានមេ",
+            noParent: "គ្មានមេ",
+            code: "Code",
+            name: "ឈ្មោះនាយកដ្ឋាន",
+            departmentName: "នាយកដ្ឋាន",
+            shortName: "ឈ្មោះខ្លី",
+            descriptionLabel: "ពិពណ៌នា",
+            status: "ស្ថានភាព",
+            statusAll: "ស្ថានភាពទាំងអស់",
+            statusActive: "សកម្ម",
+            statusInactive: "មិនសកម្ម",
+            statusArchived: "បណ្ណសារ",
+            updatedAt: "បានកែចុងក្រោយ",
+        },
     },
 
     errors: {
@@ -239,6 +293,7 @@ export default {
                 archived: "ក្រុមហ៊ុននេះត្រូវបានដាក់ក្នុងបណ្ណសារ ហើយមិនអាចប្រើបានទេ។",
                 codeExists: "Company Code នេះមានរួចហើយ។",
                 duplicate: "ក្រុមហ៊ុននេះមានរួចហើយ។",
+                archived: "សាខានេះត្រូវបានដាក់ក្នុងបណ្ណសារ ហើយមិនអាចប្រើបានទេ។",
             },
             branch: {
                 invalidId: "Branch ID មិនត្រឹមត្រូវ។",
@@ -248,6 +303,19 @@ export default {
                 headOfficeExists:
                     "ក្រុមហ៊ុននេះមានការិយាល័យកណ្ដាលរួចហើយ។",
                 duplicate: "សាខានេះមានរួចហើយ។",
+            },
+            department: {
+                invalidId: "Department ID មិនត្រឹមត្រូវ។",
+                notFound: "រកមិនឃើញនាយកដ្ឋាន។",
+                parentNotFound:
+                    "រកមិនឃើញនាយកដ្ឋានមេក្នុងសាខាដែលបានជ្រើសរើស។",
+                parentSelf:
+                    "នាយកដ្ឋានមិនអាចជាមេរបស់ខ្លួនឯងបានទេ។",
+                hasChildren:
+                    "នាយកដ្ឋាននេះមាននាយកដ្ឋានកូនសកម្ម ដូច្នេះមិនអាចដាក់ក្នុងបណ្ណសារបានទេ។",
+                codeExists:
+                    "Department Code នេះមានរួចហើយក្នុងសាខាដែលបានជ្រើសរើស។",
+                duplicate: "នាយកដ្ឋាននេះមានរួចហើយ។",
             },
         },
     },

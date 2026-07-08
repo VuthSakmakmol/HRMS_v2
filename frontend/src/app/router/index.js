@@ -58,6 +58,19 @@ const router = createRouter({
                         permissionCode: "ORGANIZATION.BRANCH.VIEW",
                     },
                 },
+
+                {
+                    path: "organization/departments",
+                    name: "organization-departments",
+                    component: () =>
+                        import(
+                            "@/modules/organization/views/DepartmentListView.vue"
+                        ),
+                    meta: {
+                        titleKey: "nav.departments",
+                        permissionCode: "ORGANIZATION.DEPARTMENT.VIEW",
+                    },
+                },
             ],
         },
 
