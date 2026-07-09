@@ -30,6 +30,7 @@ if (!mongoose.models.EmployeeType) {
 
 const addressSchema = new Schema(
     {
+        countryId: { type: Schema.Types.ObjectId, ref: "Country", default: null },
         provinceId: { type: Schema.Types.ObjectId, ref: "Province", default: null },
         districtId: { type: Schema.Types.ObjectId, ref: "District", default: null },
         communeId: { type: Schema.Types.ObjectId, ref: "Commune", default: null },
@@ -143,6 +144,25 @@ const employeeSchema = new Schema(
             ref: "EmployeeType",
             default: null,
         },
+        employeeTypeChildId: {
+            type: Schema.Types.ObjectId,
+            default: null,
+        },
+        employeeTypeChildCode: {
+            type: String,
+            trim: true,
+            maxlength: 30,
+            match: /^[A-Z0-9_-]*$/,
+            set: normalizeCode,
+            default: "",
+        },
+        employeeTypeChildName: {
+            type: String,
+            trim: true,
+            maxlength: 120,
+            set: normalizeText,
+            default: "",
+        },
 
         machineSkills: { type: machineSkillsSchema, default: () => ({}) },
 
@@ -169,6 +189,8 @@ employeeSchema.index({ employeeCode: 1 }, { unique: true, name: "uq_employee_cod
 employeeSchema.index({ companyId: 1, branchId: 1, departmentId: 1, positionId: 1, lineId: 1, recordStatus: 1 }, { name: "idx_employee_assignment_status" })
 employeeSchema.index({ employmentStatus: 1, recordStatus: 1 }, { name: "idx_employee_employment_status" })
 employeeSchema.index({ employeeTypeId: 1, recordStatus: 1 }, { name: "idx_employee_type_status" })
+employeeSchema.index({ employeeTypeId: 1, employeeTypeChildId: 1, recordStatus: 1 }, { name: "idx_employee_type_child_status" })
+employeeSchema.index({ joinDate: 1, resignDate: 1, employmentStatus: 1, recordStatus: 1 }, { name: "idx_employee_report_active_dates" })
 employeeSchema.index({ englishFirstName: "text", englishLastName: "text", khmerFirstName: "text", khmerLastName: "text", employeeCode: "text", phoneNumber: "text" }, { name: "idx_employee_search_text" })
 
 employeeSchema.set("toJSON", {

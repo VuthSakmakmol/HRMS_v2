@@ -142,6 +142,29 @@ const navGroups = computed(() => {
 
             ],
         },
+
+        {
+            labelKey: "nav.reports",
+            items: [
+                {
+                    labelKey: "nav.manpowerPlans",
+                    icon: "pi pi-chart-line",
+                    to: {
+                        name: "report-manpower-plans",
+                    },
+                    permissionCode: "REPORT.MANPOWER_PLAN.VIEW",
+                },
+                {
+                    labelKey: "nav.employeeMovements",
+                    icon: "pi pi-history",
+                    to: {
+                        name: "employee-movements",
+                    },
+                    permissionCode: "EMPLOYEE.MOVEMENT.VIEW",
+                },
+            ],
+        },
+
     ]
 
     return groups

@@ -39,6 +39,12 @@ export default {
         lines: "ខ្សែសង្វាក់ការងារ",
         shifts: "វេនការងារ",
         employeeTypes: "ប្រភេទបុគ្គលិក",
+        locations: "ទីតាំង",
+        employees: "បុគ្គលិក",
+        calendar: "ប្រតិទិន",
+        reports: "របាយការណ៍",
+        manpowerPlans: "ផែនការកម្លាំងពលកម្ម",
+        employeeMovements: "ចលនាបុគ្គលិក",
     },
 
     auth: {

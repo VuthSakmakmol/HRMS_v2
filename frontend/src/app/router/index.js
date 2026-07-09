@@ -135,6 +135,27 @@ const router = createRouter({
                     },
                 },
 
+
+                {
+                    path: "employees/movements",
+                    name: "employee-movements",
+                    component: () => import("@/modules/employeeMovement/views/EmployeeMovementListView.vue"),
+                    meta: {
+                        titleKey: "nav.employeeMovements",
+                        permissionCode: "EMPLOYEE.MOVEMENT.VIEW",
+                    },
+                },
+
+                {
+                    path: "reports/manpower-plans",
+                    name: "report-manpower-plans",
+                    component: () => import("@/modules/manpowerPlan/views/ManpowerPlanListView.vue"),
+                    meta: {
+                        titleKey: "nav.manpowerPlans",
+                        permissionCode: "REPORT.MANPOWER_PLAN.VIEW",
+                    },
+                },
+
                 {
                     path: "calendar",
                     name: "calendar-days",

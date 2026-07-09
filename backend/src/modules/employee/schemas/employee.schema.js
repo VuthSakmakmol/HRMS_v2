@@ -55,6 +55,7 @@ const phoneSchema = z
     .optional()
 
 const addressSchema = z.object({
+    countryId: nullableObjectIdSchema.optional(),
     provinceId: nullableObjectIdSchema.optional(),
     districtId: nullableObjectIdSchema.optional(),
     communeId: nullableObjectIdSchema.optional(),
@@ -104,6 +105,8 @@ export const employeeListQuerySchema = z.object({
     positionId: objectIdSchema.optional(),
     lineId: objectIdSchema.optional(),
     shiftId: objectIdSchema.optional(),
+    employeeTypeId: objectIdSchema.optional(),
+    employeeTypeChildId: objectIdSchema.optional(),
     employmentStatus: z.enum(["ALL", ...employmentStatuses]).default("ALL"),
     recordStatus: z.enum(["ALL", "ACTIVE", "INACTIVE", "ARCHIVED"]).default("ACTIVE"),
 })
@@ -157,6 +160,7 @@ export const employeeCreateSchema = z.object({
     sourceOfHiring: optionalTextSchema(160),
     introducerEmployeeId: nullableObjectIdSchema.optional(),
     employeeTypeId: nullableObjectIdSchema.optional(),
+    employeeTypeChildId: nullableObjectIdSchema.optional(),
     machineSkills: machineSkillsSchema,
     approvalPolicyId: nullableObjectIdSchema.optional(),
     recordStatus: z.enum(["ACTIVE", "INACTIVE"]).optional(),

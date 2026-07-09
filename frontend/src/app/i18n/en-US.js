@@ -42,6 +42,9 @@ export default {
         locations: "Locations",
         employees: "Employees",
         calendar: "Calendar",
+        reports: "Reports",
+        manpowerPlans: "Manpower Plans",
+        employeeMovements: "Employee Movements",
     },
 
     auth: {
