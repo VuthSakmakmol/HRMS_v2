@@ -103,7 +103,7 @@ const router = createRouter({
                     },
                 },
 
-                                {
+                {
                     path: "organization/employee-types",
                     name: "organization-employee-types",
                     component: () =>
@@ -111,6 +111,17 @@ const router = createRouter({
                     meta: {
                         titleKey: "nav.employeeTypes",
                         permissionCode: "ORGANIZATION.EMPLOYEE_TYPE.VIEW",
+                    },
+                },
+
+                {
+                    path: "organization/locations",
+                    name: "organization-locations",
+                    component: () =>
+                        import("@/modules/location/views/LocationListView.vue"),
+                    meta: {
+                        titleKey: "nav.locations",
+                        permissionCode: "ORGANIZATION.LOCATION.VIEW",
                     },
                 },
             ],
