@@ -135,6 +135,16 @@ const router = createRouter({
                     },
                 },
 
+                {
+                    path: "calendar",
+                    name: "calendar-days",
+                    component: () => import("@/modules/calendar/views/CalendarListView.vue"),
+                    meta: {
+                        titleKey: "nav.calendar",
+                        permissionCode: "CALENDAR.DAY.VIEW",
+                    },
+                },
+
             ],
         },
 

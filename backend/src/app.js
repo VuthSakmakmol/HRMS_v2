@@ -17,6 +17,7 @@ import employeeTypeRoutes from "./modules/employeeType/routes/employeeType.route
 import locationRoutes from "./modules/location/routes/location.routes.js"
 import employeeRoutes from "./modules/employee/routes/employee.routes.js"
 import approvalRoutes from "./modules/approval/routes/approval.routes.js"
+import calendarRoutes from "./modules/calendar/routes/calendar.routes.js"
 
 import { AppError } from "./shared/errors/AppError.js"
 import { errorHandler } from "./shared/middleware/errorHandler.js"
@@ -85,6 +86,7 @@ app.use("/api/v1/organization/employee-types", employeeTypeRoutes)
 app.use("/api/v1/organization/locations", locationRoutes)
 app.use("/api/v1/employees", employeeRoutes)
 app.use("/api/v1/approvals", approvalRoutes)
+app.use("/api/v1/calendar", calendarRoutes)
 
 app.use(notFound)
 app.use(errorHandler)

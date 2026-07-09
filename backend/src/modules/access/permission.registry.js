@@ -97,6 +97,15 @@ export const PERMISSION_REGISTRY = Object.freeze([
         "PREVIEW",
     ]),
 
+    ...permissionGroup("CALENDAR.DAY", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "ARCHIVE",
+        "IMPORT",
+        "EXPORT",
+    ]),
+
     ...permissionGroup("EMPLOYEE.PROFILE", [
         "VIEW",
         "CREATE",

@@ -129,6 +129,16 @@ const navGroups = computed(() => {
                     permissionCode: "EMPLOYEE.PROFILE.VIEW",
                 },
 
+                {
+                    labelKey: "nav.calendar",
+                    icon: "pi pi-calendar",
+                    to: {
+                        name: "calendar-days",
+                    },
+                    permissionCode: "CALENDAR.DAY.VIEW",
+                },
+
+
 
             ],
         },
