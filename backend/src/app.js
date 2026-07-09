@@ -15,6 +15,8 @@ import lineRoutes from "./modules/line/routes/line.routes.js"
 import shiftRoutes from "./modules/shift/routes/shift.routes.js"
 import employeeTypeRoutes from "./modules/employeeType/routes/employeeType.routes.js"
 import locationRoutes from "./modules/location/routes/location.routes.js"
+import employeeRoutes from "./modules/employee/routes/employee.routes.js"
+import approvalRoutes from "./modules/approval/routes/approval.routes.js"
 
 import { AppError } from "./shared/errors/AppError.js"
 import { errorHandler } from "./shared/middleware/errorHandler.js"
@@ -81,6 +83,8 @@ app.use("/api/v1/organization/lines", lineRoutes)
 app.use("/api/v1/organization/shifts", shiftRoutes)
 app.use("/api/v1/organization/employee-types", employeeTypeRoutes)
 app.use("/api/v1/organization/locations", locationRoutes)
+app.use("/api/v1/employees", employeeRoutes)
+app.use("/api/v1/approvals", approvalRoutes)
 
 app.use(notFound)
 app.use(errorHandler)

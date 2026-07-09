@@ -124,6 +124,17 @@ const router = createRouter({
                         permissionCode: "ORGANIZATION.LOCATION.VIEW",
                     },
                 },
+
+                {
+                    path: "employees",
+                    name: "employees",
+                    component: () => import("@/modules/employee/views/EmployeeListView.vue"),
+                    meta: {
+                        titleKey: "nav.employees",
+                        permissionCode: "EMPLOYEE.PROFILE.VIEW",
+                    },
+                },
+
             ],
         },
 

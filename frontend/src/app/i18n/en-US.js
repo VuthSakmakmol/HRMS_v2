@@ -40,6 +40,7 @@ export default {
         shifts: "Shifts",
         employeeTypes: "Employee Types",
         locations: "Locations",
+        employees: "Employees",
     },
 
     auth: {
@@ -721,6 +722,48 @@ export default {
             importErrors: "Validation Errors",
             pagination: "Page {page} of {totalPages} · {total} records",
         },
+        employee: {
+            profile: {
+                invalidId: "Invalid employee ID.",
+                notFound: "Employee was not found.",
+                archived: "This employee is archived and cannot be updated.",
+                employeeCodeExists: "This employee ID already exists.",
+                positionNotAllowedInLine: "Selected position is not allowed in selected line.",
+                resignDateRequired: "Resign date is required for this employment status.",
+            },
+            import: {
+                fileRequired: "Please choose an Excel file to import.",
+                emptyFile: "The uploaded Excel file is empty.",
+                noDataRows: "The Excel file has no employee rows to import.",
+                hasErrors: "The import finished with validation errors.",
+                employeeCodeRequired: "Employee ID is required.",
+                joinDateRequired: "Join date is required.",
+                companyRequired: "Company is required. Add companyCode or select Company filter before import.",
+                branchRequired: "Branch is required. Add branchCode or select Branch filter before import.",
+                departmentRequired: "Department is required.",
+                positionRequired: "Position is required.",
+                lineRequired: "Line is required.",
+                shiftRequired: "Shift is required.",
+                departmentNotFound: "Department was not found.",
+                positionNotFound: "Position was not found.",
+                lineNotFound: "Line was not found.",
+                shiftNotFound: "Shift was not found.",
+                introducerNotFound: "Introducer employee was not found.",
+            },
+        },
+        approval: {
+            policy: {
+                invalidId: "Invalid approval policy ID.",
+                notFound: "Approval policy was not found.",
+                archived: "This approval policy is archived.",
+                codeExists: "Approval policy code already exists.",
+                invalidReference: "One or more approval policy references are invalid.",
+                noPolicyMatched: "No approval policy matched this employee assignment.",
+                requiredApproverMissing: "One or more required approvers could not be resolved.",
+                assignmentRequired: "Assignment is required to resolve approval chain.",
+            },
+        },
+
 
     },
 

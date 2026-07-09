@@ -1,0 +1,534 @@
+import mongoose, { Types } from "mongoose"
+
+import {
+    clearCacheByPrefix,
+    getCache,
+    setCache,
+} from "../../../shared/cache/memoryCache.js"
+import { AppError } from "../../../shared/errors/AppError.js"
+
+import Company from "../../organization/models/Company.js"
+import Branch from "../../organization/models/Branch.js"
+import Department from "../../organization/models/Department.js"
+import Position from "../../organization/models/Position.js"
+import Line from "../../line/models/Line.js"
+import Shift from "../../shift/models/Shift.js"
+import Province from "../../location/models/Province.js"
+import District from "../../location/models/District.js"
+import Commune from "../../location/models/Commune.js"
+import Village from "../../location/models/Village.js"
+
+import Employee from "../models/Employee.js"
+import { resolveApprovalByAssignment } from "../../approval/services/approvalResolver.service.js"
+
+function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function ensureObjectId(id, code, messageKey) {
+    if (!Types.ObjectId.isValid(id)) {
+        throw new AppError({ statusCode: 400, code, messageKey })
+    }
+}
+
+function getEmployeeTypeModel() {
+    if (!mongoose.models.EmployeeType) {
+        const employeeTypeFallbackSchema = new mongoose.Schema(
+            {},
+            {
+                collection: "employee_types",
+                strict: false,
+                versionKey: false,
+            },
+        )
+
+        return mongoose.model("EmployeeType", employeeTypeFallbackSchema)
+    }
+
+    return mongoose.models.EmployeeType
+}
+
+function serializeEmployeeType(employeeType) {
+    if (!employeeType || typeof employeeType !== "object") return null
+
+    return {
+        id: employeeType._id?.toString?.() || employeeType.id,
+        code: employeeType.code || employeeType.typeCode || "",
+        name: employeeType.name || employeeType.typeName || employeeType.title || employeeType.displayName || "",
+        shortName: employeeType.shortName || "",
+        status: employeeType.status || employeeType.recordStatus || "",
+    }
+}
+
+async function ensureEmployeeType(employeeTypeId) {
+    if (!employeeTypeId) return null
+
+    ensureObjectId(
+        employeeTypeId,
+        "EMPLOYEE_TYPE_INVALID_ID",
+        "errors.employee.profile.employeeTypeInvalidId",
+    )
+
+    const EmployeeType = getEmployeeTypeModel()
+    const employeeType = await EmployeeType.findOne({
+        _id: employeeTypeId,
+        status: { $ne: "ARCHIVED" },
+    }).lean()
+
+    if (!employeeType) {
+        throw new AppError({
+            statusCode: 404,
+            code: "EMPLOYEE_TYPE_NOT_FOUND",
+            messageKey: "errors.employee.profile.employeeTypeNotFound",
+            fields: {
+                employeeTypeId: ["errors.employee.profile.employeeTypeNotFound"],
+            },
+        })
+    }
+
+    return employeeType
+}
+
+function getUserCompanyIds(user) {
+    return [...new Set((user?.roleAssignments || []).map((item) => item.companyId).filter(Boolean))]
+}
+
+function getCompanyScopeFilter(user) {
+    if (user?.isRootAdmin) return {}
+    const companyIds = getUserCompanyIds(user)
+    return companyIds.length ? { _id: { $in: companyIds } } : { _id: { $in: [] } }
+}
+
+function getBranchScopeFilter(user) {
+    if (user?.isRootAdmin) return {}
+    const allBranchCompanyIds = []
+    const branchIds = []
+
+    for (const assignment of user?.roleAssignments || []) {
+        if (assignment.allBranches && assignment.companyId) allBranchCompanyIds.push(assignment.companyId)
+        for (const branchId of assignment.branchIds || []) branchIds.push(branchId)
+    }
+
+    const filters = []
+    if (allBranchCompanyIds.length) filters.push({ companyId: { $in: [...new Set(allBranchCompanyIds)] } })
+    if (branchIds.length) filters.push({ _id: { $in: [...new Set(branchIds)] } })
+    return filters.length ? { $or: filters } : { _id: { $in: [] } }
+}
+
+function getEmployeeScopeFilter(user) {
+    if (user?.isRootAdmin) return {}
+    const allBranchCompanyIds = []
+    const branchIds = []
+
+    for (const assignment of user?.roleAssignments || []) {
+        if (assignment.allBranches && assignment.companyId) allBranchCompanyIds.push(assignment.companyId)
+        for (const branchId of assignment.branchIds || []) branchIds.push(branchId)
+    }
+
+    const filters = []
+    if (allBranchCompanyIds.length) filters.push({ companyId: { $in: [...new Set(allBranchCompanyIds)] } })
+    if (branchIds.length) filters.push({ branchId: { $in: [...new Set(branchIds)] } })
+    return filters.length ? { $or: filters } : { _id: { $in: [] } }
+}
+
+function buildSearchFilter(search) {
+    const keyword = String(search || "").trim()
+    if (!keyword) return {}
+    const regex = new RegExp(escapeRegExp(keyword), "i")
+    return {
+        $or: [
+            { employeeCode: regex },
+            { displayName: regex },
+            { englishFirstName: regex },
+            { englishLastName: regex },
+            { khmerFirstName: regex },
+            { khmerLastName: regex },
+            { phoneNumber: regex },
+            { email: regex },
+        ],
+    }
+}
+
+function ageFromDate(dateValue) {
+    if (!dateValue) return null
+    const dob = new Date(dateValue)
+    if (Number.isNaN(dob.getTime())) return null
+    const now = new Date()
+    let age = now.getFullYear() - dob.getFullYear()
+    const m = now.getMonth() - dob.getMonth()
+    if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age -= 1
+    return age < 0 ? null : age
+}
+
+function simpleOrg(item) {
+    if (!item || typeof item !== "object") return null
+    return {
+        id: item._id?.toString?.() || item.id,
+        code: item.code,
+        name: item.name || item.title || item.displayName || item.legalName,
+        displayName: item.displayName,
+        title: item.title,
+        shortName: item.shortName,
+        status: item.status,
+    }
+}
+
+function simpleLocation(item) {
+    if (!item || typeof item !== "object") return null
+    return {
+        id: item._id?.toString?.() || item.id,
+        code: item.code,
+        name: item.name,
+        nameKh: item.nameKh,
+        status: item.status,
+    }
+}
+
+function serializeAddress(address = {}) {
+    return {
+        provinceId: address.provinceId?._id?.toString?.() || address.provinceId?.id || address.provinceId?.toString?.() || null,
+        districtId: address.districtId?._id?.toString?.() || address.districtId?.id || address.districtId?.toString?.() || null,
+        communeId: address.communeId?._id?.toString?.() || address.communeId?.id || address.communeId?.toString?.() || null,
+        villageId: address.villageId?._id?.toString?.() || address.villageId?.id || address.villageId?.toString?.() || null,
+        detail: address.detail || "",
+        province: simpleLocation(address.provinceId),
+        district: simpleLocation(address.districtId),
+        commune: simpleLocation(address.communeId),
+        village: simpleLocation(address.villageId),
+    }
+}
+
+export function serializeEmployee(employee) {
+    if (!employee) return null
+    const raw = typeof employee.toJSON === "function" ? employee.toJSON() : { ...employee }
+    return {
+        id: raw._id?.toString?.() || raw.id,
+        employeeCode: raw.employeeCode,
+        profileImageUrl: raw.profileImageUrl || "",
+        khmerFirstName: raw.khmerFirstName || "",
+        khmerLastName: raw.khmerLastName || "",
+        englishFirstName: raw.englishFirstName || "",
+        englishLastName: raw.englishLastName || "",
+        displayName: raw.displayName || [raw.englishFirstName, raw.englishLastName].filter(Boolean).join(" ") || [raw.khmerFirstName, raw.khmerLastName].filter(Boolean).join(" "),
+        gender: raw.gender || "UNKNOWN",
+        dateOfBirth: raw.dateOfBirth,
+        age: ageFromDate(raw.dateOfBirth),
+        email: raw.email || "",
+        phoneNumber: raw.phoneNumber || "",
+        agentPhoneNumber: raw.agentPhoneNumber || "",
+        agentPerson: raw.agentPerson || "",
+        note: raw.note || "",
+        maritalStatus: raw.maritalStatus || "UNKNOWN",
+        spouseName: raw.spouseName || "",
+        spouseContactNumber: raw.spouseContactNumber || "",
+        education: raw.education || "",
+        religion: raw.religion || "",
+        nationality: raw.nationality || "",
+        birthAddress: serializeAddress(raw.birthAddress),
+        livingAddress: serializeAddress(raw.livingAddress),
+        permanentAddress: serializeAddress(raw.permanentAddress),
+        emergencyContactAddress: serializeAddress(raw.emergencyContactAddress),
+        familyAddress: serializeAddress(raw.familyAddress),
+        companyId: raw.companyId?._id?.toString?.() || raw.companyId?.id || raw.companyId?.toString?.(),
+        branchId: raw.branchId?._id?.toString?.() || raw.branchId?.id || raw.branchId?.toString?.(),
+        departmentId: raw.departmentId?._id?.toString?.() || raw.departmentId?.id || raw.departmentId?.toString?.(),
+        positionId: raw.positionId?._id?.toString?.() || raw.positionId?.id || raw.positionId?.toString?.(),
+        lineId: raw.lineId?._id?.toString?.() || raw.lineId?.id || raw.lineId?.toString?.(),
+        shiftId: raw.shiftId?._id?.toString?.() || raw.shiftId?.id || raw.shiftId?.toString?.(),
+        company: simpleOrg(raw.companyId),
+        branch: simpleOrg(raw.branchId),
+        department: simpleOrg(raw.departmentId),
+        position: simpleOrg(raw.positionId),
+        line: simpleOrg(raw.lineId),
+        shift: simpleOrg(raw.shiftId),
+        joinDate: raw.joinDate,
+        employmentStatus: raw.employmentStatus,
+        resignDate: raw.resignDate,
+        resignReason: raw.resignReason || "",
+        remark: raw.remark || "",
+        documents: raw.documents || {},
+        sourceOfHiring: raw.sourceOfHiring || "",
+        introducerEmployeeId: raw.introducerEmployeeId?._id?.toString?.() || raw.introducerEmployeeId?.id || raw.introducerEmployeeId?.toString?.() || null,
+        introducerEmployee: raw.introducerEmployeeId && typeof raw.introducerEmployeeId === "object" ? {
+            id: raw.introducerEmployeeId._id?.toString?.() || raw.introducerEmployeeId.id,
+            employeeCode: raw.introducerEmployeeId.employeeCode,
+            displayName: raw.introducerEmployeeId.displayName,
+        } : null,
+        employeeTypeId: raw.employeeTypeId?._id?.toString?.() || raw.employeeTypeId?.id || raw.employeeTypeId?.toString?.() || null,
+        employeeType: serializeEmployeeType(raw.employeeTypeId),
+        employeeTypeLabel: serializeEmployeeType(raw.employeeTypeId)?.name || serializeEmployeeType(raw.employeeTypeId)?.code || "",
+        machineSkills: raw.machineSkills || {},
+        approvalPolicyId: raw.approvalPolicyId?._id?.toString?.() || raw.approvalPolicyId?.id || raw.approvalPolicyId?.toString?.() || null,
+        approvalPolicy: simpleOrg(raw.approvalPolicyId),
+        recordStatus: raw.recordStatus,
+        createdAt: raw.createdAt,
+        updatedAt: raw.updatedAt,
+    }
+}
+
+function employeePopulate(query) {
+    return query
+        .populate({ path: "companyId", select: "code displayName legalName status" })
+        .populate({ path: "branchId", select: "companyId code name shortName status" })
+        .populate({ path: "departmentId", select: "companyId branchId code name shortName status" })
+        .populate({ path: "positionId", select: "companyId branchId departmentId code title shortName level isManager status" })
+        .populate({ path: "lineId", select: "companyId branchId departmentId code name shortName allowedPositionIds leaderPositionId status" })
+        .populate({ path: "shiftId", select: "companyId branchId code name shortName startTime endTime workingMinutes isOvernight status" })
+        .populate({ path: "introducerEmployeeId", select: "employeeCode displayName englishFirstName englishLastName khmerFirstName khmerLastName recordStatus" })
+        .populate({ path: "employeeTypeId", select: "code name typeCode typeName title displayName shortName status recordStatus" })
+        .populate({ path: "approvalPolicyId", select: "code name moduleKey status" })
+        .populate({ path: "birthAddress.provinceId", select: "code name nameKh status" })
+        .populate({ path: "birthAddress.districtId", select: "code name nameKh status" })
+        .populate({ path: "birthAddress.communeId", select: "code name nameKh status" })
+        .populate({ path: "birthAddress.villageId", select: "code name nameKh status" })
+        .populate({ path: "livingAddress.provinceId", select: "code name nameKh status" })
+        .populate({ path: "livingAddress.districtId", select: "code name nameKh status" })
+        .populate({ path: "livingAddress.communeId", select: "code name nameKh status" })
+        .populate({ path: "livingAddress.villageId", select: "code name nameKh status" })
+}
+
+async function ensureCompany(companyId, user) {
+    ensureObjectId(companyId, "EMPLOYEE_COMPANY_INVALID_ID", "errors.organization.company.invalidId")
+    const company = await Company.findOne({ _id: companyId, ...getCompanyScopeFilter(user) }).lean()
+    if (!company) throw new AppError({ statusCode: 404, code: "EMPLOYEE_COMPANY_NOT_FOUND", messageKey: "errors.organization.company.notFound" })
+    if (company.status === "ARCHIVED") throw new AppError({ statusCode: 409, code: "EMPLOYEE_COMPANY_ARCHIVED", messageKey: "errors.organization.company.archived" })
+    return company
+}
+
+async function ensureBranch(companyId, branchId, user) {
+    ensureObjectId(branchId, "EMPLOYEE_BRANCH_INVALID_ID", "errors.organization.branch.invalidId")
+    const branch = await Branch.findOne({ _id: branchId, companyId, ...getBranchScopeFilter(user) }).lean()
+    if (!branch) throw new AppError({ statusCode: 404, code: "EMPLOYEE_BRANCH_NOT_FOUND", messageKey: "errors.organization.branch.notFound" })
+    if (branch.status === "ARCHIVED") throw new AppError({ statusCode: 409, code: "EMPLOYEE_BRANCH_ARCHIVED", messageKey: "errors.organization.branch.archived" })
+    return branch
+}
+
+async function validateAssignment(payload, user) {
+    await ensureCompany(payload.companyId, user)
+    await ensureBranch(payload.companyId, payload.branchId, user)
+
+    const [department, position, line, shift] = await Promise.all([
+        Department.findOne({ _id: payload.departmentId, companyId: payload.companyId, branchId: payload.branchId, status: { $ne: "ARCHIVED" } }).lean(),
+        Position.findOne({ _id: payload.positionId, companyId: payload.companyId, branchId: payload.branchId, departmentId: payload.departmentId, status: { $ne: "ARCHIVED" } }).lean(),
+        Line.findOne({ _id: payload.lineId, companyId: payload.companyId, branchId: payload.branchId, departmentId: payload.departmentId, status: { $ne: "ARCHIVED" } }).lean(),
+        Shift.findOne({ _id: payload.shiftId, companyId: payload.companyId, branchId: payload.branchId, status: { $ne: "ARCHIVED" } }).lean(),
+    ])
+
+    if (!department) throw new AppError({ statusCode: 404, code: "EMPLOYEE_DEPARTMENT_NOT_FOUND", messageKey: "errors.organization.department.notFound", fields: { departmentId: ["errors.organization.department.notFound"] } })
+    if (!position) throw new AppError({ statusCode: 404, code: "EMPLOYEE_POSITION_NOT_FOUND", messageKey: "errors.organization.position.notFound", fields: { positionId: ["errors.organization.position.notFound"] } })
+    if (!line) throw new AppError({ statusCode: 404, code: "EMPLOYEE_LINE_NOT_FOUND", messageKey: "errors.organization.line.notFound", fields: { lineId: ["errors.organization.line.notFound"] } })
+    if (!shift) throw new AppError({ statusCode: 404, code: "EMPLOYEE_SHIFT_NOT_FOUND", messageKey: "errors.organization.shift.notFound", fields: { shiftId: ["errors.organization.shift.notFound"] } })
+
+    const allowed = (line.allowedPositionIds || []).map((id) => id.toString())
+    if (allowed.length > 0 && !allowed.includes(payload.positionId.toString())) {
+        throw new AppError({
+            statusCode: 409,
+            code: "EMPLOYEE_POSITION_NOT_ALLOWED_IN_LINE",
+            messageKey: "errors.employee.profile.positionNotAllowedInLine",
+            fields: { positionId: ["errors.employee.profile.positionNotAllowedInLine"], lineId: ["errors.employee.profile.positionNotAllowedInLine"] },
+        })
+    }
+}
+
+async function validateAddress(address, prefix) {
+    if (!address) return
+    const { provinceId, districtId, communeId, villageId } = address
+    if (!provinceId && !districtId && !communeId && !villageId) return
+
+    if (provinceId) ensureObjectId(provinceId, "EMPLOYEE_LOCATION_INVALID_ID", "errors.location.invalidId")
+    if (districtId) ensureObjectId(districtId, "EMPLOYEE_LOCATION_INVALID_ID", "errors.location.invalidId")
+    if (communeId) ensureObjectId(communeId, "EMPLOYEE_LOCATION_INVALID_ID", "errors.location.invalidId")
+    if (villageId) ensureObjectId(villageId, "EMPLOYEE_LOCATION_INVALID_ID", "errors.location.invalidId")
+
+    const [province, district, commune, village] = await Promise.all([
+        provinceId ? Province.findOne({ _id: provinceId, status: { $ne: "ARCHIVED" } }).lean() : null,
+        districtId ? District.findOne({ _id: districtId, provinceId, status: { $ne: "ARCHIVED" } }).lean() : null,
+        communeId ? Commune.findOne({ _id: communeId, districtId, status: { $ne: "ARCHIVED" } }).lean() : null,
+        villageId ? Village.findOne({ _id: villageId, communeId, status: { $ne: "ARCHIVED" } }).lean() : null,
+    ])
+
+    if (provinceId && !province) throw new AppError({ statusCode: 404, code: "EMPLOYEE_PROVINCE_NOT_FOUND", messageKey: "errors.location.provinceNotFound", fields: { [`${prefix}.provinceId`]: ["errors.location.provinceNotFound"] } })
+    if (districtId && !district) throw new AppError({ statusCode: 404, code: "EMPLOYEE_DISTRICT_NOT_FOUND", messageKey: "errors.location.districtNotFound", fields: { [`${prefix}.districtId`]: ["errors.location.districtNotFound"] } })
+    if (communeId && !commune) throw new AppError({ statusCode: 404, code: "EMPLOYEE_COMMUNE_NOT_FOUND", messageKey: "errors.location.communeNotFound", fields: { [`${prefix}.communeId`]: ["errors.location.communeNotFound"] } })
+    if (villageId && !village) throw new AppError({ statusCode: 404, code: "EMPLOYEE_VILLAGE_NOT_FOUND", messageKey: "errors.location.villageNotFound", fields: { [`${prefix}.villageId`]: ["errors.location.villageNotFound"] } })
+}
+
+async function validateAddresses(payload) {
+    await Promise.all([
+        validateAddress(payload.birthAddress, "birthAddress"),
+        validateAddress(payload.livingAddress, "livingAddress"),
+        validateAddress(payload.permanentAddress, "permanentAddress"),
+        validateAddress(payload.emergencyContactAddress, "emergencyContactAddress"),
+        validateAddress(payload.familyAddress, "familyAddress"),
+    ])
+}
+
+function ensureResignStatus(payload) {
+    if (["RESIGNED", "TERMINATED", "ABANDONED", "PASSED_AWAY", "RETIRED"].includes(payload.employmentStatus) && !payload.resignDate) {
+        throw new AppError({
+            statusCode: 422,
+            code: "EMPLOYEE_RESIGN_DATE_REQUIRED",
+            messageKey: "errors.employee.profile.resignDateRequired",
+            fields: { resignDate: ["errors.employee.profile.resignDateRequired"] },
+        })
+    }
+}
+
+function buildDisplayName(payload) {
+    if (payload.displayName) return payload.displayName
+    return [payload.englishFirstName, payload.englishLastName].filter(Boolean).join(" ") || [payload.khmerFirstName, payload.khmerLastName].filter(Boolean).join(" ") || payload.employeeCode
+}
+
+function buildEmployeePayload(payload, accountId) {
+    const base = { ...payload, updatedByAccountId: accountId }
+    if (payload.employeeCode || payload.englishFirstName || payload.englishLastName || payload.khmerFirstName || payload.khmerLastName || payload.displayName) {
+        base.displayName = buildDisplayName({ ...payload, displayName: payload.displayName })
+    }
+    return base
+}
+
+function handleDuplicate(error) {
+    if (error?.code !== 11000) throw error
+    throw new AppError({
+        statusCode: 409,
+        code: "EMPLOYEE_CODE_EXISTS",
+        messageKey: "errors.employee.profile.employeeCodeExists",
+        fields: { employeeCode: ["errors.employee.profile.employeeCodeExists"] },
+    })
+}
+
+export async function listEmployees({ query, user }) {
+    const cacheKey = `employee:list:${user?.accountId || "anonymous"}:${JSON.stringify(query)}`
+    const cached = getCache(cacheKey)
+    if (cached) return cached
+
+    const filter = { ...getEmployeeScopeFilter(user), ...buildSearchFilter(query.search) }
+    for (const key of ["companyId", "branchId", "departmentId", "positionId", "lineId", "shiftId"]) {
+        if (query[key]) filter[key] = query[key]
+    }
+    if (query.employmentStatus !== "ALL") filter.employmentStatus = query.employmentStatus
+    if (query.recordStatus !== "ALL") filter.recordStatus = query.recordStatus
+
+    const page = query.page
+    const limit = query.limit
+    const skip = (page - 1) * limit
+
+    const [items, total] = await Promise.all([
+        employeePopulate(Employee.find(filter))
+            .sort({ employeeCode: 1 })
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+        Employee.countDocuments(filter),
+    ])
+
+    const result = {
+        items: items.map(serializeEmployee),
+        pagination: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
+    }
+
+    return setCache(cacheKey, result, 30_000)
+}
+
+export async function getEmployeeById({ employeeId, user }) {
+    ensureObjectId(employeeId, "EMPLOYEE_INVALID_ID", "errors.employee.profile.invalidId")
+    const employee = await employeePopulate(Employee.findOne({ _id: employeeId, ...getEmployeeScopeFilter(user) })).lean()
+    if (!employee) throw new AppError({ statusCode: 404, code: "EMPLOYEE_NOT_FOUND", messageKey: "errors.employee.profile.notFound" })
+    return serializeEmployee(employee)
+}
+
+export async function createEmployee({ payload, user }) {
+    await validateAssignment(payload, user)
+    await validateAddresses(payload)
+    await ensureEmployeeType(payload.employeeTypeId)
+    ensureResignStatus({ ...payload, employmentStatus: payload.employmentStatus || "WORKING" })
+
+    try {
+        const employee = await Employee.create({
+            ...buildEmployeePayload(payload, user.accountId),
+            displayName: buildDisplayName(payload),
+            employmentStatus: payload.employmentStatus || "WORKING",
+            gender: payload.gender || "UNKNOWN",
+            maritalStatus: payload.maritalStatus || "UNKNOWN",
+            employeeTypeId: payload.employeeTypeId || null,
+            recordStatus: payload.recordStatus || "ACTIVE",
+            createdByAccountId: user.accountId,
+            updatedByAccountId: user.accountId,
+        })
+        clearCacheByPrefix("employee:list:")
+        return getEmployeeById({ employeeId: employee._id, user })
+    } catch (error) {
+        handleDuplicate(error)
+    }
+}
+
+export async function updateEmployee({ employeeId, payload, user }) {
+    ensureObjectId(employeeId, "EMPLOYEE_INVALID_ID", "errors.employee.profile.invalidId")
+    const existing = await Employee.findOne({ _id: employeeId, ...getEmployeeScopeFilter(user) }).lean()
+    if (!existing) throw new AppError({ statusCode: 404, code: "EMPLOYEE_NOT_FOUND", messageKey: "errors.employee.profile.notFound" })
+    if (existing.recordStatus === "ARCHIVED") throw new AppError({ statusCode: 409, code: "EMPLOYEE_ARCHIVED", messageKey: "errors.employee.profile.archived" })
+
+    const merged = { ...existing, ...payload }
+    await validateAssignment(merged, user)
+    await validateAddresses(payload)
+    await ensureEmployeeType(merged.employeeTypeId)
+    ensureResignStatus({ ...merged, employmentStatus: merged.employmentStatus || "WORKING" })
+
+    try {
+        const updated = await Employee.findByIdAndUpdate(existing._id, { $set: buildEmployeePayload(payload, user.accountId) }, { new: true, runValidators: true, context: "query" }).lean()
+        clearCacheByPrefix("employee:list:")
+        return getEmployeeById({ employeeId: updated._id, user })
+    } catch (error) {
+        handleDuplicate(error)
+    }
+}
+
+export async function archiveEmployee({ employeeId, user }) {
+    ensureObjectId(employeeId, "EMPLOYEE_INVALID_ID", "errors.employee.profile.invalidId")
+    const existing = await Employee.findOne({ _id: employeeId, ...getEmployeeScopeFilter(user) }).lean()
+    if (!existing) throw new AppError({ statusCode: 404, code: "EMPLOYEE_NOT_FOUND", messageKey: "errors.employee.profile.notFound" })
+    const archived = await Employee.findByIdAndUpdate(existing._id, { $set: { recordStatus: "ARCHIVED", updatedByAccountId: user.accountId } }, { new: true, runValidators: true, context: "query" }).lean()
+    clearCacheByPrefix("employee:list:")
+    return getEmployeeById({ employeeId: archived._id, user })
+}
+
+export async function getEmployeeApprovalPreview({ query, user }) {
+    if (query.employeeId) {
+        const employee = await Employee.findOne({
+            _id: query.employeeId,
+            ...getEmployeeScopeFilter(user),
+        }).lean()
+
+        if (!employee) {
+            throw new AppError({
+                statusCode: 404,
+                code: "EMPLOYEE_NOT_FOUND",
+                messageKey: "errors.employee.profile.notFound",
+            })
+        }
+
+        return resolveApprovalByAssignment({
+            moduleKey: query.moduleKey,
+            actionKey: query.actionKey || "REQUEST",
+            assignment: {
+                ...employee,
+                employeeId: employee._id,
+            },
+            context: {},
+        })
+    }
+
+    return resolveApprovalByAssignment({
+        moduleKey: query.moduleKey,
+        actionKey: query.actionKey || "REQUEST",
+        assignment: {
+            companyId: query.companyId,
+            branchId: query.branchId,
+            departmentId: query.departmentId,
+            positionId: query.positionId,
+            lineId: query.lineId,
+            employeeId: query.employeeId || null,
+        },
+        context: {},
+    })
+}
