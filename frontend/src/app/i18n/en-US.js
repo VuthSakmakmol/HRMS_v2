@@ -37,6 +37,7 @@ export default {
         departments: "Departments",
         positions: "Positions",
         lines: "Lines",
+        shifts: "Shifts",
     },
 
     auth: {
@@ -461,6 +462,96 @@ export default {
             field: "Field",
             issue: "Issue",
         },
+        shift: {
+            eyebrow: "Organization Setup",
+            title: "Shifts",
+            description:
+                "Create and manage branch working shifts. Shift rules are used later by employees, attendance, OT, late/early calculation, and payroll.",
+            newShift: "New Shift",
+            createTitle: "Create Shift",
+            editTitle: "Edit Shift",
+            archiveTitle: "Archive Shift",
+            archiveMessage:
+                "Are you sure you want to archive {name}? Archived shifts are kept for history and cannot be hard deleted.",
+            searchPlaceholder: "Search code, name, short name, description...",
+            empty: "No shifts found.",
+            loadFailed: "Unable to load shifts",
+            companyLoadFailed: "Unable to load companies",
+            branchLoadFailed: "Unable to load branches",
+            saveFailed: "Unable to save shift",
+            archiveFailed: "Unable to archive shift",
+            created: "Shift created",
+            createdDetail: "The shift was created successfully.",
+            updated: "Shift updated",
+            updatedDetail: "The shift was updated successfully.",
+            archived: "Shift archived",
+            archivedDetail: "The shift was archived successfully.",
+            readOnly: "Archived",
+
+            basicInfo: "Basic Information",
+            timeInfo: "Time Information",
+            allCompanies: "All Companies",
+            allBranches: "All Branches",
+            selectCompany: "Select company",
+            selectBranch: "Select branch",
+            company: "Company",
+            branch: "Branch",
+            code: "Code",
+            shiftName: "Shift",
+            shortName: "Short Name",
+            timeRange: "Time Range",
+            startTime: "Start Time",
+            endTime: "End Time",
+            breakTime: "Break Time",
+            breakStartTime: "Break Start Time",
+            breakEndTime: "Break End Time",
+            noBreak: "No Break",
+            totalHours: "Total Hours",
+            breakMinutes: "Break",
+            workingHours: "Working Hours",
+            graceMinutes: "Grace",
+            graceInMinutes: "Grace In Minutes",
+            graceOutMinutes: "Grace Out Minutes",
+            inOutGrace: "In {inValue}m / Out {outValue}m",
+            overnight: "Overnight",
+            descriptionLabel: "Description",
+            status: "Status",
+            statusAll: "All Statuses",
+            statusActive: "Active",
+            statusInactive: "Inactive",
+            statusArchived: "Archived",
+            updatedAt: "Updated",
+
+            downloadSample: "Download Sample",
+            importExcel: "Import Excel",
+            exportExcel: "Export Excel",
+            sampleDownloaded: "Sample downloaded",
+            sampleDownloadedDetail: "The shift import sample has been downloaded.",
+            sampleDownloadFailed: "Unable to download sample",
+            exported: "Export ready",
+            exportedDetail: "The shifts export has been downloaded.",
+            exportFailed: "Unable to export shifts",
+            importTitle: "Import Shifts",
+            importDescription:
+                "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
+            importFileRequired: "Excel file required",
+            importFileRequiredDetail: "Please choose an Excel file before importing.",
+            importProgress: "Processing... {percent}%",
+            importFinished: "Import finished",
+            importFinishedSuccess: "Shifts were imported successfully.",
+            importFinishedWithErrors:
+                "Import finished with validation errors. Please review the result.",
+            importFailed: "Unable to import shifts",
+            importResultTitle: "Shift Import Result",
+            totalRows: "Total Rows",
+            createdRows: "Created",
+            updatedRows: "Updated",
+            skippedRows: "Skipped",
+            validationErrors: "Validation Errors",
+            rowNumber: "Row",
+            field: "Field",
+            issue: "Issue",
+        },
     },
 
     errors: {
@@ -619,6 +710,48 @@ export default {
                     "Leader position code must also be included in allowedPositionCodes.",
                 duplicateInFile:
                     "Duplicate line code found in this Excel file for the same department.",
+            },
+            shift: {
+                invalidId: "Invalid shift ID.",
+                notFound: "Shift was not found.",
+                archived: "This shift is archived and cannot be updated.",
+                codeExists:
+                    "This shift code already exists inside the selected branch.",
+                invalidTimeRange:
+                    "Shift time range is invalid. End time must create a valid working duration.",
+                invalidBreakRange:
+                    "Break time must be inside the shift duration and shorter than total shift time.",
+                invalidWorkingMinutes:
+                    "Working minutes must be greater than zero.",
+            },
+
+            shiftImport: {
+                fileRequired: "Please choose an Excel file to import.",
+                invalidTemplate:
+                    "Invalid Excel template. Please download the sample template and use the same columns.",
+                emptyFile: "The uploaded Excel file is empty.",
+                noDataRows: "The Excel file has no shift rows to import.",
+                hasErrors:
+                    "The import finished with validation errors. Please review the result.",
+                companyCodeRequired: "Company code is required.",
+                branchCodeRequired: "Branch code is required.",
+                shiftCodeRequired: "Shift code is required.",
+                shiftNameRequired: "Shift name is required.",
+                startTimeInvalid: "Start time must use HH:mm format.",
+                endTimeInvalid: "End time must use HH:mm format.",
+                breakTimePairRequired:
+                    "Break start time and break end time must be filled together.",
+                graceMinutesInvalid:
+                    "Grace minutes must be a whole number from 0 to 240.",
+                statusInvalid: "Status must be ACTIVE or INACTIVE.",
+                invalidTimeRange:
+                    "Shift time or break time is invalid. Please check start, end, and break time.",
+                companyNotFound:
+                    "Company code was not found or the company is archived.",
+                branchNotFound:
+                    "Branch code was not found inside the selected company or the branch is archived.",
+                duplicateInFile:
+                    "Duplicate shift code found in this Excel file for the same branch.",
             },
         },
     },

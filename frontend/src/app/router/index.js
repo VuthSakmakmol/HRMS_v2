@@ -92,6 +92,16 @@ const router = createRouter({
                         permissionCode: "ORGANIZATION.LINE.VIEW",
                     },
                 },
+
+                {
+                    path: "organization/shifts",
+                    name: "organization-shifts",
+                    component: () => import("@/modules/shift/views/ShiftListView.vue"),
+                    meta: {
+                        titleKey: "nav.shifts",
+                        permissionCode: "ORGANIZATION.SHIFT.VIEW",
+                    },
+                },
             ],
         },
 

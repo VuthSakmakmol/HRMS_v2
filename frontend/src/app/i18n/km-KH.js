@@ -37,6 +37,7 @@ export default {
         departments: "នាយកដ្ឋាន",
         positions: "តួនាទីការងារ",
         lines: "ខ្សែសង្វាក់ការងារ",
+        shifts: "វេនការងារ",
     },
 
     auth: {
@@ -474,6 +475,97 @@ export default {
             field: "Field",
             issue: "បញ្ហា",
         },
+        shift: {
+            eyebrow: "ការរៀបចំអង្គភាព",
+            title: "វេនការងារ",
+            description:
+                "បង្កើត និងគ្រប់គ្រងវេនការងារតាមសាខា។ វេនការងារនឹងប្រើសម្រាប់បុគ្គលិក attendance, OT, ការគណនាមកយឺត/ចេញមុន និង payroll។",
+            newShift: "បង្កើតវេនថ្មី",
+            createTitle: "បង្កើតវេនការងារ",
+            editTitle: "កែប្រែវេនការងារ",
+            archiveTitle: "រក្សាទុកវេនការងារ",
+            archiveMessage:
+                "តើអ្នកប្រាកដថាចង់រក្សាទុក {name} មែនទេ? វេនដែលបានរក្សាទុកនឹងរក្សាសម្រាប់ប្រវត្តិ ហើយមិនអាចលុបចោលបានទេ។",
+            searchPlaceholder: "ស្វែងរកកូដ ឈ្មោះ ឈ្មោះខ្លី ការពិពណ៌នា...",
+            empty: "រកមិនឃើញវេនការងារទេ។",
+            loadFailed: "មិនអាចទាញយកវេនការងារបានទេ",
+            companyLoadFailed: "មិនអាចទាញយកក្រុមហ៊ុនបានទេ",
+            branchLoadFailed: "មិនអាចទាញយកសាខាបានទេ",
+            saveFailed: "មិនអាចរក្សាទុកវេនការងារបានទេ",
+            archiveFailed: "មិនអាចរក្សាទុកវេនការងារបានទេ",
+            created: "បានបង្កើតវេនការងារ",
+            createdDetail: "វេនការងារត្រូវបានបង្កើតដោយជោគជ័យ។",
+            updated: "បានកែប្រែវេនការងារ",
+            updatedDetail: "វេនការងារត្រូវបានកែប្រែដោយជោគជ័យ។",
+            archived: "បានរក្សាទុកវេនការងារ",
+            archivedDetail: "វេនការងារត្រូវបានរក្សាទុកដោយជោគជ័យ។",
+            readOnly: "បានរក្សាទុក",
+
+            basicInfo: "ព័ត៌មានមូលដ្ឋាន",
+            timeInfo: "ព័ត៌មានម៉ោង",
+            allCompanies: "ក្រុមហ៊ុនទាំងអស់",
+            allBranches: "សាខាទាំងអស់",
+            selectCompany: "ជ្រើសរើសក្រុមហ៊ុន",
+            selectBranch: "ជ្រើសរើសសាខា",
+            company: "ក្រុមហ៊ុន",
+            branch: "សាខា",
+            code: "កូដ",
+            shiftName: "វេន",
+            shortName: "ឈ្មោះខ្លី",
+            timeRange: "ចន្លោះម៉ោង",
+            startTime: "ម៉ោងចាប់ផ្តើម",
+            endTime: "ម៉ោងបញ្ចប់",
+            breakTime: "ម៉ោងសម្រាក",
+            breakStartTime: "ម៉ោងចាប់ផ្តើមសម្រាក",
+            breakEndTime: "ម៉ោងបញ្ចប់សម្រាក",
+            noBreak: "មិនមានម៉ោងសម្រាក",
+            totalHours: "ម៉ោងសរុប",
+            breakMinutes: "សម្រាក",
+            workingHours: "ម៉ោងធ្វើការ",
+            graceMinutes: "Grace",
+            graceInMinutes: "Grace ចូល",
+            graceOutMinutes: "Grace ចេញ",
+            inOutGrace: "ចូល {inValue}នាទី / ចេញ {outValue}នាទី",
+            overnight: "ឆ្លងថ្ងៃ",
+            descriptionLabel: "ការពិពណ៌នា",
+            status: "ស្ថានភាព",
+            statusAll: "ស្ថានភាពទាំងអស់",
+            statusActive: "សកម្ម",
+            statusInactive: "មិនសកម្ម",
+            statusArchived: "បានរក្សាទុក",
+            updatedAt: "បានកែប្រែ",
+
+            downloadSample: "ទាញយកគំរូ",
+            importExcel: "នាំចូល Excel",
+            exportExcel: "នាំចេញ Excel",
+            sampleDownloaded: "បានទាញយកគំរូ",
+            sampleDownloadedDetail: "គំរូនាំចូលវេនការងារត្រូវបានទាញយក។",
+            sampleDownloadFailed: "មិនអាចទាញយកគំរូបានទេ",
+            exported: "បាននាំចេញ",
+            exportedDetail: "ឯកសារ Shift export ត្រូវបានទាញយក។",
+            exportFailed: "មិនអាចនាំចេញវេនការងារបានទេ",
+            importTitle: "នាំចូលវេនការងារ",
+            importDescription:
+                "Upload Excel template ដែលបានបំពេញ។ សូមរក្សា column ដូចគំរូដែលបានទាញយក។",
+            importFileRequired: "ត្រូវការឯកសារ Excel",
+            importFileRequiredDetail:
+                "សូមជ្រើសរើសឯកសារ Excel មុនពេលនាំចូល។",
+            importProgress: "កំពុងដំណើរការ... {percent}%",
+            importFinished: "ការនាំចូលបានបញ្ចប់",
+            importFinishedSuccess: "វេនការងារត្រូវបាននាំចូលដោយជោគជ័យ។",
+            importFinishedWithErrors:
+                "ការនាំចូលបានបញ្ចប់ ប៉ុន្តែមានកំហុស validation។ សូមពិនិត្យលទ្ធផល។",
+            importFailed: "មិនអាចនាំចូលវេនការងារបានទេ",
+            importResultTitle: "លទ្ធផលនាំចូលវេនការងារ",
+            totalRows: "ជួរដេកសរុប",
+            createdRows: "បានបង្កើត",
+            updatedRows: "បានកែប្រែ",
+            skippedRows: "បានរំលង",
+            validationErrors: "កំហុស Validation",
+            rowNumber: "ជួរដេក",
+            field: "Field",
+            issue: "បញ្ហា",
+        },
     },
 
     errors: {
@@ -641,6 +733,50 @@ export default {
                     "កូដតួនាទីអ្នកដឹកនាំត្រូវតែមានក្នុង allowedPositionCodes។",
                 duplicateInFile:
                     "មានកូដ Line ស្ទួនក្នុង Excel file សម្រាប់នាយកដ្ឋានដូចគ្នា។",
+            },
+            shift: {
+                invalidId: "Shift ID មិនត្រឹមត្រូវ។",
+                notFound: "រកមិនឃើញវេនការងារទេ។",
+                archived:
+                    "វេនការងារនេះត្រូវបានរក្សាទុក ហើយមិនអាចកែប្រែបានទេ។",
+                codeExists:
+                    "កូដវេនការងារនេះមានរួចហើយក្នុងសាខាដែលបានជ្រើស។",
+                invalidTimeRange:
+                    "ចន្លោះម៉ោងវេនមិនត្រឹមត្រូវ។ សូមពិនិត្យម៉ោងចាប់ផ្តើម និងម៉ោងបញ្ចប់។",
+                invalidBreakRange:
+                    "ម៉ោងសម្រាកត្រូវតែស្ថិតក្នុងចន្លោះម៉ោងវេន ហើយត្រូវតែខ្លីជាងម៉ោងសរុប។",
+                invalidWorkingMinutes:
+                    "ម៉ោងធ្វើការត្រូវតែច្រើនជាងសូន្យ។",
+            },
+
+            shiftImport: {
+                fileRequired: "សូមជ្រើសរើសឯកសារ Excel ដើម្បីនាំចូល។",
+                invalidTemplate:
+                    "Excel template មិនត្រឹមត្រូវ។ សូមទាញយកគំរូ ហើយប្រើ column ដូចគ្នា។",
+                emptyFile: "ឯកសារ Excel ដែលបាន upload គឺទទេ។",
+                noDataRows:
+                    "ឯកសារ Excel មិនមានជួរដេកវេនការងារសម្រាប់នាំចូលទេ។",
+                hasErrors:
+                    "ការនាំចូលបានបញ្ចប់ ប៉ុន្តែមានកំហុស validation។ សូមពិនិត្យលទ្ធផល។",
+                companyCodeRequired: "ត្រូវការកូដក្រុមហ៊ុន។",
+                branchCodeRequired: "ត្រូវការកូដសាខា។",
+                shiftCodeRequired: "ត្រូវការកូដវេន។",
+                shiftNameRequired: "ត្រូវការឈ្មោះវេន។",
+                startTimeInvalid: "ម៉ោងចាប់ផ្តើមត្រូវប្រើទម្រង់ HH:mm។",
+                endTimeInvalid: "ម៉ោងបញ្ចប់ត្រូវប្រើទម្រង់ HH:mm។",
+                breakTimePairRequired:
+                    "ម៉ោងចាប់ផ្តើមសម្រាក និងម៉ោងបញ្ចប់សម្រាកត្រូវបំពេញជាមួយគ្នា។",
+                graceMinutesInvalid:
+                    "Grace minutes ត្រូវតែជាចំនួនគត់ចន្លោះពី 0 ដល់ 240។",
+                statusInvalid: "ស្ថានភាពត្រូវតែជា ACTIVE ឬ INACTIVE។",
+                invalidTimeRange:
+                    "ម៉ោងវេន ឬម៉ោងសម្រាកមិនត្រឹមត្រូវ។ សូមពិនិត្យម្តងទៀត។",
+                companyNotFound:
+                    "រកមិនឃើញកូដក្រុមហ៊ុន ឬក្រុមហ៊ុនត្រូវបានរក្សាទុក។",
+                branchNotFound:
+                    "រកមិនឃើញកូដសាខាក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានរក្សាទុក។",
+                duplicateInFile:
+                    "មានកូដវេនស្ទួនក្នុង Excel file សម្រាប់សាខាដូចគ្នា។",
             },
         },
     },

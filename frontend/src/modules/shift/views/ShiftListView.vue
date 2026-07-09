@@ -8,8 +8,8 @@ import Card from "primevue/card"
 import Column from "primevue/column"
 import DataTable from "primevue/datatable"
 import Dialog from "primevue/dialog"
+import InputNumber from "primevue/inputnumber"
 import InputText from "primevue/inputtext"
-import MultiSelect from "primevue/multiselect"
 import ProgressBar from "primevue/progressbar"
 import Select from "primevue/select"
 import Tag from "primevue/tag"
@@ -20,40 +20,34 @@ import { useUiStore } from "@/app/stores/ui.store.js"
 
 import { fetchBranches } from "@/modules/organization/services/branch.api.js"
 import { fetchCompanies } from "@/modules/organization/services/company.api.js"
-import { fetchDepartments } from "@/modules/organization/services/department.api.js"
-import { fetchPositions } from "@/modules/organization/services/position.api.js"
 
-import { useLineStore } from "../stores/line.store.js"
+import { useShiftStore } from "../stores/shift.store.js"
 
 const { t } = useI18n()
 const toast = useToast()
 
 const authStore = useAuthStore()
 const uiStore = useUiStore()
-const lineStore = useLineStore()
+const shiftStore = useShiftStore()
 
-const LINE_PERMISSIONS = Object.freeze({
-    VIEW: "ORGANIZATION.LINE.VIEW",
-    CREATE: "ORGANIZATION.LINE.CREATE",
-    UPDATE: "ORGANIZATION.LINE.UPDATE",
-    ARCHIVE: "ORGANIZATION.LINE.ARCHIVE",
-    IMPORT: "ORGANIZATION.LINE.IMPORT",
-    EXPORT: "ORGANIZATION.LINE.EXPORT",
+const SHIFT_PERMISSIONS = Object.freeze({
+    VIEW: "ORGANIZATION.SHIFT.VIEW",
+    CREATE: "ORGANIZATION.SHIFT.CREATE",
+    UPDATE: "ORGANIZATION.SHIFT.UPDATE",
+    ARCHIVE: "ORGANIZATION.SHIFT.ARCHIVE",
+    IMPORT: "ORGANIZATION.SHIFT.IMPORT",
+    EXPORT: "ORGANIZATION.SHIFT.EXPORT",
 })
 
 const companies = ref([])
 const branches = ref([])
-const departments = ref([])
-const positions = ref([])
 
 const companyLoading = ref(false)
 const branchLoading = ref(false)
-const departmentLoading = ref(false)
-const positionLoading = ref(false)
 
 const dialogVisible = ref(false)
 const dialogMode = ref("create")
-const selectedLineId = ref(null)
+const selectedShiftId = ref(null)
 
 const archiveDialogVisible = ref(false)
 const archiveCandidate = ref(null)
@@ -70,24 +64,30 @@ const filters = reactive({
     status: "ALL",
     companyId: "",
     branchId: "",
-    departmentId: "",
-    positionId: "",
 })
 
 const form = reactive(createEmptyForm())
 
-const canCreate = computed(() => authStore.hasPermission(LINE_PERMISSIONS.CREATE))
-const canUpdate = computed(() => authStore.hasPermission(LINE_PERMISSIONS.UPDATE))
-const canArchive = computed(() =>
-    authStore.hasPermission(LINE_PERMISSIONS.ARCHIVE),
+const canCreate = computed(() =>
+    authStore.hasPermission(SHIFT_PERMISSIONS.CREATE),
 )
-const canImport = computed(() => authStore.hasPermission(LINE_PERMISSIONS.IMPORT))
-const canExport = computed(() => authStore.hasPermission(LINE_PERMISSIONS.EXPORT))
+const canUpdate = computed(() =>
+    authStore.hasPermission(SHIFT_PERMISSIONS.UPDATE),
+)
+const canArchive = computed(() =>
+    authStore.hasPermission(SHIFT_PERMISSIONS.ARCHIVE),
+)
+const canImport = computed(() =>
+    authStore.hasPermission(SHIFT_PERMISSIONS.IMPORT),
+)
+const canExport = computed(() =>
+    authStore.hasPermission(SHIFT_PERMISSIONS.EXPORT),
+)
 
 const dialogTitle = computed(() => {
     return dialogMode.value === "create"
-        ? t("organization.line.createTitle")
-        : t("organization.line.editTitle")
+        ? t("organization.shift.createTitle")
+        : t("organization.shift.editTitle")
 })
 
 const companyOptions = computed(() =>
@@ -99,7 +99,7 @@ const companyOptions = computed(() =>
 
 const companyFilterOptions = computed(() => [
     {
-        label: t("organization.line.allCompanies"),
+        label: t("organization.shift.allCompanies"),
         value: "",
     },
     ...companyOptions.value,
@@ -122,7 +122,7 @@ const branchOptions = computed(() =>
 
 const branchFilterOptions = computed(() => [
     {
-        label: t("organization.line.allBranches"),
+        label: t("organization.shift.allBranches"),
         value: "",
     },
     ...branches.value
@@ -139,168 +139,73 @@ const branchFilterOptions = computed(() => [
         })),
 ])
 
-const departmentOptions = computed(() =>
-    departments.value
-        .filter((department) => {
-            if (form.companyId && department.companyId !== form.companyId) {
-                return false
-            }
-
-            if (form.branchId && department.branchId !== form.branchId) {
-                return false
-            }
-
-            return true
-        })
-        .map((department) => ({
-            label: `${department.code} - ${department.name}`,
-            value: department.id,
-        })),
-)
-
-const departmentFilterOptions = computed(() => [
-    {
-        label: t("organization.line.allDepartments"),
-        value: "",
-    },
-    ...departments.value
-        .filter((department) => {
-            if (
-                filters.companyId &&
-                department.companyId !== filters.companyId
-            ) {
-                return false
-            }
-
-            if (filters.branchId && department.branchId !== filters.branchId) {
-                return false
-            }
-
-            return true
-        })
-        .map((department) => ({
-            label: `${department.code} - ${department.name}`,
-            value: department.id,
-        })),
-])
-
-const positionOptions = computed(() =>
-    positions.value
-        .filter((position) => {
-            if (form.companyId && position.companyId !== form.companyId) {
-                return false
-            }
-
-            if (form.branchId && position.branchId !== form.branchId) {
-                return false
-            }
-
-            if (
-                form.departmentId &&
-                position.departmentId !== form.departmentId
-            ) {
-                return false
-            }
-
-            return true
-        })
-        .map((position) => ({
-            label: `${position.code} - ${position.title}`,
-            value: position.id,
-        })),
-)
-
-const positionFilterOptions = computed(() => [
-    {
-        label: t("organization.line.allPositions"),
-        value: "",
-    },
-    ...positions.value
-        .filter((position) => {
-            if (
-                filters.companyId &&
-                position.companyId !== filters.companyId
-            ) {
-                return false
-            }
-
-            if (filters.branchId && position.branchId !== filters.branchId) {
-                return false
-            }
-
-            if (
-                filters.departmentId &&
-                position.departmentId !== filters.departmentId
-            ) {
-                return false
-            }
-
-            return true
-        })
-        .map((position) => ({
-            label: `${position.code} - ${position.title}`,
-            value: position.id,
-        })),
-])
-
-const leaderPositionOptions = computed(() => {
-    const selectedAllowedIds = form.allowedPositionIds || []
-
-    return [
-        {
-            label: t("organization.line.noLeaderPosition"),
-            value: "",
-        },
-        ...positionOptions.value.filter((option) => {
-            if (selectedAllowedIds.length === 0) {
-                return true
-            }
-
-            return selectedAllowedIds.includes(option.value)
-        }),
-    ]
-})
-
 const statusOptions = computed(() => [
     {
-        label: t("organization.line.statusAll"),
+        label: t("organization.shift.statusAll"),
         value: "ALL",
     },
     {
-        label: t("organization.line.statusActive"),
+        label: t("organization.shift.statusActive"),
         value: "ACTIVE",
     },
     {
-        label: t("organization.line.statusInactive"),
+        label: t("organization.shift.statusInactive"),
         value: "INACTIVE",
     },
     {
-        label: t("organization.line.statusArchived"),
+        label: t("organization.shift.statusArchived"),
         value: "ARCHIVED",
     },
 ])
 
 const editableStatusOptions = computed(() => [
     {
-        label: t("organization.line.statusActive"),
+        label: t("organization.shift.statusActive"),
         value: "ACTIVE",
     },
     {
-        label: t("organization.line.statusInactive"),
+        label: t("organization.shift.statusInactive"),
         value: "INACTIVE",
     },
 ])
+
+const durationPreview = computed(() => {
+    const totalMinutes = calculateDurationMinutes(form.startTime, form.endTime)
+    const breakMinutes =
+        form.breakStartTime && form.breakEndTime
+            ? calculateDurationMinutes(form.breakStartTime, form.breakEndTime)
+            : 0
+
+    if (!totalMinutes || totalMinutes <= 0) {
+        return {
+            totalMinutes: 0,
+            breakMinutes: 0,
+            workingMinutes: 0,
+            isOvernight: false,
+        }
+    }
+
+    return {
+        totalMinutes,
+        breakMinutes,
+        workingMinutes: Math.max(totalMinutes - breakMinutes, 0),
+        isOvernight: isOvernightTime(form.startTime, form.endTime),
+    }
+})
 
 function createEmptyForm() {
     return {
         companyId: "",
         branchId: "",
-        departmentId: "",
         code: "",
         name: "",
         shortName: "",
-        allowedPositionIds: [],
-        leaderPositionId: "",
+        startTime: "07:00",
+        endTime: "16:00",
+        breakStartTime: "12:00",
+        breakEndTime: "13:00",
+        graceInMinutes: 0,
+        graceOutMinutes: 0,
         description: "",
         status: "ACTIVE",
     }
@@ -311,14 +216,15 @@ function assignForm(source) {
 
     form.companyId = nextForm.companyId || ""
     form.branchId = nextForm.branchId || ""
-    form.departmentId = nextForm.departmentId || ""
     form.code = nextForm.code || ""
     form.name = nextForm.name || ""
     form.shortName = nextForm.shortName || ""
-    form.allowedPositionIds = Array.isArray(nextForm.allowedPositionIds)
-        ? [...nextForm.allowedPositionIds]
-        : []
-    form.leaderPositionId = nextForm.leaderPositionId || ""
+    form.startTime = nextForm.startTime || "07:00"
+    form.endTime = nextForm.endTime || "16:00"
+    form.breakStartTime = nextForm.breakStartTime || ""
+    form.breakEndTime = nextForm.breakEndTime || ""
+    form.graceInMinutes = Number(nextForm.graceInMinutes || 0)
+    form.graceOutMinutes = Number(nextForm.graceOutMinutes || 0)
     form.description = nextForm.description || ""
     form.status = nextForm.status === "INACTIVE" ? "INACTIVE" : "ACTIVE"
 }
@@ -327,12 +233,15 @@ function buildCreatePayload() {
     return {
         companyId: form.companyId,
         branchId: form.branchId,
-        departmentId: form.departmentId,
         code: form.code,
         name: form.name,
         shortName: form.shortName,
-        allowedPositionIds: form.allowedPositionIds,
-        leaderPositionId: form.leaderPositionId || null,
+        startTime: form.startTime,
+        endTime: form.endTime,
+        breakStartTime: form.breakStartTime || "",
+        breakEndTime: form.breakEndTime || "",
+        graceInMinutes: Number(form.graceInMinutes || 0),
+        graceOutMinutes: Number(form.graceOutMinutes || 0),
         description: form.description,
         status: form.status,
     }
@@ -343,8 +252,12 @@ function buildUpdatePayload() {
         code: form.code,
         name: form.name,
         shortName: form.shortName,
-        allowedPositionIds: form.allowedPositionIds,
-        leaderPositionId: form.leaderPositionId || null,
+        startTime: form.startTime,
+        endTime: form.endTime,
+        breakStartTime: form.breakStartTime || "",
+        breakEndTime: form.breakEndTime || "",
+        graceInMinutes: Number(form.graceInMinutes || 0),
+        graceOutMinutes: Number(form.graceOutMinutes || 0),
         description: form.description,
         status: form.status,
     }
@@ -411,6 +324,71 @@ function normalizeCodeInput() {
     clearFieldError("code")
 }
 
+function normalizeTimeInput(fieldName) {
+    form[fieldName] = String(form[fieldName] || "")
+        .replace(/[^\d:]/g, "")
+        .slice(0, 5)
+
+    clearFieldError(fieldName)
+}
+
+function parseTimeToMinutes(time) {
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(time || ""))) {
+        return null
+    }
+
+    const [hour, minute] = String(time).split(":").map(Number)
+
+    return hour * 60 + minute
+}
+
+function isOvernightTime(startTime, endTime) {
+    const startMinutes = parseTimeToMinutes(startTime)
+    const endMinutes = parseTimeToMinutes(endTime)
+
+    if (startMinutes === null || endMinutes === null) {
+        return false
+    }
+
+    return endMinutes <= startMinutes
+}
+
+function calculateDurationMinutes(startTime, endTime) {
+    const startMinutes = parseTimeToMinutes(startTime)
+    let endMinutes = parseTimeToMinutes(endTime)
+
+    if (startMinutes === null || endMinutes === null) {
+        return 0
+    }
+
+    if (endMinutes <= startMinutes) {
+        endMinutes += 24 * 60
+    }
+
+    return endMinutes - startMinutes
+}
+
+function formatMinutes(minutes) {
+    const safeMinutes = Number(minutes || 0)
+
+    if (safeMinutes <= 0) {
+        return "0h"
+    }
+
+    const hours = Math.floor(safeMinutes / 60)
+    const mins = safeMinutes % 60
+
+    if (hours && mins) {
+        return `${hours}h ${mins}m`
+    }
+
+    if (hours) {
+        return `${hours}h`
+    }
+
+    return `${mins}m`
+}
+
 function getStatusSeverity(status) {
     if (status === "ACTIVE") {
         return "success"
@@ -429,15 +407,15 @@ function getStatusSeverity(status) {
 
 function getStatusLabel(status) {
     if (status === "ACTIVE") {
-        return t("organization.line.statusActive")
+        return t("organization.shift.statusActive")
     }
 
     if (status === "INACTIVE") {
-        return t("organization.line.statusInactive")
+        return t("organization.shift.statusInactive")
     }
 
     if (status === "ARCHIVED") {
-        return t("organization.line.statusArchived")
+        return t("organization.shift.statusArchived")
     }
 
     return status || "-"
@@ -475,7 +453,7 @@ async function loadCompanies() {
     } catch (error) {
         toast.add({
             severity: "error",
-            summary: t("organization.line.companyLoadFailed"),
+            summary: t("organization.shift.companyLoadFailed"),
             detail: getErrorMessage(error),
             life: 4500,
         })
@@ -500,7 +478,7 @@ async function loadBranches(companyId = "") {
     } catch (error) {
         toast.add({
             severity: "error",
-            summary: t("organization.line.branchLoadFailed"),
+            summary: t("organization.shift.branchLoadFailed"),
             detail: getErrorMessage(error),
             life: 4500,
         })
@@ -509,66 +487,13 @@ async function loadBranches(companyId = "") {
     }
 }
 
-async function loadDepartments(companyId = "", branchId = "") {
-    departmentLoading.value = true
-
+async function loadShifts(params = {}) {
     try {
-        const result = await fetchDepartments({
-            page: 1,
-            limit: 100,
-            status: "ACTIVE",
-            companyId: companyId || undefined,
-            branchId: branchId || undefined,
-            search: "",
-        })
-
-        departments.value = result.items || []
+        await shiftStore.loadShifts(params)
     } catch (error) {
         toast.add({
             severity: "error",
-            summary: t("organization.line.departmentLoadFailed"),
-            detail: getErrorMessage(error),
-            life: 4500,
-        })
-    } finally {
-        departmentLoading.value = false
-    }
-}
-
-async function loadPositions(companyId = "", branchId = "", departmentId = "") {
-    positionLoading.value = true
-
-    try {
-        const result = await fetchPositions({
-            page: 1,
-            limit: 100,
-            status: "ACTIVE",
-            companyId: companyId || undefined,
-            branchId: branchId || undefined,
-            departmentId: departmentId || undefined,
-            search: "",
-        })
-
-        positions.value = result.items || []
-    } catch (error) {
-        toast.add({
-            severity: "error",
-            summary: t("organization.line.positionLoadFailed"),
-            detail: getErrorMessage(error),
-            life: 4500,
-        })
-    } finally {
-        positionLoading.value = false
-    }
-}
-
-async function loadLines(params = {}) {
-    try {
-        await lineStore.loadLines(params)
-    } catch (error) {
-        toast.add({
-            severity: "error",
-            summary: t("organization.line.loadFailed"),
+            summary: t("organization.shift.loadFailed"),
             detail: getErrorMessage(error),
             life: 4500,
         })
@@ -576,15 +501,13 @@ async function loadLines(params = {}) {
 }
 
 function applyFilters() {
-    loadLines({
+    loadShifts({
         page: 1,
-        limit: lineStore.filters.limit,
+        limit: shiftStore.filters.limit,
         search: filters.search,
         status: filters.status,
         companyId: filters.companyId || undefined,
         branchId: filters.branchId || undefined,
-        departmentId: filters.departmentId || undefined,
-        positionId: filters.positionId || undefined,
     })
 }
 
@@ -593,22 +516,18 @@ function clearFilters() {
     filters.status = "ALL"
     filters.companyId = ""
     filters.branchId = ""
-    filters.departmentId = ""
-    filters.positionId = ""
 
-    loadLines({
+    loadShifts({
         page: 1,
         search: "",
         status: "ALL",
         companyId: undefined,
         branchId: undefined,
-        departmentId: undefined,
-        positionId: undefined,
     })
 }
 
 function onPage(event) {
-    loadLines({
+    loadShifts({
         page: event.page + 1,
         limit: event.rows,
     })
@@ -616,89 +535,26 @@ function onPage(event) {
 
 async function onFilterCompanyChange() {
     filters.branchId = ""
-    filters.departmentId = ""
-    filters.positionId = ""
 
-    await Promise.all([
-        loadBranches(filters.companyId),
-        loadDepartments(filters.companyId, ""),
-        loadPositions(filters.companyId, "", ""),
-    ])
+    await loadBranches(filters.companyId)
 
     applyFilters()
 }
 
 async function onFilterBranchChange() {
-    filters.departmentId = ""
-    filters.positionId = ""
-
-    await Promise.all([
-        loadDepartments(filters.companyId, filters.branchId),
-        loadPositions(filters.companyId, filters.branchId, ""),
-    ])
-
-    applyFilters()
-}
-
-async function onFilterDepartmentChange() {
-    filters.positionId = ""
-
-    await loadPositions(
-        filters.companyId,
-        filters.branchId,
-        filters.departmentId,
-    )
-
     applyFilters()
 }
 
 async function onFormCompanyChange() {
     form.branchId = ""
-    form.departmentId = ""
-    form.allowedPositionIds = []
-    form.leaderPositionId = ""
 
     clearFieldError("companyId")
 
-    await Promise.all([
-        loadBranches(form.companyId),
-        loadDepartments(form.companyId, ""),
-        loadPositions(form.companyId, "", ""),
-    ])
+    await loadBranches(form.companyId)
 }
 
-async function onFormBranchChange() {
-    form.departmentId = ""
-    form.allowedPositionIds = []
-    form.leaderPositionId = ""
-
+function onFormBranchChange() {
     clearFieldError("branchId")
-
-    await Promise.all([
-        loadDepartments(form.companyId, form.branchId),
-        loadPositions(form.companyId, form.branchId, ""),
-    ])
-}
-
-async function onFormDepartmentChange() {
-    form.allowedPositionIds = []
-    form.leaderPositionId = ""
-
-    clearFieldError("departmentId")
-
-    await loadPositions(form.companyId, form.branchId, form.departmentId)
-}
-
-function onAllowedPositionsChange() {
-    clearFieldError("allowedPositionIds")
-
-    if (
-        form.leaderPositionId &&
-        form.allowedPositionIds.length > 0 &&
-        !form.allowedPositionIds.includes(form.leaderPositionId)
-    ) {
-        form.leaderPositionId = ""
-    }
 }
 
 async function openCreateDialog() {
@@ -710,16 +566,8 @@ async function openCreateDialog() {
         await loadBranches()
     }
 
-    if (departments.value.length === 0) {
-        await loadDepartments()
-    }
-
-    if (positions.value.length === 0) {
-        await loadPositions()
-    }
-
     dialogMode.value = "create"
-    selectedLineId.value = null
+    selectedShiftId.value = null
     formErrors.value = {}
 
     assignForm(createEmptyForm())
@@ -727,86 +575,76 @@ async function openCreateDialog() {
     if (companies.value.length === 1) {
         form.companyId = companies.value[0].id
         await loadBranches(form.companyId)
-        await loadDepartments(form.companyId, "")
-        await loadPositions(form.companyId, "", "")
     }
 
     if (branchOptions.value.length === 1) {
         form.branchId = branchOptions.value[0].value
-        await loadDepartments(form.companyId, form.branchId)
-        await loadPositions(form.companyId, form.branchId, "")
-    }
-
-    if (departmentOptions.value.length === 1) {
-        form.departmentId = departmentOptions.value[0].value
-        await loadPositions(form.companyId, form.branchId, form.departmentId)
     }
 
     dialogVisible.value = true
 }
 
-async function openEditDialog(line) {
+async function openEditDialog(shift) {
     dialogMode.value = "edit"
-    selectedLineId.value = line.id
+    selectedShiftId.value = shift.id
     formErrors.value = {}
 
-    assignForm(line)
+    assignForm(shift)
 
-    await Promise.all([
-        loadBranches(form.companyId),
-        loadDepartments(form.companyId, form.branchId),
-        loadPositions(form.companyId, form.branchId, form.departmentId),
-    ])
+    await loadBranches(form.companyId)
 
     dialogVisible.value = true
 }
 
 function closeDialog() {
     dialogVisible.value = false
-    selectedLineId.value = null
+    selectedShiftId.value = null
     formErrors.value = {}
 }
 
-async function saveLine() {
+async function saveShift() {
     formErrors.value = {}
 
     try {
         if (dialogMode.value === "create") {
-            await lineStore.createLine(buildCreatePayload())
+            await shiftStore.createShift(buildCreatePayload())
 
             toast.add({
                 severity: "success",
-                summary: t("organization.line.created"),
-                detail: t("organization.line.createdDetail"),
+                summary: t("organization.shift.created"),
+                detail: t("organization.shift.createdDetail"),
                 life: 3000,
             })
         } else {
-            await lineStore.updateLine(selectedLineId.value, buildUpdatePayload())
+            await shiftStore.updateShift(
+                selectedShiftId.value,
+                buildUpdatePayload(),
+            )
 
             toast.add({
                 severity: "success",
-                summary: t("organization.line.updated"),
-                detail: t("organization.line.updatedDetail"),
+                summary: t("organization.shift.updated"),
+                detail: t("organization.shift.updatedDetail"),
                 life: 3000,
             })
         }
 
         closeDialog()
-        await loadLines()
+        await loadShifts()
     } catch (error) {
         applyBackendFieldErrors(error)
 
         toast.add({
             severity: "error",
-            summary: t("organization.line.saveFailed"),
+            summary: t("organization.shift.saveFailed"),
             detail: getErrorMessage(error),
             life: 5000,
         })
     }
 }
 
-function openArchiveDialog(line) {
-    archiveCandidate.value = line
+function openArchiveDialog(shift) {
+    archiveCandidate.value = shift
     archiveDialogVisible.value = true
 }
 
@@ -815,27 +653,27 @@ function closeArchiveDialog() {
     archiveCandidate.value = null
 }
 
-async function confirmArchiveLine() {
+async function confirmArchiveShift() {
     if (!archiveCandidate.value?.id) {
         return
     }
 
     try {
-        await lineStore.archiveLine(archiveCandidate.value.id)
+        await shiftStore.archiveShift(archiveCandidate.value.id)
 
         toast.add({
             severity: "success",
-            summary: t("organization.line.archived"),
-            detail: t("organization.line.archivedDetail"),
+            summary: t("organization.shift.archived"),
+            detail: t("organization.shift.archivedDetail"),
             life: 3000,
         })
 
         closeArchiveDialog()
-        await loadLines()
+        await loadShifts()
     } catch (error) {
         toast.add({
             severity: "error",
-            summary: t("organization.line.archiveFailed"),
+            summary: t("organization.shift.archiveFailed"),
             detail: getErrorMessage(error),
             life: 5000,
         })
@@ -844,18 +682,18 @@ async function confirmArchiveLine() {
 
 async function downloadSample() {
     try {
-        await lineStore.downloadImportTemplate()
+        await shiftStore.downloadImportTemplate()
 
         toast.add({
             severity: "success",
-            summary: t("organization.line.sampleDownloaded"),
-            detail: t("organization.line.sampleDownloadedDetail"),
+            summary: t("organization.shift.sampleDownloaded"),
+            detail: t("organization.shift.sampleDownloadedDetail"),
             life: 3000,
         })
     } catch (error) {
         toast.add({
             severity: "error",
-            summary: t("organization.line.sampleDownloadFailed"),
+            summary: t("organization.shift.sampleDownloadFailed"),
             detail: getErrorMessage(error),
             life: 5000,
         })
@@ -864,18 +702,18 @@ async function downloadSample() {
 
 async function exportExcel() {
     try {
-        await lineStore.exportLines()
+        await shiftStore.exportShifts()
 
         toast.add({
             severity: "success",
-            summary: t("organization.line.exported"),
-            detail: t("organization.line.exportedDetail"),
+            summary: t("organization.shift.exported"),
+            detail: t("organization.shift.exportedDetail"),
             life: 3000,
         })
     } catch (error) {
         toast.add({
             severity: "error",
-            summary: t("organization.line.exportFailed"),
+            summary: t("organization.shift.exportFailed"),
             detail: getErrorMessage(error),
             life: 5000,
         })
@@ -888,7 +726,7 @@ function openImportDialog() {
 }
 
 function closeImportDialog() {
-    if (lineStore.importing) {
+    if (shiftStore.importing) {
         return
     }
 
@@ -915,8 +753,8 @@ async function submitImport() {
     if (!selectedImportFile.value) {
         toast.add({
             severity: "warn",
-            summary: t("organization.line.importFileRequired"),
-            detail: t("organization.line.importFileRequiredDetail"),
+            summary: t("organization.shift.importFileRequired"),
+            detail: t("organization.shift.importFileRequiredDetail"),
             life: 3500,
         })
 
@@ -924,29 +762,29 @@ async function submitImport() {
     }
 
     try {
-        await lineStore.importLines(selectedImportFile.value)
+        await shiftStore.importShifts(selectedImportFile.value)
 
         importDialogVisible.value = false
         importResultDialogVisible.value = true
 
-        await loadLines()
+        await loadShifts()
 
         toast.add({
             severity:
-                lineStore.importSummary?.errors?.length > 0
+                shiftStore.importSummary?.errors?.length > 0
                     ? "warn"
                     : "success",
-            summary: t("organization.line.importFinished"),
+            summary: t("organization.shift.importFinished"),
             detail:
-                lineStore.importSummary?.errors?.length > 0
-                    ? t("organization.line.importFinishedWithErrors")
-                    : t("organization.line.importFinishedSuccess"),
+                shiftStore.importSummary?.errors?.length > 0
+                    ? t("organization.shift.importFinishedWithErrors")
+                    : t("organization.shift.importFinishedSuccess"),
             life: 4500,
         })
     } catch (error) {
         toast.add({
             severity: "error",
-            summary: t("organization.line.importFailed"),
+            summary: t("organization.shift.importFailed"),
             detail: getErrorMessage(error),
             life: 5000,
         })
@@ -961,14 +799,6 @@ function translateImportError(error) {
         : translated
 }
 
-function getAllowedPositionsText(line) {
-    if (!line.allowedPositions?.length) {
-        return t("organization.line.allDepartmentPositions")
-    }
-
-    return line.allowedPositions.map((position) => position.code).join(", ")
-}
-
 watch(
     () => filters.companyId,
     () => {
@@ -980,98 +810,37 @@ watch(
         ) {
             filters.branchId = ""
         }
-
-        if (
-            filters.departmentId &&
-            !departmentFilterOptions.value.some(
-                (option) => option.value === filters.departmentId,
-            )
-        ) {
-            filters.departmentId = ""
-        }
-
-        if (
-            filters.positionId &&
-            !positionFilterOptions.value.some(
-                (option) => option.value === filters.positionId,
-            )
-        ) {
-            filters.positionId = ""
-        }
-    },
-)
-
-watch(
-    () => filters.branchId,
-    () => {
-        if (
-            filters.departmentId &&
-            !departmentFilterOptions.value.some(
-                (option) => option.value === filters.departmentId,
-            )
-        ) {
-            filters.departmentId = ""
-        }
-
-        if (
-            filters.positionId &&
-            !positionFilterOptions.value.some(
-                (option) => option.value === filters.positionId,
-            )
-        ) {
-            filters.positionId = ""
-        }
-    },
-)
-
-watch(
-    () => filters.departmentId,
-    () => {
-        if (
-            filters.positionId &&
-            !positionFilterOptions.value.some(
-                (option) => option.value === filters.positionId,
-            )
-        ) {
-            filters.positionId = ""
-        }
     },
 )
 
 onMounted(async () => {
-    await Promise.all([
-        loadCompanies(),
-        loadBranches(),
-        loadDepartments(),
-        loadPositions(),
-        loadLines(),
-    ])
+    await Promise.all([loadCompanies(), loadBranches(), loadShifts()])
 })
 </script>
 
 <template>
-    <section class="line-page">
-        <div class="line-page__header">
+    <section class="shift-page">
+        <div class="shift-page__header">
             <div>
-                <span class="line-page__eyebrow">
-                    {{ t("organization.line.eyebrow") }}
+                <span class="shift-page__eyebrow">
+                    {{ t("organization.shift.eyebrow") }}
                 </span>
 
-                <h2>{{ t("organization.line.title") }}</h2>
+                <h2>{{ t("organization.shift.title") }}</h2>
 
                 <p>
-                    {{ t("organization.line.description") }}
+                    {{ t("organization.shift.description") }}
                 </p>
             </div>
 
-            <div class="line-page__header-actions">
+            <div class="shift-page__header-actions">
                 <Button
                     v-if="canImport"
                     severity="secondary"
                     outlined
                     icon="pi pi-download"
-                    :loading="lineStore.downloadingTemplate"
-                    :label="t('organization.line.downloadSample')"
+                    :loading="shiftStore.downloadingTemplate"
+                    :label="t('organization.shift.downloadSample')"
                     @click="downloadSample"
                 />
 
@@ -1080,7 +849,7 @@ onMounted(async () => {
                     severity="secondary"
                     outlined
                     icon="pi pi-upload"
-                    :label="t('organization.line.importExcel')"
+                    :label="t('organization.shift.importExcel')"
                     @click="openImportDialog"
                 />
 
@@ -1089,32 +858,32 @@ onMounted(async () => {
                     severity="secondary"
                     outlined
                     icon="pi pi-file-export"
-                    :loading="lineStore.exporting"
-                    :label="t('organization.line.exportExcel')"
+                    :loading="shiftStore.exporting"
+                    :label="t('organization.shift.exportExcel')"
                     @click="exportExcel"
                 />
 
                 <Button
                     v-if="canCreate"
                     icon="pi pi-plus"
-                    :label="t('organization.line.newLine')"
+                    :label="t('organization.shift.newShift')"
                     @click="openCreateDialog"
                 />
             </div>
         </div>
 
-        <Card class="line-card">
+        <Card class="shift-card">
             <template #content>
-                <div class="line-toolbar">
-                    <div class="line-toolbar__filters">
-                        <span class="line-search">
+                <div class="shift-toolbar">
+                    <div class="shift-toolbar__filters">
+                        <span class="shift-search">
                             <i class="pi pi-search" />
 
                             <InputText
                                 v-model="filters.search"
-                                class="line-search__input"
+                                class="shift-search__input"
                                 :placeholder="
-                                    t('organization.line.searchPlaceholder')
+                                    t('organization.shift.searchPlaceholder')
                                 "
                                 @keyup.enter="applyFilters"
                             />
@@ -1122,7 +891,7 @@ onMounted(async () => {
 
                         <Select
                             v-model="filters.companyId"
-                            class="line-filter"
+                            class="shift-filter"
                             :options="companyFilterOptions"
                             option-label="label"
                             option-value="value"
@@ -1132,7 +901,7 @@ onMounted(async () => {
 
                         <Select
                             v-model="filters.branchId"
-                            class="line-filter"
+                            class="shift-filter"
                             :options="branchFilterOptions"
                             option-label="label"
                             option-value="value"
@@ -1141,28 +910,8 @@ onMounted(async () => {
                         />
 
                         <Select
-                            v-model="filters.departmentId"
-                            class="line-filter"
-                            :options="departmentFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="departmentLoading"
-                            @change="onFilterDepartmentChange"
-                        />
-
-                        <Select
-                            v-model="filters.positionId"
-                            class="line-filter"
-                            :options="positionFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="positionLoading"
-                            @change="applyFilters"
-                        />
-
-                        <Select
                             v-model="filters.status"
-                            class="line-status-filter"
+                            class="shift-status-filter"
                             :options="statusOptions"
                             option-label="label"
                             option-value="value"
@@ -1170,7 +919,7 @@ onMounted(async () => {
                         />
                     </div>
 
-                    <div class="line-toolbar__actions">
+                    <div class="shift-toolbar__actions">
                         <Button
                             size="small"
                             icon="pi pi-filter"
@@ -1193,12 +942,12 @@ onMounted(async () => {
                             outlined
                             icon="pi pi-refresh"
                             :label="t('common.refresh')"
-                            @click="loadLines"
+                            @click="loadShifts"
                         />
                     </div>
                 </div>
 
-                <div class="line-table-wrap">
+                <div class="shift-table-wrap">
                     <DataTable
                         lazy
                         paginator
@@ -1207,37 +956,37 @@ onMounted(async () => {
                         size="small"
                         scrollable
                         scroll-height="flex"
-                        :value="lineStore.items"
-                        :loading="lineStore.loading"
-                        :rows="lineStore.pagination.limit"
+                        :value="shiftStore.items"
+                        :loading="shiftStore.loading"
+                        :rows="shiftStore.pagination.limit"
                         :first="
-                            (lineStore.pagination.page - 1) *
-                            lineStore.pagination.limit
+                            (shiftStore.pagination.page - 1) *
+                            shiftStore.pagination.limit
                         "
-                        :total-records="lineStore.pagination.total"
+                        :total-records="shiftStore.pagination.total"
                         :rows-per-page-options="[10, 20, 50, 100]"
-                        :empty-message="t('organization.line.empty')"
+                        :empty-message="t('organization.shift.empty')"
                         @page="onPage"
                     >
                         <Column
                             field="code"
-                            :header="t('organization.line.code')"
+                            :header="t('organization.shift.code')"
                             frozen
-                            style="min-width: 9rem"
+                            style="min-width: 8rem"
                         >
                             <template #body="{ data }">
-                                <strong class="line-code">
+                                <strong class="shift-code">
                                     {{ data.code }}
                                 </strong>
                             </template>
                         </Column>
 
                         <Column
-                            :header="t('organization.line.lineName')"
+                            :header="t('organization.shift.shiftName')"
                             style="min-width: 15rem"
                         >
                             <template #body="{ data }">
-                                <div class="line-name-cell">
+                                <div class="shift-name-cell">
                                     <strong>{{ data.name }}</strong>
                                     <span>{{ data.shortName || "-" }}</span>
                                 </div>
@@ -1245,27 +994,11 @@ onMounted(async () => {
                         </Column>
 
                         <Column
-                            :header="t('organization.line.department')"
+                            :header="t('organization.shift.branch')"
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <div class="line-muted-cell">
-                                    <strong>
-                                        {{ data.department?.name || "-" }}
-                                    </strong>
-                                    <span>
-                                        {{ data.department?.code || "-" }}
-                                    </span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column
-                            :header="t('organization.line.branch')"
-                            style="min-width: 13rem"
-                        >
-                            <template #body="{ data }">
-                                <div class="line-muted-cell">
+                                <div class="shift-muted-cell">
                                     <strong>
                                         {{ data.branch?.name || "-" }}
                                     </strong>
@@ -1277,46 +1010,72 @@ onMounted(async () => {
                         </Column>
 
                         <Column
-                            :header="t('organization.line.allowedPositions')"
-                            style="min-width: 18rem"
+                            :header="t('organization.shift.timeRange')"
+                            style="min-width: 12rem"
                         >
                             <template #body="{ data }">
-                                <span class="line-positions-text">
-                                    {{ getAllowedPositionsText(data) }}
+                                <div class="shift-time-cell">
+                                    <strong>
+                                        {{ data.startTime }} - {{ data.endTime }}
+                                    </strong>
+
+                                    <span v-if="data.isOvernight">
+                                        {{ t("organization.shift.overnight") }}
+                                    </span>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column
+                            :header="t('organization.shift.breakTime')"
+                            style="min-width: 12rem"
+                        >
+                            <template #body="{ data }">
+                                <span
+                                    v-if="
+                                        data.breakStartTime && data.breakEndTime
+                                    "
+                                    class="shift-muted-text"
+                                >
+                                    {{ data.breakStartTime }} -
+                                    {{ data.breakEndTime }}
+                                </span>
+
+                                <span v-else class="shift-muted-text">
+                                    {{ t("organization.shift.noBreak") }}
                                 </span>
                             </template>
                         </Column>
 
                         <Column
-                            :header="t('organization.line.leaderPosition')"
-                            style="min-width: 14rem"
+                            :header="t('organization.shift.workingHours')"
+                            style="min-width: 10rem"
                         >
                             <template #body="{ data }">
-                                <div
-                                    v-if="data.leaderPosition"
-                                    class="line-muted-cell"
-                                >
-                                    <strong>
-                                        {{ data.leaderPosition.title }}
-                                    </strong>
-                                    <span>
-                                        {{ data.leaderPosition.code }}
-                                    </span>
-                                </div>
+                                <Tag
+                                    severity="info"
+                                    :value="formatMinutes(data.workingMinutes)"
+                                />
+                            </template>
+                        </Column>
 
-                                <span v-else class="line-muted-text">
-                                    {{
-                                        t(
-                                            "organization.line.noLeaderPosition",
-                                        )
-                                    }}
+                        <Column
+                            :header="t('organization.shift.graceMinutes')"
+                            style="min-width: 11rem"
+                        >
+                            <template #body="{ data }">
+                                <span class="shift-muted-text">
+                                    {{ t("organization.shift.inOutGrace", {
+                                        inValue: data.graceInMinutes,
+                                        outValue: data.graceOutMinutes,
+                                    }) }}
                                 </span>
                             </template>
                         </Column>
 
                         <Column
                             field="status"
-                            :header="t('organization.line.status')"
+                            :header="t('organization.shift.status')"
                             style="min-width: 9rem"
                         >
                             <template #body="{ data }">
@@ -1329,11 +1088,11 @@ onMounted(async () => {
 
                         <Column
                             field="updatedAt"
-                            :header="t('organization.line.updatedAt')"
+                            :header="t('organization.shift.updatedAt')"
                             style="min-width: 11rem"
                         >
                             <template #body="{ data }">
-                                <span class="line-date">
+                                <span class="shift-date">
                                     {{ formatDateTime(data.updatedAt) }}
                                 </span>
                             </template>
@@ -1346,7 +1105,7 @@ onMounted(async () => {
                             style="min-width: 10rem"
                         >
                             <template #body="{ data }">
-                                <div class="line-actions">
+                                <div class="shift-actions">
                                     <Button
                                         v-if="
                                             canUpdate &&
@@ -1376,9 +1135,9 @@ onMounted(async () => {
 
                                     <span
                                         v-if="data.status === 'ARCHIVED'"
-                                        class="line-archived-text"
+                                        class="shift-archived-text"
                                     >
-                                        {{ t("organization.line.readOnly") }}
+                                        {{ t("organization.shift.readOnly") }}
                                     </span>
                                 </div>
                             </template>
@@ -1391,17 +1150,17 @@ onMounted(async () => {
         <Dialog
             v-model:visible="dialogVisible"
             modal
-            class="line-dialog"
+            class="shift-dialog"
             :header="dialogTitle"
             :draggable="false"
         >
-            <div class="line-form">
-                <div class="line-form__section">
-                    <h3>{{ t("organization.line.basicInfo") }}</h3>
+            <div class="shift-form">
+                <div class="shift-form__section">
+                    <h3>{{ t("organization.shift.basicInfo") }}</h3>
 
-                    <div class="line-form__grid">
-                        <label class="line-field">
-                            <span>{{ t("organization.line.company") }}</span>
+                    <div class="shift-form__grid">
+                        <label class="shift-field">
+                            <span>{{ t("organization.shift.company") }}</span>
 
                             <Select
                                 v-model="form.companyId"
@@ -1411,7 +1170,7 @@ onMounted(async () => {
                                 option-label="label"
                                 option-value="value"
                                 :placeholder="
-                                    t('organization.line.selectCompany')
+                                    t('organization.shift.selectCompany')
                                 "
                                 :loading="companyLoading"
                                 @change="onFormCompanyChange"
@@ -1422,8 +1181,8 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="line-field">
-                            <span>{{ t("organization.line.branch") }}</span>
+                        <label class="shift-field">
+                            <span>{{ t("organization.shift.branch") }}</span>
 
                             <Select
                                 v-model="form.branchId"
@@ -1435,7 +1194,7 @@ onMounted(async () => {
                                 option-label="label"
                                 option-value="value"
                                 :placeholder="
-                                    t('organization.line.selectBranch')
+                                    t('organization.shift.selectBranch')
                                 "
                                 :loading="branchLoading"
                                 @change="onFormBranchChange"
@@ -1446,40 +1205,14 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="line-field">
-                            <span>{{ t("organization.line.department") }}</span>
-
-                            <Select
-                                v-model="form.departmentId"
-                                :disabled="
-                                    dialogMode === 'edit' || !form.branchId
-                                "
-                                :invalid="
-                                    Boolean(getFieldError('departmentId'))
-                                "
-                                :options="departmentOptions"
-                                option-label="label"
-                                option-value="value"
-                                :placeholder="
-                                    t('organization.line.selectDepartment')
-                                "
-                                :loading="departmentLoading"
-                                @change="onFormDepartmentChange"
-                            />
-
-                            <small v-if="getFieldError('departmentId')">
-                                {{ getFieldError("departmentId") }}
-                            </small>
-                        </label>
-
-                        <label class="line-field">
-                            <span>{{ t("organization.line.code") }}</span>
+                        <label class="shift-field">
+                            <span>{{ t("organization.shift.code") }}</span>
 
                             <InputText
                                 v-model="form.code"
                                 :invalid="Boolean(getFieldError('code'))"
                                 autocomplete="off"
-                                placeholder="LINE_A"
+                                placeholder="DAY"
                                 @input="normalizeCodeInput"
                             />
 
@@ -1488,14 +1221,14 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="line-field">
-                            <span>{{ t("organization.line.lineName") }}</span>
+                        <label class="shift-field">
+                            <span>{{ t("organization.shift.shiftName") }}</span>
 
                             <InputText
                                 v-model="form.name"
                                 :invalid="Boolean(getFieldError('name'))"
                                 autocomplete="off"
-                                placeholder="Sewing Line A"
+                                placeholder="Day Shift"
                                 @input="clearFieldError('name')"
                             />
 
@@ -1504,66 +1237,18 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="line-field">
-                            <span>{{ t("organization.line.shortName") }}</span>
+                        <label class="shift-field">
+                            <span>{{ t("organization.shift.shortName") }}</span>
 
                             <InputText
                                 v-model="form.shortName"
                                 autocomplete="off"
-                                placeholder="Line A"
+                                placeholder="Day"
                             />
                         </label>
 
-                        <label class="line-field line-field--wide">
-                            <span>
-                                {{ t("organization.line.allowedPositions") }}
-                            </span>
-
-                            <MultiSelect
-                                v-model="form.allowedPositionIds"
-                                :disabled="!form.departmentId"
-                                :options="positionOptions"
-                                option-label="label"
-                                option-value="value"
-                                display="chip"
-                                :placeholder="
-                                    t(
-                                        'organization.line.selectAllowedPositions',
-                                    )
-                                "
-                                :loading="positionLoading"
-                                @change="onAllowedPositionsChange"
-                            />
-
-                            <small>
-                                {{
-                                    t(
-                                        "organization.line.allowedPositionsHelp",
-                                    )
-                                }}
-                            </small>
-                        </label>
-
-                        <label class="line-field">
-                            <span>
-                                {{ t("organization.line.leaderPosition") }}
-                            </span>
-
-                            <Select
-                                v-model="form.leaderPositionId"
-                                :disabled="!form.departmentId"
-                                :options="leaderPositionOptions"
-                                option-label="label"
-                                option-value="value"
-                                :placeholder="
-                                    t('organization.line.selectLeaderPosition')
-                                "
-                                :loading="positionLoading"
-                            />
-                        </label>
-
-                        <label class="line-field">
-                            <span>{{ t("organization.line.status") }}</span>
+                        <label class="shift-field">
+                            <span>{{ t("organization.shift.status") }}</span>
 
                             <Select
                                 v-model="form.status"
@@ -1572,10 +1257,166 @@ onMounted(async () => {
                                 option-value="value"
                             />
                         </label>
+                    </div>
+                </div>
 
-                        <label class="line-field line-field--wide">
+                <div class="shift-form__section">
+                    <h3>{{ t("organization.shift.timeInfo") }}</h3>
+
+                    <div class="shift-form__grid">
+                        <label class="shift-field">
+                            <span>{{ t("organization.shift.startTime") }}</span>
+
+                            <InputText
+                                v-model="form.startTime"
+                                :invalid="Boolean(getFieldError('startTime'))"
+                                placeholder="07:00"
+                                @input="normalizeTimeInput('startTime')"
+                            />
+
+                            <small v-if="getFieldError('startTime')">
+                                {{ getFieldError("startTime") }}
+                            </small>
+                        </label>
+
+                        <label class="shift-field">
+                            <span>{{ t("organization.shift.endTime") }}</span>
+
+                            <InputText
+                                v-model="form.endTime"
+                                :invalid="Boolean(getFieldError('endTime'))"
+                                placeholder="16:00"
+                                @input="normalizeTimeInput('endTime')"
+                            />
+
+                            <small v-if="getFieldError('endTime')">
+                                {{ getFieldError("endTime") }}
+                            </small>
+                        </label>
+
+                        <label class="shift-field">
                             <span>
-                                {{ t("organization.line.descriptionLabel") }}
+                                {{ t("organization.shift.breakStartTime") }}
+                            </span>
+
+                            <InputText
+                                v-model="form.breakStartTime"
+                                :invalid="
+                                    Boolean(getFieldError('breakStartTime'))
+                                "
+                                placeholder="12:00"
+                                @input="normalizeTimeInput('breakStartTime')"
+                            />
+
+                            <small v-if="getFieldError('breakStartTime')">
+                                {{ getFieldError("breakStartTime") }}
+                            </small>
+                        </label>
+
+                        <label class="shift-field">
+                            <span>
+                                {{ t("organization.shift.breakEndTime") }}
+                            </span>
+
+                            <InputText
+                                v-model="form.breakEndTime"
+                                :invalid="
+                                    Boolean(getFieldError('breakEndTime'))
+                                "
+                                placeholder="13:00"
+                                @input="normalizeTimeInput('breakEndTime')"
+                            />
+
+                            <small v-if="getFieldError('breakEndTime')">
+                                {{ getFieldError("breakEndTime") }}
+                            </small>
+                        </label>
+
+                        <label class="shift-field">
+                            <span>
+                                {{ t("organization.shift.graceInMinutes") }}
+                            </span>
+
+                            <InputNumber
+                                v-model="form.graceInMinutes"
+                                :min="0"
+                                :max="240"
+                                :use-grouping="false"
+                                suffix=" min"
+                            />
+                        </label>
+
+                        <label class="shift-field">
+                            <span>
+                                {{ t("organization.shift.graceOutMinutes") }}
+                            </span>
+
+                            <InputNumber
+                                v-model="form.graceOutMinutes"
+                                :min="0"
+                                :max="240"
+                                :use-grouping="false"
+                                suffix=" min"
+                            />
+                        </label>
+
+                        <div class="shift-preview shift-field--wide">
+                            <div>
+                                <span>
+                                    {{ t("organization.shift.totalHours") }}
+                                </span>
+                                <strong>
+                                    {{
+                                        formatMinutes(
+                                            durationPreview.totalMinutes,
+                                        )
+                                    }}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>
+                                    {{ t("organization.shift.breakMinutes") }}
+                                </span>
+                                <strong>
+                                    {{
+                                        formatMinutes(
+                                            durationPreview.breakMinutes,
+                                        )
+                                    }}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>
+                                    {{ t("organization.shift.workingHours") }}
+                                </span>
+                                <strong>
+                                    {{
+                                        formatMinutes(
+                                            durationPreview.workingMinutes,
+                                        )
+                                    }}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>
+                                    {{ t("organization.shift.overnight") }}
+                                </span>
+                                <strong>
+                                    {{
+                                        durationPreview.isOvernight
+                                            ? t("common.yes")
+                                            : t("common.no")
+                                    }}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <label class="shift-field shift-field--wide">
+                            <span>
+                                {{ t("organization.shift.descriptionLabel") }}
                             </span>
 
                             <Textarea
@@ -1598,9 +1439,9 @@ onMounted(async () => {
 
                 <Button
                     icon="pi pi-save"
-                    :loading="lineStore.saving"
+                    :loading="shiftStore.saving"
                     :label="t('common.save')"
-                    @click="saveLine"
+                    @click="saveShift"
                 />
             </template>
         </Dialog>
@@ -1608,13 +1449,13 @@ onMounted(async () => {
         <Dialog
             v-model:visible="archiveDialogVisible"
             modal
-            class="line-archive-dialog"
-            :header="t('organization.line.archiveTitle')"
+            class="shift-archive-dialog"
+            :header="t('organization.shift.archiveTitle')"
             :draggable="false"
         >
-            <p class="line-archive-text">
+            <p class="shift-archive-text">
                 {{
-                    t("organization.line.archiveMessage", {
+                    t("organization.shift.archiveMessage", {
                         name: archiveCandidate?.name || "-",
                     })
                 }}
@@ -1631,9 +1472,9 @@ onMounted(async () => {
                 <Button
                     severity="danger"
                     icon="pi pi-archive"
-                    :loading="lineStore.archiving"
+                    :loading="shiftStore.archiving"
                     :label="t('common.archive')"
-                    @click="confirmArchiveLine"
+                    @click="confirmArchiveShift"
                 />
             </template>
         </Dialog>
@@ -1641,36 +1482,39 @@ onMounted(async () => {
         <Dialog
             v-model:visible="importDialogVisible"
             modal
-            class="line-import-dialog"
-            :header="t('organization.line.importTitle')"
+            class="shift-import-dialog"
+            :header="t('organization.shift.importTitle')"
             :draggable="false"
-            :closable="!lineStore.importing"
+            :closable="!shiftStore.importing"
         >
-            <div class="line-import">
+            <div class="shift-import">
                 <p>
-                    {{ t("organization.line.importDescription") }}
+                    {{ t("organization.shift.importDescription") }}
                 </p>
 
                 <input
                     ref="fileInputRef"
                     type="file"
                     accept=".xlsx"
-                    :disabled="lineStore.importing"
+                    :disabled="shiftStore.importing"
                     @change="onImportFileChange"
                 />
 
-                <div v-if="selectedImportFile" class="line-import__file">
+                <div v-if="selectedImportFile" class="shift-import__file">
                     <i class="pi pi-file-excel" />
                     <span>{{ selectedImportFile.name }}</span>
                 </div>
 
-                <div v-if="lineStore.importing" class="line-import__progress">
-                    <ProgressBar :value="lineStore.importProgress" />
+                <div
+                    v-if="shiftStore.importing"
+                    class="shift-import__progress"
+                >
+                    <ProgressBar :value="shiftStore.importProgress" />
 
                     <span>
                         {{
-                            t("organization.line.importProgress", {
-                                percent: lineStore.importProgress,
+                            t("organization.shift.importProgress", {
+                                percent: shiftStore.importProgress,
                             })
                         }}
                     </span>
@@ -1681,15 +1525,15 @@ onMounted(async () => {
                 <Button
                     severity="secondary"
                     outlined
-                    :disabled="lineStore.importing"
+                    :disabled="shiftStore.importing"
                     :label="t('common.cancel')"
                     @click="closeImportDialog"
                 />
 
                 <Button
                     icon="pi pi-upload"
-                    :loading="lineStore.importing"
-                    :label="t('organization.line.importExcel')"
+                    :loading="shiftStore.importing"
+                    :label="t('organization.shift.importExcel')"
                     @click="submitImport"
                 />
             </template>
@@ -1698,56 +1542,56 @@ onMounted(async () => {
         <Dialog
             v-model:visible="importResultDialogVisible"
             modal
-            class="line-import-result-dialog"
-            :header="t('organization.line.importResultTitle')"
+            class="shift-import-result-dialog"
+            :header="t('organization.shift.importResultTitle')"
             :draggable="false"
         >
-            <div v-if="lineStore.importSummary" class="line-import-result">
-                <div class="line-import-result__grid">
+            <div v-if="shiftStore.importSummary" class="shift-import-result">
+                <div class="shift-import-result__grid">
                     <div>
-                        <span>{{ t("organization.line.totalRows") }}</span>
-                        <strong>{{ lineStore.importSummary.totalRows }}</strong>
+                        <span>{{ t("organization.shift.totalRows") }}</span>
+                        <strong>{{ shiftStore.importSummary.totalRows }}</strong>
                     </div>
 
                     <div>
-                        <span>{{ t("organization.line.createdRows") }}</span>
-                        <strong>{{ lineStore.importSummary.created }}</strong>
+                        <span>{{ t("organization.shift.createdRows") }}</span>
+                        <strong>{{ shiftStore.importSummary.created }}</strong>
                     </div>
 
                     <div>
-                        <span>{{ t("organization.line.updatedRows") }}</span>
-                        <strong>{{ lineStore.importSummary.updated }}</strong>
+                        <span>{{ t("organization.shift.updatedRows") }}</span>
+                        <strong>{{ shiftStore.importSummary.updated }}</strong>
                     </div>
 
                     <div>
-                        <span>{{ t("organization.line.skippedRows") }}</span>
-                        <strong>{{ lineStore.importSummary.skipped }}</strong>
+                        <span>{{ t("organization.shift.skippedRows") }}</span>
+                        <strong>{{ shiftStore.importSummary.skipped }}</strong>
                     </div>
                 </div>
 
                 <div
-                    v-if="lineStore.importSummary.errors?.length"
-                    class="line-import-result__errors"
+                    v-if="shiftStore.importSummary.errors?.length"
+                    class="shift-import-result__errors"
                 >
-                    <h4>{{ t("organization.line.validationErrors") }}</h4>
+                    <h4>{{ t("organization.shift.validationErrors") }}</h4>
 
                     <DataTable
                         size="small"
-                        :value="lineStore.importSummary.errors"
+                        :value="shiftStore.importSummary.errors"
                     >
                         <Column
                             field="rowNumber"
-                            :header="t('organization.line.rowNumber')"
+                            :header="t('organization.shift.rowNumber')"
                             style="width: 7rem"
                         />
 
                         <Column
                             field="field"
-                            :header="t('organization.line.field')"
+                            :header="t('organization.shift.field')"
                             style="width: 12rem"
                         />
 
-                        <Column :header="t('organization.line.issue')">
+                        <Column :header="t('organization.shift.issue')">
                             <template #body="{ data }">
                                 {{ translateImportError(data) }}
                             </template>
@@ -1767,20 +1611,20 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.line-page {
+.shift-page {
     width: 100%;
     display: grid;
     gap: 1rem;
 }
 
-.line-page__header {
+.shift-page__header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
 }
 
-.line-page__header-actions {
+.shift-page__header-actions {
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -1788,7 +1632,7 @@ onMounted(async () => {
     flex-wrap: wrap;
 }
 
-.line-page__eyebrow {
+.shift-page__eyebrow {
     display: inline-flex;
     margin-bottom: 0.35rem;
     color: var(--hrms-color-primary);
@@ -1798,23 +1642,23 @@ onMounted(async () => {
     letter-spacing: 0.08em;
 }
 
-.line-page__header h2 {
+.shift-page__header h2 {
     margin: 0;
     font-size: clamp(1.35rem, 2vw, 1.85rem);
 }
 
-.line-page__header p {
+.shift-page__header p {
     max-width: 54rem;
     margin: 0.45rem 0 0;
     color: var(--hrms-text-muted);
     font-size: 0.9rem;
 }
 
-.line-card {
+.shift-card {
     min-width: 0;
 }
 
-.line-toolbar {
+.shift-toolbar {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -1822,7 +1666,7 @@ onMounted(async () => {
     margin-bottom: 0.85rem;
 }
 
-.line-toolbar__filters {
+.shift-toolbar__filters {
     flex: 1;
     display: flex;
     align-items: center;
@@ -1831,7 +1675,7 @@ onMounted(async () => {
     min-width: 0;
 }
 
-.line-toolbar__actions {
+.shift-toolbar__actions {
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -1839,7 +1683,7 @@ onMounted(async () => {
     flex-wrap: wrap;
 }
 
-.line-search {
+.shift-search {
     min-width: 16rem;
     flex: 1;
     display: inline-flex;
@@ -1851,57 +1695,59 @@ onMounted(async () => {
     background: var(--hrms-surface-ground);
 }
 
-.line-search i {
+.shift-search i {
     color: var(--hrms-text-muted);
 }
 
-.line-search__input {
+.shift-search__input {
     width: 100%;
     border: 0;
     background: transparent;
     box-shadow: none;
 }
 
-.line-filter {
+.shift-filter {
     width: 12rem;
 }
 
-.line-status-filter {
+.shift-status-filter {
     width: 10rem;
 }
 
-.line-table-wrap {
+.shift-table-wrap {
     min-height: 34rem;
     height: calc(100vh - 18rem);
 }
 
-.line-code {
+.shift-code {
     color: var(--hrms-color-primary);
     font-size: 0.82rem;
 }
 
-.line-name-cell,
-.line-muted-cell {
+.shift-name-cell,
+.shift-muted-cell,
+.shift-time-cell {
     display: grid;
     gap: 0.15rem;
     line-height: 1.25;
 }
 
-.line-name-cell strong,
-.line-muted-cell strong {
+.shift-name-cell strong,
+.shift-muted-cell strong,
+.shift-time-cell strong {
     font-size: 0.82rem;
 }
 
-.line-name-cell span,
-.line-muted-cell span,
-.line-muted-text,
-.line-date,
-.line-positions-text {
+.shift-name-cell span,
+.shift-muted-cell span,
+.shift-time-cell span,
+.shift-muted-text,
+.shift-date {
     color: var(--hrms-text-muted);
     font-size: 0.76rem;
 }
 
-.line-actions {
+.shift-actions {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1909,84 +1755,104 @@ onMounted(async () => {
     width: 100%;
 }
 
-.line-archived-text {
+.shift-archived-text {
     color: var(--hrms-text-muted);
     font-size: 0.76rem;
 }
 
-.line-dialog {
-    width: min(60rem, calc(100vw - 2rem));
+.shift-dialog {
+    width: min(62rem, calc(100vw - 2rem));
 }
 
-.line-form {
+.shift-form {
     display: grid;
     gap: 1rem;
 }
 
-.line-form__section {
+.shift-form__section {
     border: 1px solid var(--hrms-border-color);
     border-radius: 1rem;
     padding: 1rem;
     background: var(--hrms-surface-ground);
 }
 
-.line-form__section h3 {
+.shift-form__section h3 {
     margin: 0 0 0.85rem;
     font-size: 0.95rem;
 }
 
-.line-form__grid {
+.shift-form__grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.85rem;
 }
 
-.line-field {
+.shift-field {
     display: grid;
     gap: 0.35rem;
 }
 
-.line-field--wide {
+.shift-field--wide {
     grid-column: 1 / -1;
 }
 
-.line-field > span {
+.shift-field > span {
     color: var(--hrms-text-muted);
     font-size: 0.76rem;
     font-weight: 700;
 }
 
-.line-field small {
+.shift-field small {
     color: var(--hrms-color-danger);
     font-size: 0.72rem;
 }
 
-.line-field--wide small {
-    color: var(--hrms-text-muted);
+.shift-preview {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
 }
 
-.line-archive-dialog,
-.line-import-dialog,
-.line-import-result-dialog {
+.shift-preview div {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    border: 1px solid var(--hrms-border-color);
+    border-radius: 0.85rem;
+    background: var(--hrms-surface-card);
+}
+
+.shift-preview span {
+    color: var(--hrms-text-muted);
+    font-size: 0.72rem;
+}
+
+.shift-preview strong {
+    font-size: 0.95rem;
+}
+
+.shift-archive-dialog,
+.shift-import-dialog,
+.shift-import-result-dialog {
     width: min(44rem, calc(100vw - 2rem));
 }
 
-.line-archive-text {
+.shift-archive-text {
     margin: 0;
     color: var(--hrms-text-muted);
 }
 
-.line-import {
+.shift-import {
     display: grid;
     gap: 1rem;
 }
 
-.line-import p {
+.shift-import p {
     margin: 0;
     color: var(--hrms-text-muted);
 }
 
-.line-import__file {
+.shift-import__file {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -1996,28 +1862,28 @@ onMounted(async () => {
     color: var(--hrms-text-muted);
 }
 
-.line-import__progress {
+.shift-import__progress {
     display: grid;
     gap: 0.45rem;
 }
 
-.line-import__progress span {
+.shift-import__progress span {
     color: var(--hrms-text-muted);
     font-size: 0.78rem;
 }
 
-.line-import-result {
+.shift-import-result {
     display: grid;
     gap: 1rem;
 }
 
-.line-import-result__grid {
+.shift-import-result__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.75rem;
 }
 
-.line-import-result__grid div {
+.shift-import-result__grid div {
     display: grid;
     gap: 0.25rem;
     padding: 0.85rem;
@@ -2026,21 +1892,21 @@ onMounted(async () => {
     background: var(--hrms-surface-ground);
 }
 
-.line-import-result__grid span {
+.shift-import-result__grid span {
     color: var(--hrms-text-muted);
     font-size: 0.76rem;
 }
 
-.line-import-result__grid strong {
+.shift-import-result__grid strong {
     font-size: 1.35rem;
 }
 
-.line-import-result__errors {
+.shift-import-result__errors {
     display: grid;
     gap: 0.65rem;
 }
 
-.line-import-result__errors h4 {
+.shift-import-result__errors h4 {
     margin: 0;
 }
 
@@ -2052,40 +1918,42 @@ onMounted(async () => {
 }
 
 @media (max-width: 1100px) {
-    .line-page__header,
-    .line-toolbar {
+    .shift-page__header,
+    .shift-toolbar {
         flex-direction: column;
     }
 
-    .line-page__header-actions,
-    .line-toolbar__actions {
+    .shift-page__header-actions,
+    .shift-toolbar__actions {
         justify-content: flex-start;
     }
 
-    .line-filter,
-    .line-status-filter {
+    .shift-filter,
+    .shift-status-filter {
         width: min(100%, 14rem);
     }
 
-    .line-form__grid {
+    .shift-form__grid,
+    .shift-preview {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 720px) {
-    .line-search,
-    .line-filter,
-    .line-status-filter {
+    .shift-search,
+    .shift-filter,
+    .shift-status-filter {
         width: 100%;
         min-width: 0;
     }
 
-    .line-form__grid,
-    .line-import-result__grid {
+    .shift-form__grid,
+    .shift-preview,
+    .shift-import-result__grid {
         grid-template-columns: 1fr;
     }
 
-    .line-table-wrap {
+    .shift-table-wrap {
         height: 32rem;
     }
 }

@@ -92,6 +92,15 @@ const navGroups = computed(() => {
                     },
                     permissionCode: "ORGANIZATION.LINE.VIEW",
                 },
+
+                {
+                    labelKey: "nav.shifts",
+                    icon: "pi pi-clock",
+                    to: {
+                        name: "organization-shifts",
+                    },
+                    permissionCode: "ORGANIZATION.SHIFT.VIEW",
+                },
             ],
         },
     ]
