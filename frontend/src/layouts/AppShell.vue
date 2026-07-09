@@ -101,6 +101,15 @@ const navGroups = computed(() => {
                     },
                     permissionCode: "ORGANIZATION.SHIFT.VIEW",
                 },
+
+                {
+                    labelKey: "nav.employeeTypes",
+                    icon: "pi pi-id-card",
+                    to: {
+                        name: "organization-employee-types",
+                    },
+                    permissionCode: "ORGANIZATION.EMPLOYEE_TYPE.VIEW",
+                },
             ],
         },
     ]

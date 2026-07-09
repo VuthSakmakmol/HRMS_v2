@@ -102,6 +102,17 @@ const router = createRouter({
                         permissionCode: "ORGANIZATION.SHIFT.VIEW",
                     },
                 },
+
+                                {
+                    path: "organization/employee-types",
+                    name: "organization-employee-types",
+                    component: () =>
+                        import("@/modules/employeeType/views/EmployeeTypeListView.vue"),
+                    meta: {
+                        titleKey: "nav.employeeTypes",
+                        permissionCode: "ORGANIZATION.EMPLOYEE_TYPE.VIEW",
+                    },
+                },
             ],
         },
 
