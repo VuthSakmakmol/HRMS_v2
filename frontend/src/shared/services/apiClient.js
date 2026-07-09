@@ -31,5 +31,17 @@ apiClient.interceptors.request.use((config) => {
         config.headers.Authorization = `Bearer ${accessToken}`
     }
 
+    if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+        config.headers = config.headers || {}
+
+        if (typeof config.headers.delete === "function") {
+            config.headers.delete("Content-Type")
+            config.headers.delete("content-type")
+        } else {
+            delete config.headers["Content-Type"]
+            delete config.headers["content-type"]
+        }
+    }
+
     return config
 })

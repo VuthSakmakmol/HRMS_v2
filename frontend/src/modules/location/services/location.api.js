@@ -97,6 +97,9 @@ export async function importLocations(entity, file, onUploadProgress) {
         formData,
         {
             timeout: 0,
+            headers: {
+                Accept: "application/json",
+            },
             onUploadProgress,
         },
     )

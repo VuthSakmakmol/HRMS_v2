@@ -1,4 +1,7 @@
 import ExcelJS from "exceljs"
+import { mkdtemp, rm, writeFile } from "node:fs/promises"
+import os from "node:os"
+import path from "node:path"
 
 import { AppError } from "../../../shared/errors/AppError.js"
 import {
@@ -215,9 +218,56 @@ export async function buildLocationImportTemplateWorkbook({ entity }) {
 
 export async function parseLocationImportWorkbook(buffer, entity) {
     const config = getTemplateConfig(entity)
-    const workbook = new ExcelJS.Workbook()
 
-    await workbook.xlsx.load(buffer)
+    if (!buffer || !buffer.length) {
+        throw new AppError({
+            statusCode: 422,
+            code: "LOCATION_IMPORT_FILE_REQUIRED",
+            messageKey: "errors.location.import.fileRequired",
+        })
+    }
+
+    const workbookBuffer = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer)
+    const fileSignature = workbookBuffer.subarray(0, 2).toString("utf8")
+
+    if (fileSignature !== "PK") {
+        throw new AppError({
+            statusCode: 422,
+            code: "LOCATION_IMPORT_INVALID_EXCEL_FILE",
+            messageKey: "errors.location.import.invalidExcelFile",
+            message:
+                "The uploaded file is not a valid .xlsx workbook. Please upload the downloaded Excel sample file.",
+        })
+    }
+
+    const workbook = new ExcelJS.Workbook()
+    const tempDirectory = await mkdtemp(path.join(os.tmpdir(), "hrms-location-import-"))
+    const tempFilePath = path.join(tempDirectory, `location-import-${Date.now()}.xlsx`)
+
+    try {
+        await writeFile(tempFilePath, workbookBuffer)
+        await workbook.xlsx.readFile(tempFilePath)
+    } catch (error) {
+        console.error("[location-import] ExcelJS read failed:", {
+            message: error?.message,
+            size: workbookBuffer.length,
+            signature: workbookBuffer.subarray(0, 8).toString("hex"),
+        })
+
+        throw new AppError({
+            statusCode: 422,
+            code: "LOCATION_IMPORT_INVALID_EXCEL_FILE",
+            messageKey: "errors.location.import.invalidExcelFile",
+            message:
+                "The uploaded Excel file could not be read. Please use the downloaded sample template.",
+            cause: error,
+        })
+    } finally {
+        await rm(tempDirectory, {
+            recursive: true,
+            force: true,
+        })
+    }
 
     const worksheet = workbook.worksheets[0]
 

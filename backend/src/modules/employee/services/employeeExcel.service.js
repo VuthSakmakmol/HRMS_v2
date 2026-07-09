@@ -146,12 +146,63 @@ function normalizeHeader(value) {
     return HEADER_ALIASES.get(key) || raw
 }
 
+function excelValueToPrimitive(value) {
+    if (value === null || value === undefined) return ""
+    if (value instanceof Date) return value
+    if (["string", "number", "boolean"].includes(typeof value)) return value
+
+    if (Array.isArray(value)) {
+        return value.map((item) => excelValueToString(item)).join(",")
+    }
+
+    if (typeof value === "object") {
+        if (Array.isArray(value.richText)) {
+            return value.richText.map((item) => item?.text || "").join("")
+        }
+
+        if (Object.prototype.hasOwnProperty.call(value, "text")) {
+            return excelValueToPrimitive(value.text)
+        }
+
+        if (Object.prototype.hasOwnProperty.call(value, "result")) {
+            return excelValueToPrimitive(value.result)
+        }
+
+        if (Object.prototype.hasOwnProperty.call(value, "formula")) {
+            return excelValueToPrimitive(value.result || "")
+        }
+
+        if (Object.prototype.hasOwnProperty.call(value, "hyperlink")) {
+            return excelValueToPrimitive(value.text || "")
+        }
+
+        if (Object.prototype.hasOwnProperty.call(value, "error")) {
+            return ""
+        }
+
+        if (typeof value.toString === "function" && value.toString !== Object.prototype.toString) {
+            return value.toString()
+        }
+
+        return ""
+    }
+
+    return value
+}
+
+function excelValueToString(value) {
+    const primitive = excelValueToPrimitive(value)
+    if (primitive === null || primitive === undefined) return ""
+    if (primitive instanceof Date) return primitive
+    return String(primitive)
+}
+
 function normalizeCode(value) {
-    return String(value || "").trim().replace(/\s+/g, "_").toUpperCase()
+    return excelValueToString(value).trim().replace(/\s+/g, "_").toUpperCase()
 }
 
 function normalizeText(value) {
-    return String(value || "").trim().replace(/\s+/g, " ")
+    return excelValueToString(value).trim().replace(/\s+/g, " ")
 }
 
 function normalizeGender(value) {
@@ -196,14 +247,14 @@ function normalizeEmployeeTypeLookup(value) {
 }
 
 function normalizeNumber(value) {
-    const raw = String(value ?? "").trim()
+    const raw = excelValueToString(value).trim()
     if (!raw) return 0
     const num = Number(raw)
     return Number.isFinite(num) && num >= 0 ? num : 0
 }
 
 function normalizeBoolean(value, defaultValue = false) {
-    const raw = String(value ?? "").trim().toUpperCase()
+    const raw = excelValueToString(value).trim().toUpperCase()
     if (!raw) return defaultValue
     if (["YES", "Y", "TRUE", "1", "CREATE", "ON"].includes(raw)) return true
     if (["NO", "N", "FALSE", "0", "SKIP", "OFF"].includes(raw)) return false
@@ -218,10 +269,11 @@ function excelSerialToDate(serial) {
 }
 
 function normalizeDate(value) {
-    if (!value) return null
-    if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
-    if (typeof value === "number") return excelSerialToDate(value)
-    const raw = String(value).trim()
+    const primitive = excelValueToPrimitive(value)
+    if (!primitive) return null
+    if (primitive instanceof Date) return Number.isNaN(primitive.getTime()) ? null : primitive
+    if (typeof primitive === "number") return excelSerialToDate(primitive)
+    const raw = excelValueToString(primitive).trim()
     if (!raw) return null
     if (/^\d+(\.\d+)?$/.test(raw)) return excelSerialToDate(Number(raw))
     const date = new Date(raw)
@@ -230,15 +282,7 @@ function normalizeDate(value) {
 
 function getCellValue(row, index) {
     const cell = row.getCell(index)
-    const value = cell.value
-    if (value === null || value === undefined) return ""
-    if (value instanceof Date) return value
-    if (typeof value === "object") {
-        if (value.text) return String(value.text)
-        if (value.result) return value.result
-        if (value.richText) return value.richText.map((item) => item.text).join("")
-    }
-    return value
+    return excelValueToPrimitive(cell.value)
 }
 
 function buildError(rowNumber, field, messageKey) {
@@ -331,7 +375,7 @@ export async function parseEmployeeImportWorkbook(buffer) {
         if (rowNumber === 1) return
         const raw = {}
         for (const [colNumber, key] of headerMap.entries()) raw[key] = getCellValue(row, colNumber)
-        const isEmpty = Object.values(raw).every((value) => String(value || "").trim() === "")
+        const isEmpty = Object.values(raw).every((value) => excelValueToString(value).trim() === "")
         if (isEmpty) return
 
         const normalized = {
@@ -577,16 +621,28 @@ export async function importEmployeesFromRows({ rows, parseErrors, context, user
         const existing = await Employee.findOne({ employeeCode: row.employeeCode }).lean()
         let employee = null
 
-        if (existing) {
-            employee = await Employee.findByIdAndUpdate(
-                existing._id,
-                { $set: payload },
-                { new: true, runValidators: true, context: "query" },
-            ).lean()
-            summary.updated += 1
-        } else {
-            employee = await Employee.create({ ...payload, createdByAccountId: user.accountId })
-            summary.created += 1
+        try {
+            if (existing) {
+                employee = await Employee.findByIdAndUpdate(
+                    existing._id,
+                    { $set: payload },
+                    { returnDocument: "after", runValidators: true, context: "query" },
+                ).lean()
+                summary.updated += 1
+            } else {
+                employee = await Employee.create({ ...payload, createdByAccountId: user.accountId })
+                summary.created += 1
+            }
+        } catch (error) {
+            summary.skipped += 1
+            summary.errors.push(
+                buildError(
+                    row.rowNumber,
+                    "employeeCode",
+                    error?.errors?.employeeCode?.message || error.messageKey || error.message || "errors.employee.import.saveFailed",
+                ),
+            )
+            continue
         }
 
         try {
