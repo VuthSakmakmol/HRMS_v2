@@ -82,6 +82,16 @@ const router = createRouter({
                         permissionCode: "ORGANIZATION.POSITION.VIEW",
                     },
                 },
+                
+                {
+                    path: "organization/lines",
+                    name: "organization-lines",
+                    component: () => import("@/modules/line/views/LineListView.vue"),
+                    meta: {
+                        titleKey: "nav.lines",
+                        permissionCode: "ORGANIZATION.LINE.VIEW",
+                    },
+                },
             ],
         },
 

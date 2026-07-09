@@ -83,6 +83,15 @@ const navGroups = computed(() => {
                     },
                     permissionCode: "ORGANIZATION.POSITION.VIEW",
                 },
+
+                {
+                    labelKey: "nav.lines",
+                    icon: "pi pi-share-alt",
+                    to: {
+                        name: "organization-lines",
+                    },
+                    permissionCode: "ORGANIZATION.LINE.VIEW",
+                },
             ],
         },
     ]

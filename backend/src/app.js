@@ -11,6 +11,7 @@ import companyRoutes from "./modules/organization/routes/company.routes.js"
 import branchRoutes from "./modules/organization/routes/branch.routes.js"
 import departmentRoutes from "./modules/organization/routes/department.routes.js"
 import positionRoutes from "./modules/organization/routes/position.routes.js"
+import lineRoutes from "./modules/line/routes/line.routes.js"
 
 import { AppError } from "./shared/errors/AppError.js"
 import { errorHandler } from "./shared/middleware/errorHandler.js"
@@ -73,6 +74,7 @@ app.use("/api/v1/organization/companies", companyRoutes)
 app.use("/api/v1/organization/branches", branchRoutes)
 app.use("/api/v1/organization/departments", departmentRoutes)
 app.use("/api/v1/organization/positions", positionRoutes)
+app.use("/api/v1/organization/lines", lineRoutes)
 
 app.use(notFound)
 app.use(errorHandler)

@@ -53,6 +53,15 @@ export const PERMISSION_REGISTRY = Object.freeze([
         "EXPORT",
     ]),
 
+    ...permissionGroup("ORGANIZATION.LINE", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "ARCHIVE",
+        "IMPORT",
+        "EXPORT",
+    ]),
+
     ...permissionGroup("EMPLOYEE.PROFILE", [
         "VIEW",
         "CREATE",

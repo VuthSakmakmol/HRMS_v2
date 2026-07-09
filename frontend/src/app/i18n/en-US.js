@@ -36,6 +36,7 @@ export default {
         branches: "Branches",
         departments: "Departments",
         positions: "Positions",
+        lines: "Lines",
     },
 
     auth: {
@@ -373,6 +374,93 @@ export default {
             field: "Field",
             issue: "Issue",
         },
+        line: {
+            eyebrow: "Organization Setup",
+            title: "Lines",
+            description:
+                "Create and manage production lines under each department. Lines connect positions to employees and become important for approval chains, attendance, OT, and manpower reporting.",
+            newLine: "New Line",
+            createTitle: "Create Line",
+            editTitle: "Edit Line",
+            archiveTitle: "Archive Line",
+            archiveMessage:
+                "Are you sure you want to archive {name}? Archived lines are kept for history and cannot be hard deleted.",
+            searchPlaceholder: "Search code, name, short name, description...",
+            empty: "No lines found.",
+            loadFailed: "Unable to load lines",
+            companyLoadFailed: "Unable to load companies",
+            branchLoadFailed: "Unable to load branches",
+            departmentLoadFailed: "Unable to load departments",
+            positionLoadFailed: "Unable to load positions",
+            saveFailed: "Unable to save line",
+            archiveFailed: "Unable to archive line",
+            created: "Line created",
+            createdDetail: "The line was created successfully.",
+            updated: "Line updated",
+            updatedDetail: "The line was updated successfully.",
+            archived: "Line archived",
+            archivedDetail: "The line was archived successfully.",
+            readOnly: "Archived",
+            basicInfo: "Basic Information",
+            allCompanies: "All Companies",
+            allBranches: "All Branches",
+            allDepartments: "All Departments",
+            allPositions: "All Positions",
+            selectCompany: "Select company",
+            selectBranch: "Select branch",
+            selectDepartment: "Select department",
+            selectAllowedPositions: "Select allowed positions",
+            selectLeaderPosition: "Select leader position",
+            company: "Company",
+            branch: "Branch",
+            department: "Department",
+            code: "Code",
+            lineName: "Line",
+            shortName: "Short Name",
+            allowedPositions: "Allowed Positions",
+            allowedPositionsHelp:
+                "Leave blank if this line can use all active positions in the selected department.",
+            allDepartmentPositions: "All department positions",
+            leaderPosition: "Leader Position",
+            noLeaderPosition: "No Leader Position",
+            descriptionLabel: "Description",
+            status: "Status",
+            statusAll: "All Statuses",
+            statusActive: "Active",
+            statusInactive: "Inactive",
+            statusArchived: "Archived",
+            updatedAt: "Updated",
+
+            downloadSample: "Download Sample",
+            importExcel: "Import Excel",
+            exportExcel: "Export Excel",
+            sampleDownloaded: "Sample downloaded",
+            sampleDownloadedDetail: "The line import sample has been downloaded.",
+            sampleDownloadFailed: "Unable to download sample",
+            exported: "Export ready",
+            exportedDetail: "The lines export has been downloaded.",
+            exportFailed: "Unable to export lines",
+            importTitle: "Import Lines",
+            importDescription:
+                "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
+            importFileRequired: "Excel file required",
+            importFileRequiredDetail: "Please choose an Excel file before importing.",
+            importProgress: "Processing... {percent}%",
+            importFinished: "Import finished",
+            importFinishedSuccess: "Lines were imported successfully.",
+            importFinishedWithErrors:
+                "Import finished with validation errors. Please review the result.",
+            importFailed: "Unable to import lines",
+            importResultTitle: "Line Import Result",
+            totalRows: "Total Rows",
+            createdRows: "Created",
+            updatedRows: "Updated",
+            skippedRows: "Skipped",
+            validationErrors: "Validation Errors",
+            rowNumber: "Row",
+            field: "Field",
+            issue: "Issue",
+        },
     },
 
     errors: {
@@ -485,6 +573,52 @@ export default {
                     "Department code was not found inside the selected branch or the department is archived.",
                 duplicateInFile:
                     "Duplicate position code found in this Excel file for the same department.",
+            },
+            line: {
+                invalidId: "Invalid line ID.",
+                notFound: "Line was not found.",
+                archived: "This line is archived and cannot be updated.",
+                codeExists:
+                    "This line code already exists inside the selected department.",
+                duplicate: "This line already exists.",
+                positionNotFound:
+                    "One or more selected positions were not found in the selected department.",
+                leaderPositionNotFound:
+                    "Leader position was not found in the selected department.",
+                leaderPositionNotAllowed:
+                    "Leader position must be included in allowed positions.",
+            },
+
+            lineImport: {
+                fileRequired: "Please choose an Excel file to import.",
+                invalidTemplate:
+                    "Invalid Excel template. Please download the sample template and use the same columns.",
+                emptyFile: "The uploaded Excel file is empty.",
+                noDataRows: "The Excel file has no line rows to import.",
+                hasErrors:
+                    "The import finished with validation errors. Please review the result.",
+                companyCodeRequired: "Company code is required.",
+                branchCodeRequired: "Branch code is required.",
+                departmentCodeRequired: "Department code is required.",
+                lineCodeRequired: "Line code is required.",
+                lineCodeInvalid:
+                    "Line code must be 2-30 characters and use letters, numbers, dash, or underscore only.",
+                lineNameRequired: "Line name is required.",
+                statusInvalid: "Status must be ACTIVE or INACTIVE.",
+                companyNotFound:
+                    "Company code was not found or the company is archived.",
+                branchNotFound:
+                    "Branch code was not found inside the selected company or the branch is archived.",
+                departmentNotFound:
+                    "Department code was not found inside the selected branch or the department is archived.",
+                positionNotFound:
+                    "One or more allowed position codes were not found in the selected department.",
+                leaderPositionNotFound:
+                    "Leader position code was not found in the selected department.",
+                leaderPositionNotAllowed:
+                    "Leader position code must also be included in allowedPositionCodes.",
+                duplicateInFile:
+                    "Duplicate line code found in this Excel file for the same department.",
             },
         },
     },

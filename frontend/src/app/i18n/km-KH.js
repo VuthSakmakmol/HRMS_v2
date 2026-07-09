@@ -36,6 +36,7 @@ export default {
         branches: "សាខា",
         departments: "នាយកដ្ឋាន",
         positions: "តួនាទីការងារ",
+        lines: "ខ្សែសង្វាក់ការងារ",
     },
 
     auth: {
@@ -385,6 +386,94 @@ export default {
             field: "Field",
             issue: "បញ្ហា",
         },
+        line: {
+            eyebrow: "ការរៀបចំអង្គភាព",
+            title: "ខ្សែសង្វាក់ការងារ",
+            description:
+                "បង្កើត និងគ្រប់គ្រងខ្សែសង្វាក់ការងារក្រោមនាយកដ្ឋាននីមួយៗ។ ខ្សែសង្វាក់ការងារនឹងភ្ជាប់តួនាទីទៅបុគ្គលិក និងប្រើសម្រាប់ approval, attendance, OT និងរបាយការណ៍ manpower។",
+            newLine: "បង្កើត Line ថ្មី",
+            createTitle: "បង្កើត Line",
+            editTitle: "កែប្រែ Line",
+            archiveTitle: "រក្សាទុក Line",
+            archiveMessage:
+                "តើអ្នកប្រាកដថាចង់រក្សាទុក {name} មែនទេ? Line ដែលបានរក្សាទុកនឹងរក្សាសម្រាប់ប្រវត្តិ ហើយមិនអាចលុបចោលបានទេ។",
+            searchPlaceholder: "ស្វែងរកកូដ ឈ្មោះ ឈ្មោះខ្លី ការពិពណ៌នា...",
+            empty: "រកមិនឃើញ Line ទេ។",
+            loadFailed: "មិនអាចទាញយក Line បានទេ",
+            companyLoadFailed: "មិនអាចទាញយកក្រុមហ៊ុនបានទេ",
+            branchLoadFailed: "មិនអាចទាញយកសាខាបានទេ",
+            departmentLoadFailed: "មិនអាចទាញយកនាយកដ្ឋានបានទេ",
+            positionLoadFailed: "មិនអាចទាញយកតួនាទីបានទេ",
+            saveFailed: "មិនអាចរក្សាទុក Line បានទេ",
+            archiveFailed: "មិនអាចរក្សាទុក Line បានទេ",
+            created: "បានបង្កើត Line",
+            createdDetail: "Line ត្រូវបានបង្កើតដោយជោគជ័យ។",
+            updated: "បានកែប្រែ Line",
+            updatedDetail: "Line ត្រូវបានកែប្រែដោយជោគជ័យ។",
+            archived: "បានរក្សាទុក Line",
+            archivedDetail: "Line ត្រូវបានរក្សាទុកដោយជោគជ័យ។",
+            readOnly: "បានរក្សាទុក",
+            basicInfo: "ព័ត៌មានមូលដ្ឋាន",
+            allCompanies: "ក្រុមហ៊ុនទាំងអស់",
+            allBranches: "សាខាទាំងអស់",
+            allDepartments: "នាយកដ្ឋានទាំងអស់",
+            allPositions: "តួនាទីទាំងអស់",
+            selectCompany: "ជ្រើសរើសក្រុមហ៊ុន",
+            selectBranch: "ជ្រើសរើសសាខា",
+            selectDepartment: "ជ្រើសរើសនាយកដ្ឋាន",
+            selectAllowedPositions: "ជ្រើសរើសតួនាទីដែលអនុញ្ញាត",
+            selectLeaderPosition: "ជ្រើសរើសតួនាទីអ្នកដឹកនាំ",
+            company: "ក្រុមហ៊ុន",
+            branch: "សាខា",
+            department: "នាយកដ្ឋាន",
+            code: "កូដ",
+            lineName: "Line",
+            shortName: "ឈ្មោះខ្លី",
+            allowedPositions: "តួនាទីដែលអនុញ្ញាត",
+            allowedPositionsHelp:
+                "ទុកឱ្យទទេ ប្រសិនបើ Line នេះអាចប្រើតួនាទី active ទាំងអស់ក្នុងនាយកដ្ឋានដែលបានជ្រើស។",
+            allDepartmentPositions: "តួនាទីទាំងអស់ក្នុងនាយកដ្ឋាន",
+            leaderPosition: "តួនាទីអ្នកដឹកនាំ",
+            noLeaderPosition: "មិនមានតួនាទីអ្នកដឹកនាំ",
+            descriptionLabel: "ការពិពណ៌នា",
+            status: "ស្ថានភាព",
+            statusAll: "ស្ថានភាពទាំងអស់",
+            statusActive: "សកម្ម",
+            statusInactive: "មិនសកម្ម",
+            statusArchived: "បានរក្សាទុក",
+            updatedAt: "បានកែប្រែ",
+
+            downloadSample: "ទាញយកគំរូ",
+            importExcel: "នាំចូល Excel",
+            exportExcel: "នាំចេញ Excel",
+            sampleDownloaded: "បានទាញយកគំរូ",
+            sampleDownloadedDetail: "គំរូនាំចូល Line ត្រូវបានទាញយក។",
+            sampleDownloadFailed: "មិនអាចទាញយកគំរូបានទេ",
+            exported: "បាននាំចេញ",
+            exportedDetail: "ឯកសារ Line export ត្រូវបានទាញយក។",
+            exportFailed: "មិនអាចនាំចេញ Line បានទេ",
+            importTitle: "នាំចូល Line",
+            importDescription:
+                "Upload Excel template ដែលបានបំពេញ។ សូមរក្សា column ដូចគំរូដែលបានទាញយក។",
+            importFileRequired: "ត្រូវការឯកសារ Excel",
+            importFileRequiredDetail:
+                "សូមជ្រើសរើសឯកសារ Excel មុនពេលនាំចូល។",
+            importProgress: "កំពុងដំណើរការ... {percent}%",
+            importFinished: "ការនាំចូលបានបញ្ចប់",
+            importFinishedSuccess: "Line ត្រូវបាននាំចូលដោយជោគជ័យ។",
+            importFinishedWithErrors:
+                "ការនាំចូលបានបញ្ចប់ ប៉ុន្តែមានកំហុស validation។ សូមពិនិត្យលទ្ធផល។",
+            importFailed: "មិនអាចនាំចូល Line បានទេ",
+            importResultTitle: "លទ្ធផលនាំចូល Line",
+            totalRows: "ជួរដេកសរុប",
+            createdRows: "បានបង្កើត",
+            updatedRows: "បានកែប្រែ",
+            skippedRows: "បានរំលង",
+            validationErrors: "កំហុស Validation",
+            rowNumber: "ជួរដេក",
+            field: "Field",
+            issue: "បញ្ហា",
+        },
     },
 
     errors: {
@@ -506,6 +595,52 @@ export default {
                     "រកមិនឃើញ Department Code ក្នុងសាខាដែលបានជ្រើស ឬនាយកដ្ឋានត្រូវបានដាក់បណ្ណសារ។",
                 duplicateInFile:
                     "មាន Position Code ស្ទួនក្នុងឯកសារ Excel សម្រាប់នាយកដ្ឋានដូចគ្នា។",
+            },
+            line: {
+                invalidId: "Line ID មិនត្រឹមត្រូវ។",
+                notFound: "រកមិនឃើញ Line ទេ។",
+                archived: "Line នេះត្រូវបានរក្សាទុក ហើយមិនអាចកែប្រែបានទេ។",
+                codeExists:
+                    "កូដ Line នេះមានរួចហើយក្នុងនាយកដ្ឋានដែលបានជ្រើស។",
+                duplicate: "Line នេះមានរួចហើយ។",
+                positionNotFound:
+                    "តួនាទីមួយចំនួនដែលបានជ្រើស មិនមានក្នុងនាយកដ្ឋាននេះទេ។",
+                leaderPositionNotFound:
+                    "រកមិនឃើញតួនាទីអ្នកដឹកនាំក្នុងនាយកដ្ឋាននេះទេ។",
+                leaderPositionNotAllowed:
+                    "តួនាទីអ្នកដឹកនាំត្រូវតែស្ថិតក្នុងតួនាទីដែលអនុញ្ញាត។",
+            },
+
+            lineImport: {
+                fileRequired: "សូមជ្រើសរើសឯកសារ Excel ដើម្បីនាំចូល។",
+                invalidTemplate:
+                    "Excel template មិនត្រឹមត្រូវ។ សូមទាញយកគំរូ ហើយប្រើ column ដូចគ្នា។",
+                emptyFile: "ឯកសារ Excel ដែលបាន upload គឺទទេ។",
+                noDataRows: "ឯកសារ Excel មិនមានជួរដេក Line សម្រាប់នាំចូលទេ។",
+                hasErrors:
+                    "ការនាំចូលបានបញ្ចប់ ប៉ុន្តែមានកំហុស validation។ សូមពិនិត្យលទ្ធផល។",
+                companyCodeRequired: "ត្រូវការកូដក្រុមហ៊ុន។",
+                branchCodeRequired: "ត្រូវការកូដសាខា។",
+                departmentCodeRequired: "ត្រូវការកូដនាយកដ្ឋាន។",
+                lineCodeRequired: "ត្រូវការកូដ Line។",
+                lineCodeInvalid:
+                    "កូដ Line ត្រូវមាន 2-30 តួអក្សរ ហើយប្រើអក្សរ លេខ dash ឬ underscore ប៉ុណ្ណោះ។",
+                lineNameRequired: "ត្រូវការឈ្មោះ Line។",
+                statusInvalid: "ស្ថានភាពត្រូវតែជា ACTIVE ឬ INACTIVE។",
+                companyNotFound:
+                    "រកមិនឃើញកូដក្រុមហ៊ុន ឬក្រុមហ៊ុនត្រូវបានរក្សាទុក។",
+                branchNotFound:
+                    "រកមិនឃើញកូដសាខាក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានរក្សាទុក។",
+                departmentNotFound:
+                    "រកមិនឃើញកូដនាយកដ្ឋានក្នុងសាខាដែលបានជ្រើស ឬនាយកដ្ឋានត្រូវបានរក្សាទុក។",
+                positionNotFound:
+                    "រកមិនឃើញកូដតួនាទីមួយចំនួនក្នុងនាយកដ្ឋានដែលបានជ្រើស។",
+                leaderPositionNotFound:
+                    "រកមិនឃើញកូដតួនាទីអ្នកដឹកនាំក្នុងនាយកដ្ឋានដែលបានជ្រើស។",
+                leaderPositionNotAllowed:
+                    "កូដតួនាទីអ្នកដឹកនាំត្រូវតែមានក្នុង allowedPositionCodes។",
+                duplicateInFile:
+                    "មានកូដ Line ស្ទួនក្នុង Excel file សម្រាប់នាយកដ្ឋានដូចគ្នា។",
             },
         },
     },
