@@ -45,6 +45,8 @@ export default {
         reports: "Reports",
         manpowerPlans: "Manpower Plans",
         employeeMovements: "Employee Movements",
+        reports: "Reports",
+        hrManagementDashboard: "HR Management Dashboard",
     },
 
     auth: {

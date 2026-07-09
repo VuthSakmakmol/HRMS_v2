@@ -73,6 +73,12 @@ const accountSchema = new Schema(
             set: normalizeText,
         },
 
+        employeeId: {
+            type: Schema.Types.ObjectId,
+            ref: "Employee",
+            default: null,
+        },
+
         passwordHash: {
             type: String,
             required: true,
@@ -133,6 +139,15 @@ accountSchema.index(
     {
         unique: true,
         name: "uq_account_login_id",
+    },
+)
+
+accountSchema.index(
+    { employeeId: 1 },
+    {
+        unique: true,
+        sparse: true,
+        name: "uq_account_employee_id",
     },
 )
 

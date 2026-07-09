@@ -54,6 +54,21 @@ const phoneSchema = z
     .max(40)
     .optional()
 
+const optionalBooleanSchema = (defaultValue = false) =>
+    z.preprocess(
+        (value) => {
+            if (value === undefined || value === null || value === "") return defaultValue
+            if (typeof value === "boolean") return value
+
+            const raw = String(value).trim().toUpperCase()
+            if (["YES", "Y", "TRUE", "1", "ON"].includes(raw)) return true
+            if (["NO", "N", "FALSE", "0", "OFF"].includes(raw)) return false
+
+            return value
+        },
+        z.boolean(),
+    )
+
 const addressSchema = z.object({
     countryId: nullableObjectIdSchema.optional(),
     provinceId: nullableObjectIdSchema.optional(),
@@ -163,6 +178,10 @@ export const employeeCreateSchema = z.object({
     employeeTypeChildId: nullableObjectIdSchema.optional(),
     machineSkills: machineSkillsSchema,
     approvalPolicyId: nullableObjectIdSchema.optional(),
+
+    createAccount: optionalBooleanSchema(true).optional().default(true),
+    defaultRoleId: nullableObjectIdSchema.optional(),
+
     recordStatus: z.enum(["ACTIVE", "INACTIVE"]).optional(),
 })
 

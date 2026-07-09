@@ -25,6 +25,7 @@ import {
     createAutomaticMovementForEmployeeCreate,
     createAutomaticMovementForEmployeeUpdate,
 } from "../../employeeMovement/services/employeeMovement.service.js"
+import { provisionEmployeeAccount } from "../../access/services/accountProvisioning.service.js"
 
 function escapeRegExp(value) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -565,7 +566,8 @@ function buildDisplayName(payload) {
 }
 
 function buildEmployeePayload(payload, accountId) {
-    const base = { ...payload, updatedByAccountId: accountId }
+    const { createAccount, defaultRoleId, ...employeePayload } = payload
+    const base = { ...employeePayload, updatedByAccountId: accountId }
     if (payload.employeeCode || payload.englishFirstName || payload.englishLastName || payload.khmerFirstName || payload.khmerLastName || payload.displayName) {
         base.displayName = buildDisplayName({ ...payload, displayName: payload.displayName })
     }
@@ -640,6 +642,18 @@ export async function createEmployee({ payload, user }) {
             createdByAccountId: user.accountId,
             updatedByAccountId: user.accountId,
         })
+
+        try {
+            await provisionEmployeeAccount({
+                employee,
+                user,
+                createAccount: payload.createAccount !== false,
+                defaultRoleId: payload.defaultRoleId || null,
+            })
+        } catch (error) {
+            await Employee.findByIdAndDelete(employee._id)
+            throw error
+        }
 
         await createAutomaticMovementForEmployeeCreate({ employee, user })
 

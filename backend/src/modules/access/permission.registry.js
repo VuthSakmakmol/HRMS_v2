@@ -148,7 +148,6 @@ export const PERMISSION_REGISTRY = Object.freeze([
         "EXPORT",
     ]),
 
-
     ...permissionGroup("EMPLOYEE.MOVEMENT", [
         "VIEW",
         "CREATE",

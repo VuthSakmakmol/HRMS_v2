@@ -162,6 +162,15 @@ const navGroups = computed(() => {
                     },
                     permissionCode: "EMPLOYEE.MOVEMENT.VIEW",
                 },
+
+                {
+                    labelKey: "nav.hrManagementDashboard",
+                    icon: "pi pi-chart-bar",
+                    to: {
+                        name: "reports-hr-management-dashboard",
+                    },
+                    permissionCode: "REPORT.HR_ANALYTICS.VIEW",
+                },
             ],
         },
 

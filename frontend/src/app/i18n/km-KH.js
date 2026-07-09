@@ -45,6 +45,8 @@ export default {
         reports: "របាយការណ៍",
         manpowerPlans: "ផែនការកម្លាំងពលកម្ម",
         employeeMovements: "ចលនាបុគ្គលិក",
+        reports: "របាយការណ៍",
+        hrManagementDashboard: "ផ្ទាំងគ្រប់គ្រង HR",
     },
 
     auth: {

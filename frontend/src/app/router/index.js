@@ -166,6 +166,16 @@ const router = createRouter({
                     },
                 },
 
+                {
+                    path: "reports/hr-management-dashboard",
+                    name: "reports-hr-management-dashboard",
+                    component: () => import("@/modules/report/views/HrManagementDashboardView.vue"),
+                    meta: {
+                        titleKey: "nav.hrManagementDashboard",
+                        permissionCode: "REPORT.HR_ANALYTICS.VIEW",
+                    },
+                },
+
             ],
         },
 

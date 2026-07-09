@@ -17,6 +17,7 @@ import Village from "../../location/models/Village.js"
 
 import Employee from "../models/Employee.js"
 import { listEmployees } from "./employee.service.js"
+import { provisionEmployeeAccount } from "../../access/services/accountProvisioning.service.js"
 
 function getEmployeeTypeModel() {
     if (!mongoose.models.EmployeeType) {
@@ -46,6 +47,7 @@ const TEMPLATE_HEADERS = [
     "dateOfBirth",
     "email",
     "phoneNumber",
+    "createAccount",
     "agentPhoneNumber",
     "agentPerson",
     "note",
@@ -102,6 +104,9 @@ const HEADER_ALIASES = new Map([
     ["english last name", "englishLastName"],
     ["date of birth", "dateOfBirth"],
     ["phone number", "phoneNumber"],
+    ["create account", "createAccount"],
+    ["login account", "createAccount"],
+    ["account", "createAccount"],
     ["agent phone number", "agentPhoneNumber"],
     ["agent person", "agentPerson"],
     ["married status", "maritalStatus"],
@@ -197,6 +202,14 @@ function normalizeNumber(value) {
     return Number.isFinite(num) && num >= 0 ? num : 0
 }
 
+function normalizeBoolean(value, defaultValue = false) {
+    const raw = String(value ?? "").trim().toUpperCase()
+    if (!raw) return defaultValue
+    if (["YES", "Y", "TRUE", "1", "CREATE", "ON"].includes(raw)) return true
+    if (["NO", "N", "FALSE", "0", "SKIP", "OFF"].includes(raw)) return false
+    return defaultValue
+}
+
 function excelSerialToDate(serial) {
     const utcDays = Math.floor(Number(serial) - 25569)
     const utcValue = utcDays * 86400
@@ -259,6 +272,7 @@ export async function buildEmployeeImportTemplateWorkbook() {
         gender: "MALE",
         dateOfBirth: "1995-05-12",
         phoneNumber: "0979866163",
+        createAccount: "YES",
         maritalStatus: "SINGLE",
         education: "High School",
         religion: "Buddhism",
@@ -292,6 +306,7 @@ export async function buildEmployeeImportTemplateWorkbook() {
         { rule: "Age", description: "Do not import age. Backend calculates age from dateOfBirth." },
         { rule: "Team/Section", description: "Team and Section are ignored because the project structure is Department => Position => Line." },
         { rule: "Status", description: "Use WORKING, RESIGNED, TERMINATED, ABANDONED, PASSED_AWAY, or RETIRED. Old values Working, Resign, Terminate, Abandon, Pass Away, Retirement are accepted." },
+        { rule: "Login account", description: "Set createAccount to YES to create login. Login ID = employeeCode. Initial password = employeeCode + phoneNumber. If the column is missing, YES is used." },
     ])
     instructions.getRow(1).font = { bold: true }
     return workbook
@@ -331,6 +346,7 @@ export async function parseEmployeeImportWorkbook(buffer) {
             dateOfBirth: normalizeDate(raw.dateOfBirth),
             email: normalizeText(raw.email),
             phoneNumber: normalizeText(raw.phoneNumber),
+            createAccount: normalizeBoolean(raw.createAccount, true),
             agentPhoneNumber: normalizeText(raw.agentPhoneNumber),
             agentPerson: normalizeText(raw.agentPerson),
             note: normalizeText(raw.note),
@@ -443,7 +459,16 @@ async function resolveLocation({ provinceName, districtName, communeName, villag
 }
 
 export async function importEmployeesFromRows({ rows, parseErrors, context, user }) {
-    const summary = { totalRows: rows.length, created: 0, updated: 0, skipped: 0, errors: [...parseErrors] }
+    const summary = {
+        totalRows: rows.length,
+        created: 0,
+        updated: 0,
+        skipped: 0,
+        accountsCreated: 0,
+        accountsExisting: 0,
+        accountsSkipped: 0,
+        errors: [...parseErrors],
+    }
     if (summary.errors.length > 0) {
         summary.skipped = rows.length
         return summary
@@ -550,12 +575,39 @@ export async function importEmployeesFromRows({ rows, parseErrors, context, user
         }
 
         const existing = await Employee.findOne({ employeeCode: row.employeeCode }).lean()
+        let employee = null
+
         if (existing) {
-            await Employee.findByIdAndUpdate(existing._id, { $set: payload }, { runValidators: true, context: "query" })
+            employee = await Employee.findByIdAndUpdate(
+                existing._id,
+                { $set: payload },
+                { new: true, runValidators: true, context: "query" },
+            ).lean()
             summary.updated += 1
         } else {
-            await Employee.create({ ...payload, createdByAccountId: user.accountId })
+            employee = await Employee.create({ ...payload, createdByAccountId: user.accountId })
             summary.created += 1
+        }
+
+        try {
+            const accountResult = await provisionEmployeeAccount({
+                employee,
+                user,
+                createAccount: row.createAccount !== false,
+            })
+
+            if (accountResult.action === "CREATED") summary.accountsCreated += 1
+            else if (accountResult.action === "EXISTS") summary.accountsExisting += 1
+            else summary.accountsSkipped += 1
+        } catch (error) {
+            summary.accountsSkipped += 1
+            summary.errors.push(
+                buildError(
+                    row.rowNumber,
+                    "createAccount",
+                    error.messageKey || error.code || "errors.employee.import.accountCreateFailed",
+                ),
+            )
         }
     }
 

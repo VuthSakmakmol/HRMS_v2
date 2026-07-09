@@ -107,7 +107,7 @@ const dialogTitle = computed(() => dialogMode.value === "create" ? "Create Emplo
 
 function createEmptyForm() {
     return {
-        employeeCode: "", profileImageUrl: "",
+        employeeCode: "", profileImageUrl: "", createAccount: true, defaultRoleId: null,
         khmerFirstName: "", khmerLastName: "", englishFirstName: "", englishLastName: "", displayName: "",
         gender: "UNKNOWN", dateOfBirth: "",
         email: "", phoneNumber: "", agentPhoneNumber: "", agentPerson: "", note: "",
@@ -189,6 +189,8 @@ function buildUpdatePayload() {
     const payload = buildPayload()
     delete payload.companyId
     delete payload.branchId
+    delete payload.createAccount
+    delete payload.defaultRoleId
     return payload
 }
 
@@ -485,6 +487,11 @@ onMounted(async () => {
             <div class="employee-form">
                 <div class="form-section"><h3>1. Identity</h3><div class="grid">
                     <label><span>Employee ID</span><InputText v-model="form.employeeCode" :disabled="dialogMode === 'edit'" @input="normalizeCode" /><small>{{ fieldError('employeeCode') }}</small></label>
+                    <label v-if="dialogMode === 'create'" class="account-option">
+                        <span>Create Login Account</span>
+                        <span class="checkbox-line"><input v-model="form.createAccount" type="checkbox" /> Yes, create account</span>
+                        <small>Login ID = Employee ID. Initial password = Employee ID + phone number.</small>
+                    </label>
                     <label><span>English First Name</span><InputText v-model="form.englishFirstName" /></label>
                     <label><span>English Last Name</span><InputText v-model="form.englishLastName" /></label>
                     <label><span>Khmer First Name</span><InputText v-model="form.khmerFirstName" /></label>
@@ -520,7 +527,7 @@ onMounted(async () => {
 
                 <div class="form-section"><h3>4. Contact, Family & Background</h3><div class="grid">
                     <label><span>Email</span><InputText v-model="form.email" /></label>
-                    <label><span>Phone Number</span><InputText v-model="form.phoneNumber" /></label>
+                    <label><span>Phone Number</span><InputText v-model="form.phoneNumber" /><small>{{ fieldError('phoneNumber') }}</small></label>
                     <label><span>Agent Person</span><InputText v-model="form.agentPerson" /></label>
                     <label><span>Agent Phone</span><InputText v-model="form.agentPhoneNumber" /></label>
                     <label><span>Marital Status</span><Select v-model="form.maritalStatus" :options="maritalOptions" option-label="label" option-value="value" /></label>
@@ -574,12 +581,12 @@ onMounted(async () => {
         </Dialog>
 
         <Dialog v-model:visible="importDialogVisible" modal header="Import Employees" :draggable="false" class="small-dialog" :closable="!employeeStore.importing">
-            <div class="import-box"><p>Upload completed Employee Excel template. If your file has no company/branch columns, choose company and branch filters first before import.</p><input ref="fileInputRef" type="file" accept=".xlsx" :disabled="employeeStore.importing" @change="onImportFileChange" /><div v-if="selectedImportFile" class="muted">{{ selectedImportFile.name }}</div><div v-if="employeeStore.importing"><ProgressBar :value="employeeStore.importProgress" /><span class="muted">Processing {{ employeeStore.importProgress }}%</span></div></div>
+            <div class="import-box"><p>Upload completed Employee Excel template. If your file has no company/branch columns, choose company and branch filters first before import.</p><p class="muted">Account import rule: createAccount = YES creates login. Login ID = Employee ID. Initial password = Employee ID + phone number.</p><input ref="fileInputRef" type="file" accept=".xlsx" :disabled="employeeStore.importing" @change="onImportFileChange" /><div v-if="selectedImportFile" class="muted">{{ selectedImportFile.name }}</div><div v-if="employeeStore.importing"><ProgressBar :value="employeeStore.importProgress" /><span class="muted">Processing {{ employeeStore.importProgress }}%</span></div></div>
             <template #footer><Button outlined severity="secondary" label="Cancel" :disabled="employeeStore.importing" @click="importDialogVisible = false" /><Button icon="pi pi-upload" label="Import" :loading="employeeStore.importing" @click="submitImport" /></template>
         </Dialog>
 
         <Dialog v-model:visible="importResultDialogVisible" modal header="Employee Import Result" :draggable="false" class="result-dialog">
-            <div v-if="employeeStore.importSummary" class="result-grid"><div><span>Total</span><strong>{{ employeeStore.importSummary.totalRows }}</strong></div><div><span>Created</span><strong>{{ employeeStore.importSummary.created }}</strong></div><div><span>Updated</span><strong>{{ employeeStore.importSummary.updated }}</strong></div><div><span>Skipped</span><strong>{{ employeeStore.importSummary.skipped }}</strong></div></div>
+            <div v-if="employeeStore.importSummary" class="result-grid"><div><span>Total</span><strong>{{ employeeStore.importSummary.totalRows }}</strong></div><div><span>Created</span><strong>{{ employeeStore.importSummary.created }}</strong></div><div><span>Updated</span><strong>{{ employeeStore.importSummary.updated }}</strong></div><div><span>Skipped</span><strong>{{ employeeStore.importSummary.skipped }}</strong></div><div><span>Accounts Created</span><strong>{{ employeeStore.importSummary.accountsCreated || 0 }}</strong></div><div><span>Accounts Existing</span><strong>{{ employeeStore.importSummary.accountsExisting || 0 }}</strong></div><div><span>Accounts Skipped</span><strong>{{ employeeStore.importSummary.accountsSkipped || 0 }}</strong></div></div>
             <DataTable v-if="employeeStore.importSummary?.errors?.length" size="small" :value="employeeStore.importSummary.errors"><Column field="rowNumber" header="Row" /><Column field="field" header="Field" /><Column field="messageKey" header="Issue" /></DataTable>
             <template #footer><Button label="Close" @click="importResultDialogVisible = false" /></template>
         </Dialog>
@@ -615,6 +622,8 @@ label small { color: var(--hrms-color-danger); font-size: 0.72rem; }
 .result-dialog { width: min(58rem, calc(100vw - 2rem)); }
 .import-box { display: grid; gap: 1rem; }
 .result-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+.account-option { align-content: start; }
+.checkbox-line { display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2.45rem; color: var(--hrms-text-strong); font-size: 0.82rem; font-weight: 700; }
 .result-grid div { display: grid; gap: 0.25rem; padding: 0.85rem; border: 1px solid var(--hrms-border-color); border-radius: 0.85rem; background: var(--hrms-surface-ground); }
 .result-grid span { color: var(--hrms-text-muted); font-size: 0.76rem; }
 .result-grid strong { font-size: 1.35rem; }
