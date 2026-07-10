@@ -5,15 +5,16 @@ import {
     requirePermission,
 } from "../../access/middleware/auth.middleware.js"
 import { AppError } from "../../../shared/errors/AppError.js"
-
-import { hrManagementDashboardQuerySchema } from "../schemas/hrManagementDashboard.schema.js"
-import { getHrManagementDashboard } from "../services/hrManagementDashboard.service.js"
+import {
+    hrDashboardLookupQuerySchema,
+    hrDashboardQuerySchema,
+} from "../schemas/hrDashboard.schema.js"
+import {
+    getHrDashboard,
+    getHrDashboardLookups,
+} from "../services/hrDashboard.service.js"
 
 const router = Router()
-
-const PERMISSIONS = Object.freeze({
-    VIEW: "REPORT.HR_ANALYTICS.VIEW",
-})
 
 function parseRequest(schema, value) {
     const parsed = schema.safeParse(value)
@@ -31,14 +32,28 @@ function parseRequest(schema, value) {
 }
 
 router.use(requireAuthentication)
+router.use(requirePermission("REPORT.HR_ANALYTICS.VIEW"))
 
-router.get("/", requirePermission(PERMISSIONS.VIEW), async (req, res, next) => {
+router.get("/lookups", async (req, res, next) => {
     try {
-        const query = parseRequest(hrManagementDashboardQuerySchema, req.query)
-        const dashboard = await getHrManagementDashboard({
-            query,
-            user: req.auth.user,
+        const query = parseRequest(hrDashboardLookupQuerySchema, req.query)
+        const lookups = await getHrDashboardLookups({ query })
+
+        res.status(200).json({
+            success: true,
+            data: {
+                lookups,
+            },
         })
+    } catch (error) {
+        next(error)
+    }
+})
+
+router.get("/", async (req, res, next) => {
+    try {
+        const query = parseRequest(hrDashboardQuerySchema, req.query)
+        const dashboard = await getHrDashboard({ query })
 
         res.status(200).json({
             success: true,

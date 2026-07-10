@@ -21,7 +21,7 @@ import employeeMovementRoutes from "./modules/employeeMovement/routes/employeeMo
 import manpowerPlanRoutes from "./modules/manpowerPlan/routes/manpowerPlan.routes.js"
 import approvalRoutes from "./modules/approval/routes/approval.routes.js"
 import calendarRoutes from "./modules/calendar/routes/calendar.routes.js"
-import hrManagementDashboardRoutes from "./modules/report/routes/hrManagementDashboard.routes.js"
+import hrDashboardRoutes from "./modules/hrDashboard/routes/hrDashboard.routes.js"
 
 import { AppError } from "./shared/errors/AppError.js"
 import { errorHandler } from "./shared/middleware/errorHandler.js"
@@ -94,7 +94,7 @@ app.use("/api/v1/employee-movements", employeeMovementRoutes)
 app.use("/api/v1/reports/manpower-plans", manpowerPlanRoutes)
 app.use("/api/v1/approvals", approvalRoutes)
 app.use("/api/v1/calendar", calendarRoutes)
-app.use("/api/v1/reports/hr-management-dashboard", hrManagementDashboardRoutes)
+app.use("/api/v1/hr-dashboard", hrDashboardRoutes)
 
 app.use(notFound)
 app.use(errorHandler)

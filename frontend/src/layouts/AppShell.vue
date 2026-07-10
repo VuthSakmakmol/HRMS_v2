@@ -172,10 +172,10 @@ const navGroups = computed(() => {
                 },
 
                 {
-                    labelKey: "nav.hrManagementDashboard",
+                    labelKey: "nav.hrDashboard",
                     icon: "pi pi-chart-bar",
                     to: {
-                        name: "reports-hr-management-dashboard",
+                        name: "reports-hr-dashboard",
                     },
                     permissionCode: "REPORT.HR_ANALYTICS.VIEW",
                 },

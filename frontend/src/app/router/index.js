@@ -180,11 +180,12 @@ const router = createRouter({
                 },
 
                 {
-                    path: "reports/hr-management-dashboard",
-                    name: "reports-hr-management-dashboard",
-                    component: () => import("@/modules/report/views/HrManagementDashboardView.vue"),
+                    path: "reports/hr-dashboard",
+                    name: "reports-hr-dashboard",
+                    component: () =>
+                        import("@/modules/hrDashboard/views/HRDashboardView.vue"),
                     meta: {
-                        titleKey: "nav.hrManagementDashboard",
+                        titleKey: "nav.hrDashboard",
                         permissionCode: "REPORT.HR_ANALYTICS.VIEW",
                     },
                 },
