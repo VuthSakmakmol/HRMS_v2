@@ -34,6 +34,19 @@ const router = createRouter({
                 },
 
                 {
+                    path: "access/accounts",
+                    name: "access-accounts",
+                    component: () => import("@/modules/access/views/AccountListView.vue"),
+                    meta: { titleKey: "nav.accounts", permissionCode: "ACCESS.ACCOUNT.VIEW" },
+                },
+                {
+                    path: "access/roles",
+                    name: "access-roles",
+                    component: () => import("@/modules/access/views/RoleListView.vue"),
+                    meta: { titleKey: "nav.rolesPermissions", permissionCode: "ACCESS.ROLE.VIEW" },
+                },
+
+                {
                     path: "organization/companies",
                     name: "organization-companies",
                     component: () =>
@@ -149,7 +162,7 @@ const router = createRouter({
                 {
                     path: "reports/manpower-plans",
                     name: "report-manpower-plans",
-                    component: () => import("@/modules/manpowerPlan/views/ManpowerPlanListView.vue"),
+                    component: () => import("@/modules/manpowerPlan/views/ManpowerPlanListview.vue"),
                     meta: {
                         titleKey: "nav.manpowerPlans",
                         permissionCode: "REPORT.MANPOWER_PLAN.VIEW",

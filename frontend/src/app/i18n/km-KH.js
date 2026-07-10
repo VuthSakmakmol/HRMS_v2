@@ -29,6 +29,9 @@ export default {
     },
 
     nav: {
+        accessControl: "ការគ្រប់គ្រងសិទ្ធិ",
+        accounts: "គណនី",
+        rolesPermissions: "តួនាទី និងសិទ្ធិ",
         workspace: "កន្លែងធ្វើការ",
         overview: "ទិដ្ឋភាពទូទៅ",
         organization: "អង្គភាព",
@@ -740,6 +743,30 @@ export default {
             pagination: "Page {page} of {totalPages} · {total} records",
         },
 
+    },
+
+    calendar: {
+        scope: { ALL: "វិសាលភាពទាំងអស់", GLOBAL: "សកល", COMPANY: "ក្រុមហ៊ុន", BRANCH: "សាខា", DEFAULT: "លំនាំដើម" },
+        status: { ALL: "ស្ថានភាពទាំងអស់", ACTIVE: "សកម្ម", INACTIVE: "មិនសកម្ម", ARCHIVED: "បណ្ណសារ" },
+        dayTypes: { ALL: "ប្រភេទថ្ងៃទាំងអស់", WORKING_DAY: "ថ្ងៃធ្វើការ", WEEKEND: "ចុងសប្តាហ៍", HOLIDAY: "ថ្ងៃឈប់សម្រាក", SPECIAL_WORKING_DAY: "ថ្ងៃធ្វើការពិសេស", COMPANY_EVENT: "ព្រឹត្តិការណ៍ក្រុមហ៊ុន", CLOSED_DAY: "ថ្ងៃបិទ" },
+        day: {
+            eyebrow: "ប្រតិទិនផ្ទៃក្នុង", title: "ប្រតិទិន និងថ្ងៃឈប់សម្រាក",
+            description: "បង្កើតថ្ងៃឈប់សម្រាករបស់ក្រុមហ៊ុន ឬសាខា ការកែប្រែថ្ងៃចុងសប្តាហ៍ និងថ្ងៃធ្វើការពិសេស។ ការចូលធ្វើការ OT ប្រាក់ខែ និងការទូទាត់ត្រូវយោងតាមប្រតិទិននេះ។",
+            newDay: "បង្កើតថ្ងៃថ្មី", createTitle: "បង្កើតថ្ងៃក្នុងប្រតិទិន", editTitle: "កែប្រែថ្ងៃក្នុងប្រតិទិន", archiveTitle: "ដាក់ថ្ងៃក្នុងបណ្ណសារ", archiveMessage: "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ?",
+            searchPlaceholder: "ស្វែងរកថ្ងៃឈប់សម្រាក ប្រភេទ ឬសេចក្តីពិពណ៌នា...", empty: "រកមិនឃើញទិន្នន័យប្រតិទិន។",
+            loadFailed: "មិនអាចទាញយកប្រតិទិនបានទេ", saveFailed: "មិនអាចរក្សាទុកថ្ងៃក្នុងប្រតិទិនបានទេ", archiveFailed: "មិនអាចដាក់ថ្ងៃក្នុងបណ្ណសារបានទេ",
+            created: "បានបង្កើតថ្ងៃក្នុងប្រតិទិន", updated: "បានកែប្រែថ្ងៃក្នុងប្រតិទិន", archived: "បានដាក់ថ្ងៃក្នុងបណ្ណសារ", readOnly: "បណ្ណសារ",
+            allCompanies: "ក្រុមហ៊ុនទាំងអស់", allBranches: "សាខាទាំងអស់", company: "ក្រុមហ៊ុន", branch: "សាខា", scope: "វិសាលភាព", date: "កាលបរិច្ឆេទ", selectDate: "ជ្រើសរើសកាលបរិច្ឆេទ", resolving: "កំពុងពិនិត្យកាលបរិច្ឆេទ...", name: "ឈ្មោះ", category: "ប្រភេទ", dayType: "ប្រភេទថ្ងៃ", paidHoliday: "ថ្ងៃឈប់មានប្រាក់ឈ្នួល", status: "ស្ថានភាព", updatedAt: "បានកែចុងក្រោយ", descriptionLabel: "សេចក្តីពិពណ៌នា",
+            downloadSample: "ទាញយកគំរូ", importExcel: "នាំចូល Excel", exportExcel: "នាំចេញ Excel", sampleDownloaded: "បានទាញយកគំរូ", sampleDownloadFailed: "មិនអាចទាញយកគំរូបានទេ", exported: "បានរៀបចំឯកសារនាំចេញ", exportFailed: "មិនអាចនាំចេញប្រតិទិនបានទេ",
+            importTitle: "នាំចូលថ្ងៃក្នុងប្រតិទិន", importDescription: "បញ្ចូលឯកសារ Excel ដែលបានបំពេញ ដោយរក្សា Column ដូចគំរូ។", importFileRequired: "ត្រូវការឯកសារ Excel", importProgress: "កំពុងដំណើរការ... {percent}%", importFailed: "មិនអាចនាំចូលប្រតិទិនបានទេ", importResultTitle: "លទ្ធផលនាំចូលប្រតិទិន", totalRows: "ជួរសរុប", createdRows: "បានបង្កើត", updatedRows: "បានកែប្រែ", skippedRows: "បានរំលង", validationErrors: "កំហុសផ្ទៀងផ្ទាត់", rowNumber: "ជួរ", field: "Field", issue: "បញ្ហា"
+        }
+    },
+
+    manpowerPlan: {
+        title: "ផែនការកម្លាំងពលកម្ម", description: "គោលដៅថវិកា និងផែនទីផ្លូវប្រចាំខែ សម្រាប់ប្រៀបធៀបក្នុង Dashboard។",
+        sample: "គំរូ", import: "នាំចូល", export: "នាំចេញ", new: "បង្កើតថ្មី", search: "ស្វែងរក", company: "ក្រុមហ៊ុន", branch: "សាខា", year: "ឆ្នាំ", month: "ខែ", employeeType: "ប្រភេទបុគ្គលិក", status: "ស្ថានភាព", apply: "អនុវត្ត", department: "នាយកដ្ឋាន", position: "តួនាទី", line: "Line", shift: "វេន", type: "ប្រភេទ", budget: "ថវិកា", roadmap: "ផែនទីផ្លូវ", action: "សកម្មភាព", childGroup: "ក្រុមរង", targetBudget: "គោលដៅថវិកា", targetRoadmap: "គោលដៅផែនទីផ្លូវ", remark: "កំណត់សម្គាល់",
+        createTitle: "បង្កើតផែនការកម្លាំងពលកម្ម", editTitle: "កែប្រែផែនការកម្លាំងពលកម្ម", archiveTitle: "ដាក់ផែនការកម្លាំងពលកម្មក្នុងបណ្ណសារ", archiveMessage: "តើអ្នកចង់ដាក់ផែនការនេះក្នុងបណ្ណសារឬទេ?", archive: "ដាក់បណ្ណសារ", importTitle: "នាំចូលផែនការកម្លាំងពលកម្ម", importResultTitle: "លទ្ធផលនាំចូល", chooseFile: "ជ្រើសរើសឯកសារ Excel", all: "ទាំងអស់", active: "សកម្ម", inactive: "មិនសកម្ម", archived: "បណ្ណសារ", allMonths: "ខែទាំងអស់",
+        loadFailed: "មិនអាចទាញយកផែនការកម្លាំងពលកម្មបានទេ", saveFailed: "មិនអាចរក្សាទុកផែនការកម្លាំងពលកម្មបានទេ", archiveFailed: "មិនអាចដាក់ផែនការក្នុងបណ្ណសារបានទេ", importFailed: "មិនអាចនាំចូលផែនការកម្លាំងពលកម្មបានទេ", created: "បានបង្កើតផែនការកម្លាំងពលកម្ម", updated: "បានកែប្រែផែនការកម្លាំងពលកម្ម", archivedMessage: "បានដាក់ផែនការក្នុងបណ្ណសារ"
     },
 
     errors: {

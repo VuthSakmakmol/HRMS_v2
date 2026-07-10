@@ -29,6 +29,9 @@ export default {
     },
 
     nav: {
+        accessControl: "Access Control",
+        accounts: "Accounts",
+        rolesPermissions: "Roles & Permissions",
         workspace: "Workspace",
         overview: "Overview",
         organization: "Organization",
@@ -850,6 +853,23 @@ export default {
         }
 
 
+    },
+
+    manpowerPlan: {
+        title: "Manpower Plans",
+        description: "Monthly budget and roadmap targets for dashboard comparison.",
+        sample: "Sample", import: "Import", export: "Export", new: "New", search: "Search",
+        company: "Company", branch: "Branch", year: "Year", month: "Month", employeeType: "Employee Type",
+        status: "Status", apply: "Apply", department: "Department", position: "Position", line: "Line",
+        shift: "Shift", type: "Type", budget: "Budget", roadmap: "Roadmap", action: "Action",
+        childGroup: "Child Group", targetBudget: "Target Budget", targetRoadmap: "Target Roadmap", remark: "Remark",
+        createTitle: "Create Manpower Plan", editTitle: "Edit Manpower Plan",
+        archiveTitle: "Archive Manpower Plan", archiveMessage: "Archive this manpower plan?", archive: "Archive",
+        importTitle: "Import Manpower Plans", importResultTitle: "Import Result", chooseFile: "Choose Excel file",
+        all: "All", active: "Active", inactive: "Inactive", archived: "Archived", allMonths: "All Months",
+        loadFailed: "Unable to load manpower plans", saveFailed: "Unable to save manpower plan",
+        archiveFailed: "Unable to archive manpower plan", importFailed: "Unable to import manpower plans",
+        created: "Manpower plan created", updated: "Manpower plan updated", archivedMessage: "Manpower plan archived",
     },
 
     errors: {

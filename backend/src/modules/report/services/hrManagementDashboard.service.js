@@ -611,6 +611,168 @@ function buildTurnoverResult({ exits, startHeadcount, endHeadcount, toDate }) {
     }
 }
 
+
+function searchableEmployeeText(employee = {}) {
+    return [
+        employee.employeeTypeId?.code,
+        employee.employeeTypeId?.name,
+        employee.employeeTypeId?.typeCode,
+        employee.employeeTypeId?.typeName,
+        employee.employeeTypeChildCode,
+        employee.employeeTypeChildName,
+        employee.departmentId?.code,
+        employee.departmentId?.name,
+        employee.positionId?.code,
+        employee.positionId?.title,
+        employee.positionId?.name,
+        employee.lineId?.code,
+        employee.lineId?.name,
+    ]
+        .filter(Boolean)
+        .join(" ")
+        .toUpperCase()
+}
+
+function searchablePlanText(plan = {}) {
+    return [
+        plan.employeeTypeId?.code,
+        plan.employeeTypeId?.name,
+        plan.employeeTypeId?.typeCode,
+        plan.employeeTypeId?.typeName,
+        plan.employeeTypeChildCode,
+        plan.employeeTypeChildName,
+        plan.departmentId?.code,
+        plan.departmentId?.name,
+        plan.positionId?.code,
+        plan.positionId?.title,
+        plan.positionId?.name,
+        plan.lineId?.code,
+        plan.lineId?.name,
+    ]
+        .filter(Boolean)
+        .join(" ")
+        .toUpperCase()
+}
+
+function workforceCategoryFromText(text) {
+    if (/WHITE[ _-]?COLLAR|OFFICE|MANAGER|SUPERVISOR|ADMIN|ACCOUNT|HR|MERCHAND/.test(text)) {
+        return "WHITE_COLLAR"
+    }
+
+    if (/SEWER|SEWING OPERATOR|SEWING WORKER/.test(text)) {
+        return "SEWER"
+    }
+
+    return "NON_SEWER"
+}
+
+function laborCategoryFromText(text) {
+    if (/INDIRECT/.test(text)) return "INDIRECT"
+    if (/DIRECT/.test(text)) return "DIRECT"
+    return "UNCLASSIFIED"
+}
+
+function filterEmployeesByCategory(employees, category) {
+    return employees.filter((employee) => workforceCategoryFromText(searchableEmployeeText(employee)) === category)
+}
+
+function filterPlansByCategory(plans, category) {
+    return plans.filter((plan) => workforceCategoryFromText(searchablePlanText(plan)) === category)
+}
+
+function indirectDirectRatio(employees) {
+    let direct = 0
+    let indirect = 0
+
+    for (const employee of employees) {
+        const category = laborCategoryFromText(searchableEmployeeText(employee))
+        if (category === "DIRECT") direct += 1
+        if (category === "INDIRECT") indirect += 1
+    }
+
+    return direct > 0 ? round(indirect / direct, 2) : 0
+}
+
+function buildCategoryMovement({ movements, category, year }) {
+    const months = MONTH_LABELS.map((label, index) => ({
+        month: index + 1,
+        label,
+        in: 0,
+        out: 0,
+        balance: 0,
+    }))
+
+    for (const movement of movements) {
+        const employee = movement.employeeId
+        if (!employee || typeof employee !== "object") continue
+
+        const employeeCategory = workforceCategoryFromText(searchableEmployeeText(employee))
+        if (employeeCategory !== category) continue
+
+        const effectiveDate = new Date(movement.effectiveDate)
+        if (effectiveDate.getFullYear() !== year) continue
+
+        const month = months[effectiveDate.getMonth()]
+        if (!month) continue
+
+        if (MOVEMENT_IN_TYPES.has(movement.movementType)) {
+            month.in += 1
+        } else if (MOVEMENT_OUT_TYPES.has(movement.movementType)) {
+            month.out += 1
+        }
+    }
+
+    for (const month of months) {
+        month.balance = month.in - month.out
+    }
+
+    return months
+}
+
+function buildPhaseOneDashboard({
+    totalEmployees,
+    selectedEmployees,
+    annualEmployees,
+    plans,
+    movements,
+    asOfDate,
+    year,
+    month,
+}) {
+    const sewerEmployees = filterEmployeesByCategory(selectedEmployees, "SEWER")
+    const previousMonthEnd = monthEndDate(year, Math.max(1, month - 1))
+    const previousEmployees = annualEmployees.filter((employee) => isActiveOn(employee, previousMonthEnd))
+
+    const categoryManpower = (category) => buildManpowerPlanMonths({
+        plans: filterPlansByCategory(plans, category),
+        annualEmployees: filterEmployeesByCategory(annualEmployees, category),
+        year,
+    })
+
+    return {
+        general: {
+            totalAverageAge: buildSummary(totalEmployees, asOfDate).avgAge,
+            sewerAverageAge: buildSummary(sewerEmployees, asOfDate).avgAge,
+            totalAverageService: buildSummary(totalEmployees, asOfDate).avgService,
+            sewerAverageService: buildSummary(sewerEmployees, asOfDate).avgService,
+            previousPeriodLabel: `${MONTH_LABELS[Math.max(0, month - 2)]} '${String(year).slice(-2)}`,
+            currentPeriodLabel: `Budget ${year}`,
+            previousIndirectDirectRatio: indirectDirectRatio(previousEmployees),
+            currentIndirectDirectRatio: indirectDirectRatio(selectedEmployees),
+        },
+        manpower: {
+            sewer: categoryManpower("SEWER"),
+            nonSewer: categoryManpower("NON_SEWER"),
+            whiteCollar: categoryManpower("WHITE_COLLAR"),
+        },
+        movement: {
+            sewer: buildCategoryMovement({ movements, category: "SEWER", year }),
+            nonSewer: buildCategoryMovement({ movements, category: "NON_SEWER", year }),
+            whiteCollar: buildCategoryMovement({ movements, category: "WHITE_COLLAR", year }),
+        },
+    }
+}
+
 function buildVacancyResult({ plans, employees, selectedMonthEnd }) {
     const rows = new Map()
 
@@ -688,13 +850,24 @@ export async function getHrManagementDashboard({ query, user }) {
         employeePopulate(Employee.find(buildActiveAsOfFilter({ query, user, asOfDate, baseOnly: true }))).lean(),
         employeePopulate(Employee.find(buildActiveAsOfFilter({ query, user, asOfDate }))).lean(),
         employeePopulate(Employee.find(buildAnnualEmployeeFilter({ query, user, year }))).lean(),
-        ManpowerPlan.find(buildPlanFilter({ query, user, year })).lean(),
+        planPopulate(ManpowerPlan.find(buildPlanFilter({ query, user, year }))).lean(),
         planPopulate(ManpowerPlan.find(buildPlanFilter({ query, user, year, month }))).lean(),
         EmployeeMovement.find({
             ...getMovementScopeFilter(user),
             status: "ACTIVE",
-            effectiveDate: { $gte: fromDate, $lte: toDate },
-        }).lean(),
+            effectiveDate: { $gte: monthStartDate(year, 1), $lte: monthEndDate(year, 12) },
+        })
+            .populate({
+                path: "employeeId",
+                select: "employeeTypeId employeeTypeChildCode employeeTypeChildName departmentId positionId lineId",
+                populate: [
+                    { path: "employeeTypeId", select: "code name typeCode typeName title displayName" },
+                    { path: "departmentId", select: "code name" },
+                    { path: "positionId", select: "code title name" },
+                    { path: "lineId", select: "code name" },
+                ],
+            })
+            .lean(),
         employeePopulate(Employee.find(buildEmployeePeriodFilter({ query, user, fromDate, toDate, dateField: "joinDate" }))).lean(),
         employeePopulate(Employee.find(buildEmployeePeriodFilter({ query, user, fromDate, toDate, dateField: "resignDate" }))).lean(),
         Employee.countDocuments(buildActiveAsOfFilter({ query, user, asOfDate: startOfDay(fromDate) })),
@@ -740,6 +913,17 @@ export async function getHrManagementDashboard({ query, user }) {
         recruitment: buildRecruitmentResult(hires),
         turnover: buildTurnoverResult({ exits, startHeadcount: startEmployees, endHeadcount: endEmployees, toDate }),
         vacancy: buildVacancyResult({ plans: selectedMonthPlans, employees: annualEmployees, selectedMonthEnd }),
+
+        phaseOne: buildPhaseOneDashboard({
+            totalEmployees,
+            selectedEmployees,
+            annualEmployees,
+            plans,
+            movements,
+            asOfDate,
+            year,
+            month,
+        }),
     }
 
     return setCache(cacheKey, result, 60_000)

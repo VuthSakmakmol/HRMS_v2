@@ -7,6 +7,7 @@ import { env } from "./config/env.js"
 
 import systemRoutes from "./modules/system/system.routes.js"
 import authRoutes from "./modules/access/routes/auth.routes.js"
+import accessManagementRoutes from "./modules/access/routes/accessManagement.routes.js"
 import companyRoutes from "./modules/organization/routes/company.routes.js"
 import branchRoutes from "./modules/organization/routes/branch.routes.js"
 import departmentRoutes from "./modules/organization/routes/department.routes.js"
@@ -79,6 +80,7 @@ app.use(
 
 app.use("/api/v1", systemRoutes)
 app.use("/api/v1/auth", authRoutes)
+app.use("/api/v1/access", accessManagementRoutes)
 app.use("/api/v1/organization/companies", companyRoutes)
 app.use("/api/v1/organization/branches", branchRoutes)
 app.use("/api/v1/organization/departments", departmentRoutes)

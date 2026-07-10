@@ -2,6 +2,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from "vue"
 import { useToast } from "primevue/usetoast"
+import { useI18n } from "vue-i18n"
 
 import Button from "primevue/button"
 import Card from "primevue/card"
@@ -27,6 +28,7 @@ import { fetchEmployeeTypes } from "@/modules/employeeType/services/employeeType
 import { useManpowerPlanStore } from "../stores/manpowerPlan.store.js"
 
 const toast = useToast()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const manpowerPlanStore = useManpowerPlanStore()
 
@@ -75,18 +77,18 @@ const canArchive = computed(() => authStore.hasPermission(PERMISSIONS.ARCHIVE))
 const canImport = computed(() => authStore.hasPermission(PERMISSIONS.IMPORT))
 const canExport = computed(() => authStore.hasPermission(PERMISSIONS.EXPORT))
 
-const statusOptions = [
-    { label: "All", value: "ALL" },
-    { label: "Active", value: "ACTIVE" },
-    { label: "Inactive", value: "INACTIVE" },
-    { label: "Archived", value: "ARCHIVED" },
-]
-const editableStatusOptions = [
-    { label: "Active", value: "ACTIVE" },
-    { label: "Inactive", value: "INACTIVE" },
-]
+const statusOptions = computed(() => [
+    { label: t("manpowerPlan.all"), value: "ALL" },
+    { label: t("manpowerPlan.active"), value: "ACTIVE" },
+    { label: t("manpowerPlan.inactive"), value: "INACTIVE" },
+    { label: t("manpowerPlan.archived"), value: "ARCHIVED" },
+])
+const editableStatusOptions = computed(() => [
+    { label: t("manpowerPlan.active"), value: "ACTIVE" },
+    { label: t("manpowerPlan.inactive"), value: "INACTIVE" },
+])
 const monthOptions = [
-    { label: "All Months", value: "" },
+    { label: t("manpowerPlan.allMonths"), value: "" },
     ...Array.from({ length: 12 }, (_, index) => ({ label: `${index + 1}`, value: index + 1 })),
 ]
 const formMonthOptions = Array.from({ length: 12 }, (_, index) => ({ label: `${index + 1}`, value: index + 1 }))
@@ -109,7 +111,11 @@ const childOptions = computed(() => {
     ]
 })
 
-const dialogTitle = computed(() => dialogMode.value === "create" ? "Create Manpower Plan" : "Edit Manpower Plan")
+const dialogTitle = computed(() =>
+    dialogMode.value === "create"
+        ? t("manpowerPlan.createTitle")
+        : t("manpowerPlan.editTitle"),
+)
 
 function getErrorMessage(error) {
     return error?.response?.data?.error?.messageKey || error?.response?.data?.message || error?.message || "Something went wrong"
@@ -298,70 +304,70 @@ onMounted(async () => {
             <template #title>
                 <div class="report-title-row">
                     <div>
-                        <h1>Manpower Plans</h1>
-                        <p>Monthly budget and roadmap targets for dashboard comparison.</p>
+                        <h1>{{ t("manpowerPlan.title") }}</h1>
+                        <p>{{ t("manpowerPlan.description") }}</p>
                     </div>
                     <div class="report-actions">
-                        <Button v-if="canImport" icon="pi pi-download" label="Sample" severity="secondary" :loading="manpowerPlanStore.downloadingTemplate" @click="manpowerPlanStore.downloadImportTemplate()" />
-                        <Button v-if="canImport" icon="pi pi-upload" label="Import" severity="secondary" @click="importDialogVisible = true" />
-                        <Button v-if="canExport" icon="pi pi-file-excel" label="Export" severity="secondary" :loading="manpowerPlanStore.exporting" @click="manpowerPlanStore.exportManpowerPlans()" />
-                        <Button v-if="canCreate" icon="pi pi-plus" label="New" @click="openCreateDialog" />
+                        <Button v-if="canImport" icon="pi pi-download" :label="t('manpowerPlan.sample')" severity="secondary" :loading="manpowerPlanStore.downloadingTemplate" @click="manpowerPlanStore.downloadImportTemplate()" />
+                        <Button v-if="canImport" icon="pi pi-upload" :label="t('manpowerPlan.import')" severity="secondary" @click="importDialogVisible = true" />
+                        <Button v-if="canExport" icon="pi pi-file-excel" :label="t('manpowerPlan.export')" severity="secondary" :loading="manpowerPlanStore.exporting" @click="manpowerPlanStore.exportManpowerPlans()" />
+                        <Button v-if="canCreate" icon="pi pi-plus" :label="t('manpowerPlan.new')" @click="openCreateDialog" />
                     </div>
                 </div>
             </template>
 
             <template #content>
                 <div class="filter-grid">
-                    <InputText v-model="filters.search" placeholder="Search" @keyup.enter="loadPlans(1)" />
-                    <Select v-model="filters.companyId" :options="companyFilterOptions" option-label="label" option-value="value" placeholder="Company" filter show-clear />
-                    <Select v-model="filters.branchId" :options="branchFilterOptions" option-label="label" option-value="value" placeholder="Branch" filter show-clear />
-                    <InputNumber v-model="filters.year" placeholder="Year" :min="2000" :max="2100" :use-grouping="false" />
-                    <Select v-model="filters.month" :options="monthOptions" option-label="label" option-value="value" placeholder="Month" />
-                    <Select v-model="filters.employeeTypeId" :options="employeeTypeFilterOptions" option-label="label" option-value="value" placeholder="Employee Type" filter show-clear />
-                    <Select v-model="filters.status" :options="statusOptions" option-label="label" option-value="value" placeholder="Status" />
-                    <Button icon="pi pi-search" label="Apply" :loading="manpowerPlanStore.loading" @click="loadPlans(1)" />
+                    <InputText v-model="filters.search" :placeholder="t('manpowerPlan.search')" @keyup.enter="loadPlans(1)" />
+                    <Select v-model="filters.companyId" :options="companyFilterOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.company')" filter show-clear />
+                    <Select v-model="filters.branchId" :options="branchFilterOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.branch')" filter show-clear />
+                    <InputNumber v-model="filters.year" :placeholder="t('manpowerPlan.year')" :min="2000" :max="2100" :use-grouping="false" />
+                    <Select v-model="filters.month" :options="monthOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.month')" />
+                    <Select v-model="filters.employeeTypeId" :options="employeeTypeFilterOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.employeeType')" filter show-clear />
+                    <Select v-model="filters.status" :options="statusOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.status')" />
+                    <Button icon="pi pi-search" :label="t('manpowerPlan.apply')" :loading="manpowerPlanStore.loading" @click="loadPlans(1)" />
                 </div>
 
                 <DataTable :value="manpowerPlanStore.items" :loading="manpowerPlanStore.loading || loadingOptions" data-key="id" paginator lazy :first="(manpowerPlanStore.pagination.page - 1) * manpowerPlanStore.pagination.limit" :rows="manpowerPlanStore.pagination.limit" :total-records="manpowerPlanStore.pagination.total" @page="loadPlans($event.page + 1)" scrollable scroll-height="62vh" size="small" class="compact-table">
-                    <Column field="year" header="Year" style="min-width: 80px" />
-                    <Column field="month" header="Month" style="min-width: 80px" />
-                    <Column header="Company" style="min-width: 140px"><template #body="{ data }">{{ data.company?.code || '-' }}</template></Column>
-                    <Column header="Branch" style="min-width: 140px"><template #body="{ data }">{{ data.branch?.code || '-' }}</template></Column>
-                    <Column header="Department" style="min-width: 160px"><template #body="{ data }">{{ data.department?.name || '-' }}</template></Column>
-                    <Column header="Position" style="min-width: 170px"><template #body="{ data }">{{ data.position?.title || '-' }}</template></Column>
-                    <Column header="Line" style="min-width: 120px"><template #body="{ data }">{{ data.line?.name || '-' }}</template></Column>
-                    <Column header="Type" style="min-width: 180px"><template #body="{ data }">{{ data.employeeType?.name || '-' }}<span v-if="data.employeeTypeChildName"> / {{ data.employeeTypeChildName }}</span></template></Column>
-                    <Column field="targetBudget" header="Budget" style="min-width: 100px" />
-                    <Column field="targetRoadmap" header="Roadmap" style="min-width: 110px" />
-                    <Column header="Status" style="min-width: 100px"><template #body="{ data }"><Tag :value="data.status" :severity="data.status === 'ACTIVE' ? 'success' : 'secondary'" /></template></Column>
-                    <Column header="Action" frozen align-frozen="right" style="min-width: 150px"><template #body="{ data }"><div class="row-actions"><Button v-if="canUpdate" icon="pi pi-pencil" text rounded @click="openEditDialog(data)" /><Button v-if="canArchive && data.status !== 'ARCHIVED'" icon="pi pi-trash" text rounded severity="danger" @click="confirmArchive(data)" /></div></template></Column>
+                    <Column field="year" :header="t('manpowerPlan.year')" style="min-width: 80px" />
+                    <Column field="month" :header="t('manpowerPlan.month')" style="min-width: 80px" />
+                    <Column :header="t('manpowerPlan.company')" style="min-width: 140px"><template #body="{ data }">{{ data.company?.code || '-' }}</template></Column>
+                    <Column :header="t('manpowerPlan.branch')" style="min-width: 140px"><template #body="{ data }">{{ data.branch?.code || '-' }}</template></Column>
+                    <Column :header="t('manpowerPlan.department')" style="min-width: 160px"><template #body="{ data }">{{ data.department?.name || '-' }}</template></Column>
+                    <Column :header="t('manpowerPlan.position')" style="min-width: 170px"><template #body="{ data }">{{ data.position?.title || '-' }}</template></Column>
+                    <Column :header="t('manpowerPlan.line')" style="min-width: 120px"><template #body="{ data }">{{ data.line?.name || '-' }}</template></Column>
+                    <Column :header="t('manpowerPlan.type')" style="min-width: 180px"><template #body="{ data }">{{ data.employeeType?.name || '-' }}<span v-if="data.employeeTypeChildName"> / {{ data.employeeTypeChildName }}</span></template></Column>
+                    <Column field="targetBudget" :header="t('manpowerPlan.budget')" style="min-width: 100px" />
+                    <Column field="targetRoadmap" :header="t('manpowerPlan.roadmap')" style="min-width: 110px" />
+                    <Column :header="t('manpowerPlan.status')" style="min-width: 100px"><template #body="{ data }"><Tag :value="data.status" :severity="data.status === 'ACTIVE' ? 'success' : 'secondary'" /></template></Column>
+                    <Column :header="t('manpowerPlan.action')" frozen align-frozen="right" style="min-width: 150px"><template #body="{ data }"><div class="row-actions"><Button v-if="canUpdate" icon="pi pi-pencil" text rounded @click="openEditDialog(data)" /><Button v-if="canArchive && data.status !== 'ARCHIVED'" icon="pi pi-trash" text rounded severity="danger" @click="confirmArchive(data)" /></div></template></Column>
                 </DataTable>
             </template>
         </Card>
 
         <Dialog v-model:visible="dialogVisible" :header="dialogTitle" modal class="report-dialog">
             <div class="form-grid">
-                <Select v-model="form.companyId" :options="companyOptions" option-label="label" option-value="value" placeholder="Company" filter />
-                <Select v-model="form.branchId" :options="branchOptions" option-label="label" option-value="value" placeholder="Branch" filter />
-                <InputNumber v-model="form.year" placeholder="Year" :min="2000" :max="2100" :use-grouping="false" />
-                <Select v-model="form.month" :options="formMonthOptions" option-label="label" option-value="value" placeholder="Month" />
-                <Select v-model="form.departmentId" :options="departmentOptions" option-label="label" option-value="value" placeholder="Department" filter show-clear />
-                <Select v-model="form.positionId" :options="positionOptions" option-label="label" option-value="value" placeholder="Position" filter show-clear />
-                <Select v-model="form.lineId" :options="lineOptions" option-label="label" option-value="value" placeholder="Line" filter show-clear />
-                <Select v-model="form.shiftId" :options="shiftOptions" option-label="label" option-value="value" placeholder="Shift" filter show-clear />
-                <Select v-model="form.employeeTypeId" :options="employeeTypeOptions" option-label="label" option-value="value" placeholder="Employee Type" filter show-clear />
-                <Select v-model="form.employeeTypeChildId" :options="childOptions" option-label="label" option-value="value" placeholder="Child Group" :disabled="!form.employeeTypeId" show-clear />
-                <InputNumber v-model="form.targetBudget" placeholder="Target Budget" :min="0" />
-                <InputNumber v-model="form.targetRoadmap" placeholder="Target Roadmap" :min="0" />
-                <Select v-model="form.status" :options="editableStatusOptions" option-label="label" option-value="value" placeholder="Status" />
-                <Textarea v-model="form.remark" placeholder="Remark" rows="3" class="span-2" />
+                <Select v-model="form.companyId" :options="companyOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.company')" filter />
+                <Select v-model="form.branchId" :options="branchOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.branch')" filter />
+                <InputNumber v-model="form.year" :placeholder="t('manpowerPlan.year')" :min="2000" :max="2100" :use-grouping="false" />
+                <Select v-model="form.month" :options="formMonthOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.month')" />
+                <Select v-model="form.departmentId" :options="departmentOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.department')" filter show-clear />
+                <Select v-model="form.positionId" :options="positionOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.position')" filter show-clear />
+                <Select v-model="form.lineId" :options="lineOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.line')" filter show-clear />
+                <Select v-model="form.shiftId" :options="shiftOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.shift')" filter show-clear />
+                <Select v-model="form.employeeTypeId" :options="employeeTypeOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.employeeType')" filter show-clear />
+                <Select v-model="form.employeeTypeChildId" :options="childOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.childGroup')" :disabled="!form.employeeTypeId" show-clear />
+                <InputNumber v-model="form.targetBudget" :placeholder="t('manpowerPlan.targetBudget')" :min="0" />
+                <InputNumber v-model="form.targetRoadmap" :placeholder="t('manpowerPlan.targetRoadmap')" :min="0" />
+                <Select v-model="form.status" :options="editableStatusOptions" option-label="label" option-value="value" :placeholder="t('manpowerPlan.status')" />
+                <Textarea v-model="form.remark" :placeholder="t('manpowerPlan.remark')" rows="3" class="span-2" />
             </div>
-            <template #footer><Button label="Cancel" severity="secondary" @click="dialogVisible = false" /><Button label="Save" :loading="manpowerPlanStore.saving" @click="submitForm" /></template>
+            <template #footer><Button :label="t('common.cancel')" severity="secondary" @click="dialogVisible = false" /><Button :label="t('common.save')" :loading="manpowerPlanStore.saving" @click="submitForm" /></template>
         </Dialog>
 
-        <Dialog v-model:visible="archiveDialogVisible" header="Archive Manpower Plan" modal><p>Archive this manpower plan?</p><template #footer><Button label="Cancel" severity="secondary" @click="archiveDialogVisible = false" /><Button label="Archive" severity="danger" :loading="manpowerPlanStore.archiving" @click="archiveSelected" /></template></Dialog>
-        <Dialog v-model:visible="importDialogVisible" header="Import Manpower Plans" modal><input ref="fileInputRef" type="file" accept=".xlsx" @change="onImportFileChange" /><ProgressBar v-if="manpowerPlanStore.importing" :value="manpowerPlanStore.importProgress" /><template #footer><Button label="Cancel" severity="secondary" @click="importDialogVisible = false" /><Button label="Import" :disabled="!selectedImportFile" :loading="manpowerPlanStore.importing" @click="submitImport" /></template></Dialog>
-        <Dialog v-model:visible="importResultDialogVisible" header="Import Result" modal><pre>{{ manpowerPlanStore.importSummary }}</pre></Dialog>
+        <Dialog v-model:visible="archiveDialogVisible" :header="t('manpowerPlan.archiveTitle')" modal><p>{{ t("manpowerPlan.archiveMessage") }}</p><template #footer><Button :label="t('common.cancel')" severity="secondary" @click="archiveDialogVisible = false" /><Button :label="t('manpowerPlan.archive')" severity="danger" :loading="manpowerPlanStore.archiving" @click="archiveSelected" /></template></Dialog>
+        <Dialog v-model:visible="importDialogVisible" :header="t('manpowerPlan.importTitle')" modal><input ref="fileInputRef" type="file" accept=".xlsx" @change="onImportFileChange" /><ProgressBar v-if="manpowerPlanStore.importing" :value="manpowerPlanStore.importProgress" /><template #footer><Button :label="t('common.cancel')" severity="secondary" @click="importDialogVisible = false" /><Button :label="t('manpowerPlan.import')" :disabled="!selectedImportFile" :loading="manpowerPlanStore.importing" @click="submitImport" /></template></Dialog>
+        <Dialog v-model:visible="importResultDialogVisible" :header="t('manpowerPlan.importResultTitle')" modal><pre>{{ manpowerPlanStore.importSummary }}</pre></Dialog>
     </section>
 </template>
 

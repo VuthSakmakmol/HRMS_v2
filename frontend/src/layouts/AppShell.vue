@@ -46,6 +46,14 @@ const navGroups = computed(() => {
         },
 
         {
+            labelKey: "nav.accessControl",
+            items: [
+                { labelKey: "nav.accounts", icon: "pi pi-users", to: { name: "access-accounts" }, permissionCode: "ACCESS.ACCOUNT.VIEW" },
+                { labelKey: "nav.rolesPermissions", icon: "pi pi-shield", to: { name: "access-roles" }, permissionCode: "ACCESS.ROLE.VIEW" },
+            ],
+        },
+
+        {
             labelKey: "nav.organization",
             items: [
                 {

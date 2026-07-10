@@ -74,8 +74,8 @@ const canExport = computed(() => authStore.hasPermission(PERMISSIONS.EXPORT))
 
 const dialogTitle = computed(() =>
     dialogMode.value === "create"
-        ? t("calendar.day.createTitle")
-        : t("calendar.day.editTitle"),
+        ? t("organization.calendar.day.createTitle")
+        : t("organization.calendar.day.editTitle"),
 )
 
 const companyOptions = computed(() =>
@@ -86,7 +86,7 @@ const companyOptions = computed(() =>
 )
 
 const companyFilterOptions = computed(() => [
-    { label: t("calendar.day.allCompanies"), value: "" },
+    { label: t("organization.calendar.day.allCompanies"), value: "" },
     ...companyOptions.value,
 ])
 
@@ -97,38 +97,38 @@ const branchOptions = computed(() =>
 )
 
 const branchFilterOptions = computed(() => [
-    { label: t("calendar.day.allBranches"), value: "" },
+    { label: t("organization.calendar.day.allBranches"), value: "" },
     ...branches.value
         .filter((branch) => !filters.companyId || branch.companyId === filters.companyId)
         .map((branch) => ({ label: `${branch.code} - ${branch.name}`, value: branch.id })),
 ])
 
 const scopeOptions = computed(() => [
-    { label: t("calendar.scope.ALL"), value: "ALL" },
-    { label: t("calendar.scope.GLOBAL"), value: "GLOBAL" },
-    { label: t("calendar.scope.COMPANY"), value: "COMPANY" },
-    { label: t("calendar.scope.BRANCH"), value: "BRANCH" },
+    { label: t("organization.calendar.scope.ALL"), value: "ALL" },
+    { label: t("organization.calendar.scope.GLOBAL"), value: "GLOBAL" },
+    { label: t("organization.calendar.scope.COMPANY"), value: "COMPANY" },
+    { label: t("organization.calendar.scope.BRANCH"), value: "BRANCH" },
 ])
 
 const createScopeOptions = computed(() => scopeOptions.value.filter((item) => item.value !== "ALL"))
 
 const dayTypeOptions = computed(() => [
-    { label: t("calendar.dayTypes.ALL"), value: "ALL" },
-    { label: t("calendar.dayTypes.WORKING_DAY"), value: "WORKING_DAY" },
-    { label: t("calendar.dayTypes.WEEKEND"), value: "WEEKEND" },
-    { label: t("calendar.dayTypes.HOLIDAY"), value: "HOLIDAY" },
-    { label: t("calendar.dayTypes.SPECIAL_WORKING_DAY"), value: "SPECIAL_WORKING_DAY" },
-    { label: t("calendar.dayTypes.COMPANY_EVENT"), value: "COMPANY_EVENT" },
-    { label: t("calendar.dayTypes.CLOSED_DAY"), value: "CLOSED_DAY" },
+    { label: t("organization.calendar.dayTypes.ALL"), value: "ALL" },
+    { label: t("organization.calendar.dayTypes.WORKING_DAY"), value: "WORKING_DAY" },
+    { label: t("organization.calendar.dayTypes.WEEKEND"), value: "WEEKEND" },
+    { label: t("organization.calendar.dayTypes.HOLIDAY"), value: "HOLIDAY" },
+    { label: t("organization.calendar.dayTypes.SPECIAL_WORKING_DAY"), value: "SPECIAL_WORKING_DAY" },
+    { label: t("organization.calendar.dayTypes.COMPANY_EVENT"), value: "COMPANY_EVENT" },
+    { label: t("organization.calendar.dayTypes.CLOSED_DAY"), value: "CLOSED_DAY" },
 ])
 
 const createDayTypeOptions = computed(() => dayTypeOptions.value.filter((item) => item.value !== "ALL"))
 
 const statusOptions = computed(() => [
-    { label: t("calendar.status.ALL"), value: "ALL" },
-    { label: t("calendar.status.ACTIVE"), value: "ACTIVE" },
-    { label: t("calendar.status.INACTIVE"), value: "INACTIVE" },
-    { label: t("calendar.status.ARCHIVED"), value: "ARCHIVED" },
+    { label: t("organization.calendar.status.ALL"), value: "ALL" },
+    { label: t("organization.calendar.status.ACTIVE"), value: "ACTIVE" },
+    { label: t("organization.calendar.status.INACTIVE"), value: "INACTIVE" },
+    { label: t("organization.calendar.status.ARCHIVED"), value: "ARCHIVED" },
 ])
 
 const editableStatusOptions = computed(() => statusOptions.value.filter((item) => ["ACTIVE", "INACTIVE"].includes(item.value)))
@@ -259,7 +259,7 @@ async function loadCalendarDays(params = {}) {
     try {
         await calendarStore.loadCalendarDays(params)
     } catch (error) {
-        toast.add({ severity: "error", summary: t("calendar.day.loadFailed"), detail: getErrorMessage(error), life: 4500 })
+        toast.add({ severity: "error", summary: t("organization.calendar.day.loadFailed"), detail: getErrorMessage(error), life: 4500 })
     }
 }
 
@@ -338,16 +338,16 @@ async function saveCalendarDay() {
     try {
         if (dialogMode.value === "create") {
             await calendarStore.createCalendarDay(buildCreatePayload())
-            toast.add({ severity: "success", summary: t("calendar.day.created"), life: 3000 })
+            toast.add({ severity: "success", summary: t("organization.calendar.day.created"), life: 3000 })
         } else {
             await calendarStore.updateCalendarDay(selectedDayId.value, buildUpdatePayload())
-            toast.add({ severity: "success", summary: t("calendar.day.updated"), life: 3000 })
+            toast.add({ severity: "success", summary: t("organization.calendar.day.updated"), life: 3000 })
         }
         closeDialog()
         await loadCalendarDays()
     } catch (error) {
         applyBackendFieldErrors(error)
-        toast.add({ severity: "error", summary: t("calendar.day.saveFailed"), detail: getErrorMessage(error), life: 5000 })
+        toast.add({ severity: "error", summary: t("organization.calendar.day.saveFailed"), detail: getErrorMessage(error), life: 5000 })
     }
 }
 
@@ -365,29 +365,29 @@ async function confirmArchiveDay() {
     if (!archiveCandidate.value?.id) return
     try {
         await calendarStore.archiveCalendarDay(archiveCandidate.value.id)
-        toast.add({ severity: "success", summary: t("calendar.day.archived"), life: 3000 })
+        toast.add({ severity: "success", summary: t("organization.calendar.day.archived"), life: 3000 })
         closeArchiveDialog()
         await loadCalendarDays()
     } catch (error) {
-        toast.add({ severity: "error", summary: t("calendar.day.archiveFailed"), detail: getErrorMessage(error), life: 5000 })
+        toast.add({ severity: "error", summary: t("organization.calendar.day.archiveFailed"), detail: getErrorMessage(error), life: 5000 })
     }
 }
 
 async function downloadSample() {
     try {
         await calendarStore.downloadImportTemplate()
-        toast.add({ severity: "success", summary: t("calendar.day.sampleDownloaded"), life: 3000 })
+        toast.add({ severity: "success", summary: t("organization.calendar.day.sampleDownloaded"), life: 3000 })
     } catch (error) {
-        toast.add({ severity: "error", summary: t("calendar.day.sampleDownloadFailed"), detail: getErrorMessage(error), life: 5000 })
+        toast.add({ severity: "error", summary: t("organization.calendar.day.sampleDownloadFailed"), detail: getErrorMessage(error), life: 5000 })
     }
 }
 
 async function exportExcel() {
     try {
         await calendarStore.exportCalendarDays()
-        toast.add({ severity: "success", summary: t("calendar.day.exported"), life: 3000 })
+        toast.add({ severity: "success", summary: t("organization.calendar.day.exported"), life: 3000 })
     } catch (error) {
-        toast.add({ severity: "error", summary: t("calendar.day.exportFailed"), detail: getErrorMessage(error), life: 5000 })
+        toast.add({ severity: "error", summary: t("organization.calendar.day.exportFailed"), detail: getErrorMessage(error), life: 5000 })
     }
 }
 
@@ -409,7 +409,7 @@ function onImportFileChange(event) {
 
 async function submitImport() {
     if (!selectedImportFile.value) {
-        toast.add({ severity: "warn", summary: t("calendar.day.importFileRequired"), life: 3500 })
+        toast.add({ severity: "warn", summary: t("organization.calendar.day.importFileRequired"), life: 3500 })
         return
     }
     try {
@@ -418,7 +418,7 @@ async function submitImport() {
         importResultDialogVisible.value = true
         await loadCalendarDays()
     } catch (error) {
-        toast.add({ severity: "error", summary: t("calendar.day.importFailed"), detail: getErrorMessage(error), life: 5000 })
+        toast.add({ severity: "error", summary: t("organization.calendar.day.importFailed"), detail: getErrorMessage(error), life: 5000 })
     }
 }
 
@@ -440,15 +440,15 @@ onMounted(async () => {
     <section class="calendar-page">
         <div class="calendar-page__header">
             <div>
-                <span class="calendar-page__eyebrow">{{ t("calendar.day.eyebrow") }}</span>
-                <h2>{{ t("calendar.day.title") }}</h2>
-                <p>{{ t("calendar.day.description") }}</p>
+                <span class="calendar-page__eyebrow">{{ t("organization.calendar.day.eyebrow") }}</span>
+                <h2>{{ t("organization.calendar.day.title") }}</h2>
+                <p>{{ t("organization.calendar.day.description") }}</p>
             </div>
             <div class="calendar-page__header-actions">
-                <Button v-if="canImport" severity="secondary" outlined icon="pi pi-download" :loading="calendarStore.downloadingTemplate" :label="t('calendar.day.downloadSample')" @click="downloadSample" />
-                <Button v-if="canImport" severity="secondary" outlined icon="pi pi-upload" :label="t('calendar.day.importExcel')" @click="openImportDialog" />
-                <Button v-if="canExport" severity="secondary" outlined icon="pi pi-file-export" :loading="calendarStore.exporting" :label="t('calendar.day.exportExcel')" @click="exportExcel" />
-                <Button v-if="canCreate" icon="pi pi-plus" :label="t('calendar.day.newDay')" @click="openCreateDialog" />
+                <Button v-if="canImport" severity="secondary" outlined icon="pi pi-download" :loading="calendarStore.downloadingTemplate" :label="t('organization.calendar.day.downloadSample')" @click="downloadSample" />
+                <Button v-if="canImport" severity="secondary" outlined icon="pi pi-upload" :label="t('organization.calendar.day.importExcel')" @click="openImportDialog" />
+                <Button v-if="canExport" severity="secondary" outlined icon="pi pi-file-export" :loading="calendarStore.exporting" :label="t('organization.calendar.day.exportExcel')" @click="exportExcel" />
+                <Button v-if="canCreate" icon="pi pi-plus" :label="t('organization.calendar.day.newDay')" @click="openCreateDialog" />
             </div>
         </div>
 
@@ -456,7 +456,7 @@ onMounted(async () => {
             <template #content>
                 <div class="calendar-toolbar">
                     <div class="calendar-toolbar__filters">
-                        <span class="calendar-search"><i class="pi pi-search" /><InputText v-model="filters.search" class="calendar-search__input" :placeholder="t('calendar.day.searchPlaceholder')" @keyup.enter="applyFilters" /></span>
+                        <span class="calendar-search"><i class="pi pi-search" /><InputText v-model="filters.search" class="calendar-search__input" :placeholder="t('organization.calendar.day.searchPlaceholder')" @keyup.enter="applyFilters" /></span>
                         <InternalCalendarDatePicker v-model="filters.startDate" :show-status="false" />
                         <InternalCalendarDatePicker v-model="filters.endDate" :show-status="false" />
                         <Select v-model="filters.companyId" class="calendar-filter" :options="companyFilterOptions" option-label="label" option-value="value" :loading="companyLoading" @change="onFilterCompanyChange" />
@@ -473,15 +473,15 @@ onMounted(async () => {
                 </div>
 
                 <div class="calendar-table-wrap">
-                    <DataTable lazy paginator striped-rows data-key="id" size="small" scrollable scroll-height="flex" :value="calendarStore.items" :loading="calendarStore.loading" :rows="calendarStore.pagination.limit" :first="(calendarStore.pagination.page - 1) * calendarStore.pagination.limit" :total-records="calendarStore.pagination.total" :rows-per-page-options="[10,20,50,100]" :empty-message="t('calendar.day.empty')" @page="onPage">
-                        <Column field="dateKey" :header="t('calendar.day.date')" frozen style="min-width: 9rem"><template #body="{ data }"><strong class="calendar-code">{{ data.dateKey }}</strong></template></Column>
-                        <Column :header="t('calendar.day.name')" style="min-width: 16rem"><template #body="{ data }"><div class="calendar-name-cell"><strong>{{ data.name }}</strong><span>{{ data.holidayCategory || '-' }}</span></div></template></Column>
-                        <Column :header="t('calendar.day.dayType')" style="min-width: 13rem"><template #body="{ data }"><Tag :severity="getDayTypeSeverity(data.dayType)" :value="t(`calendar.dayTypes.${data.dayType}`)" /></template></Column>
-                        <Column :header="t('calendar.day.scope')" style="min-width: 12rem"><template #body="{ data }"><div class="calendar-muted-cell"><strong>{{ t(`calendar.scope.${data.scopeLevel}`) }}</strong><span>{{ data.branch?.code || data.company?.code || '-' }}</span></div></template></Column>
-                        <Column :header="t('calendar.day.paidHoliday')" style="min-width: 9rem"><template #body="{ data }"><Tag :severity="data.isPaidHoliday ? 'success' : 'secondary'" :value="data.isPaidHoliday ? t('common.yes') : t('common.no')" /></template></Column>
-                        <Column field="status" :header="t('calendar.day.status')" style="min-width: 9rem"><template #body="{ data }"><Tag :severity="getStatusSeverity(data.status)" :value="t(`calendar.status.${data.status}`)" /></template></Column>
-                        <Column field="updatedAt" :header="t('calendar.day.updatedAt')" style="min-width: 11rem"><template #body="{ data }"><span class="calendar-date">{{ formatDateTime(data.updatedAt) }}</span></template></Column>
-                        <Column :header="t('common.actions')" align-frozen="right" frozen style="min-width: 10rem"><template #body="{ data }"><div class="calendar-actions"><Button v-if="canUpdate && data.status !== 'ARCHIVED'" size="small" text rounded icon="pi pi-pencil" @click="openEditDialog(data)" /><Button v-if="canArchive && data.status !== 'ARCHIVED'" size="small" text rounded severity="danger" icon="pi pi-archive" @click="openArchiveDialog(data)" /><span v-if="data.status === 'ARCHIVED'" class="calendar-archived-text">{{ t('calendar.day.readOnly') }}</span></div></template></Column>
+                    <DataTable lazy paginator striped-rows data-key="id" size="small" scrollable scroll-height="flex" :value="calendarStore.items" :loading="calendarStore.loading" :rows="calendarStore.pagination.limit" :first="(calendarStore.pagination.page - 1) * calendarStore.pagination.limit" :total-records="calendarStore.pagination.total" :rows-per-page-options="[10,20,50,100]" :empty-message="t('organization.calendar.day.empty')" @page="onPage">
+                        <Column field="dateKey" :header="t('organization.calendar.day.date')" frozen style="min-width: 9rem"><template #body="{ data }"><strong class="calendar-code">{{ data.dateKey }}</strong></template></Column>
+                        <Column :header="t('organization.calendar.day.name')" style="min-width: 16rem"><template #body="{ data }"><div class="calendar-name-cell"><strong>{{ data.name }}</strong><span>{{ data.holidayCategory || '-' }}</span></div></template></Column>
+                        <Column :header="t('organization.calendar.day.dayType')" style="min-width: 13rem"><template #body="{ data }"><Tag :severity="getDayTypeSeverity(data.dayType)" :value="t(`organization.calendar.dayTypes.${data.dayType}`)" /></template></Column>
+                        <Column :header="t('organization.calendar.day.scope')" style="min-width: 12rem"><template #body="{ data }"><div class="calendar-muted-cell"><strong>{{ t(`organization.calendar.scope.${data.scopeLevel}`) }}</strong><span>{{ data.branch?.code || data.company?.code || '-' }}</span></div></template></Column>
+                        <Column :header="t('organization.calendar.day.paidHoliday')" style="min-width: 9rem"><template #body="{ data }"><Tag :severity="data.isPaidHoliday ? 'success' : 'secondary'" :value="data.isPaidHoliday ? t('common.yes') : t('common.no')" /></template></Column>
+                        <Column field="status" :header="t('organization.calendar.day.status')" style="min-width: 9rem"><template #body="{ data }"><Tag :severity="getStatusSeverity(data.status)" :value="t(`organization.calendar.status.${data.status}`)" /></template></Column>
+                        <Column field="updatedAt" :header="t('organization.calendar.day.updatedAt')" style="min-width: 11rem"><template #body="{ data }"><span class="calendar-date">{{ formatDateTime(data.updatedAt) }}</span></template></Column>
+                        <Column :header="t('common.actions')" align-frozen="right" frozen style="min-width: 10rem"><template #body="{ data }"><div class="calendar-actions"><Button v-if="canUpdate && data.status !== 'ARCHIVED'" size="small" text rounded icon="pi pi-pencil" @click="openEditDialog(data)" /><Button v-if="canArchive && data.status !== 'ARCHIVED'" size="small" text rounded severity="danger" icon="pi pi-archive" @click="openArchiveDialog(data)" /><span v-if="data.status === 'ARCHIVED'" class="calendar-archived-text">{{ t('organization.calendar.day.readOnly') }}</span></div></template></Column>
                     </DataTable>
                 </div>
             </template>
@@ -489,25 +489,25 @@ onMounted(async () => {
 
         <Dialog v-model:visible="dialogVisible" modal class="calendar-dialog" :header="dialogTitle" :draggable="false">
             <div class="calendar-form">
-                <label class="calendar-field"><span>{{ t('calendar.day.scope') }}</span><Select v-model="form.scopeLevel" :disabled="dialogMode === 'edit'" :options="createScopeOptions" option-label="label" option-value="value" @change="onFormScopeChange" /></label>
-                <label v-if="form.scopeLevel !== 'GLOBAL'" class="calendar-field"><span>{{ t('calendar.day.company') }}</span><Select v-model="form.companyId" :disabled="dialogMode === 'edit'" :options="companyOptions" option-label="label" option-value="value" :loading="companyLoading" @change="onFormCompanyChange" /><small v-if="getFieldError('companyId')">{{ getFieldError('companyId') }}</small></label>
-                <label v-if="form.scopeLevel === 'BRANCH'" class="calendar-field"><span>{{ t('calendar.day.branch') }}</span><Select v-model="form.branchId" :disabled="dialogMode === 'edit' || !form.companyId" :options="branchOptions" option-label="label" option-value="value" :loading="branchLoading" /><small v-if="getFieldError('branchId')">{{ getFieldError('branchId') }}</small></label>
-                <label class="calendar-field"><span>{{ t('calendar.day.date') }}</span><InternalCalendarDatePicker v-model="form.dateKey" :company-id="form.companyId" :branch-id="form.branchId" :disabled="dialogMode === 'edit'" /><small v-if="getFieldError('dateKey')">{{ getFieldError('dateKey') }}</small></label>
-                <label class="calendar-field"><span>{{ t('calendar.day.dayType') }}</span><Select v-model="form.dayType" :options="createDayTypeOptions" option-label="label" option-value="value" /></label>
-                <label class="calendar-field"><span>{{ t('calendar.day.name') }}</span><InputText v-model="form.name" /><small v-if="getFieldError('name')">{{ getFieldError('name') }}</small></label>
-                <label class="calendar-field"><span>{{ t('calendar.day.category') }}</span><InputText v-model="form.holidayCategory" /></label>
-                <label class="calendar-field calendar-field--inline"><Checkbox v-model="form.isPaidHoliday" binary /><span>{{ t('calendar.day.paidHoliday') }}</span></label>
-                <label class="calendar-field"><span>{{ t('calendar.day.status') }}</span><Select v-model="form.status" :options="editableStatusOptions" option-label="label" option-value="value" /></label>
-                <label class="calendar-field calendar-field--wide"><span>{{ t('calendar.day.descriptionLabel') }}</span><Textarea v-model="form.description" rows="3" auto-resize /></label>
+                <label class="calendar-field"><span>{{ t('organization.calendar.day.scope') }}</span><Select v-model="form.scopeLevel" :disabled="dialogMode === 'edit'" :options="createScopeOptions" option-label="label" option-value="value" @change="onFormScopeChange" /></label>
+                <label v-if="form.scopeLevel !== 'GLOBAL'" class="calendar-field"><span>{{ t('organization.calendar.day.company') }}</span><Select v-model="form.companyId" :disabled="dialogMode === 'edit'" :options="companyOptions" option-label="label" option-value="value" :loading="companyLoading" @change="onFormCompanyChange" /><small v-if="getFieldError('companyId')">{{ getFieldError('companyId') }}</small></label>
+                <label v-if="form.scopeLevel === 'BRANCH'" class="calendar-field"><span>{{ t('organization.calendar.day.branch') }}</span><Select v-model="form.branchId" :disabled="dialogMode === 'edit' || !form.companyId" :options="branchOptions" option-label="label" option-value="value" :loading="branchLoading" /><small v-if="getFieldError('branchId')">{{ getFieldError('branchId') }}</small></label>
+                <label class="calendar-field"><span>{{ t('organization.calendar.day.date') }}</span><InternalCalendarDatePicker v-model="form.dateKey" :company-id="form.companyId" :branch-id="form.branchId" :disabled="dialogMode === 'edit'" /><small v-if="getFieldError('dateKey')">{{ getFieldError('dateKey') }}</small></label>
+                <label class="calendar-field"><span>{{ t('organization.calendar.day.dayType') }}</span><Select v-model="form.dayType" :options="createDayTypeOptions" option-label="label" option-value="value" /></label>
+                <label class="calendar-field"><span>{{ t('organization.calendar.day.name') }}</span><InputText v-model="form.name" /><small v-if="getFieldError('name')">{{ getFieldError('name') }}</small></label>
+                <label class="calendar-field"><span>{{ t('organization.calendar.day.category') }}</span><InputText v-model="form.holidayCategory" /></label>
+                <label class="calendar-field calendar-field--inline"><Checkbox v-model="form.isPaidHoliday" binary /><span>{{ t('organization.calendar.day.paidHoliday') }}</span></label>
+                <label class="calendar-field"><span>{{ t('organization.calendar.day.status') }}</span><Select v-model="form.status" :options="editableStatusOptions" option-label="label" option-value="value" /></label>
+                <label class="calendar-field calendar-field--wide"><span>{{ t('organization.calendar.day.descriptionLabel') }}</span><Textarea v-model="form.description" rows="3" auto-resize /></label>
             </div>
             <template #footer><Button severity="secondary" outlined :label="t('common.cancel')" @click="closeDialog" /><Button icon="pi pi-save" :loading="calendarStore.saving" :label="t('common.save')" @click="saveCalendarDay" /></template>
         </Dialog>
 
-        <Dialog v-model:visible="archiveDialogVisible" modal class="calendar-archive-dialog" :header="t('calendar.day.archiveTitle')" :draggable="false"><p class="calendar-archive-text">{{ t('calendar.day.archiveMessage', { name: archiveCandidate?.name || '-' }) }}</p><template #footer><Button severity="secondary" outlined :label="t('common.cancel')" @click="closeArchiveDialog" /><Button severity="danger" icon="pi pi-archive" :loading="calendarStore.archiving" :label="t('common.archive')" @click="confirmArchiveDay" /></template></Dialog>
+        <Dialog v-model:visible="archiveDialogVisible" modal class="calendar-archive-dialog" :header="t('organization.calendar.day.archiveTitle')" :draggable="false"><p class="calendar-archive-text">{{ t('organization.calendar.day.archiveMessage', { name: archiveCandidate?.name || '-' }) }}</p><template #footer><Button severity="secondary" outlined :label="t('common.cancel')" @click="closeArchiveDialog" /><Button severity="danger" icon="pi pi-archive" :loading="calendarStore.archiving" :label="t('common.archive')" @click="confirmArchiveDay" /></template></Dialog>
 
-        <Dialog v-model:visible="importDialogVisible" modal class="calendar-import-dialog" :header="t('calendar.day.importTitle')" :draggable="false" :closable="!calendarStore.importing"><div class="calendar-import"><p>{{ t('calendar.day.importDescription') }}</p><input ref="fileInputRef" type="file" accept=".xlsx" :disabled="calendarStore.importing" @change="onImportFileChange" /><div v-if="selectedImportFile" class="calendar-import__file"><i class="pi pi-file-excel" /><span>{{ selectedImportFile.name }}</span></div><div v-if="calendarStore.importing" class="calendar-import__progress"><ProgressBar :value="calendarStore.importProgress" /><span>{{ t('calendar.day.importProgress', { percent: calendarStore.importProgress }) }}</span></div></div><template #footer><Button severity="secondary" outlined :disabled="calendarStore.importing" :label="t('common.cancel')" @click="closeImportDialog" /><Button icon="pi pi-upload" :loading="calendarStore.importing" :label="t('calendar.day.importExcel')" @click="submitImport" /></template></Dialog>
+        <Dialog v-model:visible="importDialogVisible" modal class="calendar-import-dialog" :header="t('organization.calendar.day.importTitle')" :draggable="false" :closable="!calendarStore.importing"><div class="calendar-import"><p>{{ t('organization.calendar.day.importDescription') }}</p><input ref="fileInputRef" type="file" accept=".xlsx" :disabled="calendarStore.importing" @change="onImportFileChange" /><div v-if="selectedImportFile" class="calendar-import__file"><i class="pi pi-file-excel" /><span>{{ selectedImportFile.name }}</span></div><div v-if="calendarStore.importing" class="calendar-import__progress"><ProgressBar :value="calendarStore.importProgress" /><span>{{ t('organization.calendar.day.importProgress', { percent: calendarStore.importProgress }) }}</span></div></div><template #footer><Button severity="secondary" outlined :disabled="calendarStore.importing" :label="t('common.cancel')" @click="closeImportDialog" /><Button icon="pi pi-upload" :loading="calendarStore.importing" :label="t('organization.calendar.day.importExcel')" @click="submitImport" /></template></Dialog>
 
-        <Dialog v-model:visible="importResultDialogVisible" modal class="calendar-import-result-dialog" :header="t('calendar.day.importResultTitle')" :draggable="false"><div v-if="calendarStore.importSummary" class="calendar-import-result"><div class="calendar-import-result__grid"><div><span>{{ t('calendar.day.totalRows') }}</span><strong>{{ calendarStore.importSummary.totalRows }}</strong></div><div><span>{{ t('calendar.day.createdRows') }}</span><strong>{{ calendarStore.importSummary.created }}</strong></div><div><span>{{ t('calendar.day.updatedRows') }}</span><strong>{{ calendarStore.importSummary.updated }}</strong></div><div><span>{{ t('calendar.day.skippedRows') }}</span><strong>{{ calendarStore.importSummary.skipped }}</strong></div></div><div v-if="calendarStore.importSummary.errors?.length" class="calendar-import-result__errors"><h4>{{ t('calendar.day.validationErrors') }}</h4><DataTable size="small" :value="calendarStore.importSummary.errors"><Column field="rowNumber" :header="t('calendar.day.rowNumber')" style="width:7rem" /><Column field="field" :header="t('calendar.day.field')" style="width:12rem" /><Column :header="t('calendar.day.issue')"><template #body="{ data }">{{ translateImportError(data) }}</template></Column></DataTable></div></div><template #footer><Button :label="t('common.close')" @click="importResultDialogVisible = false" /></template></Dialog>
+        <Dialog v-model:visible="importResultDialogVisible" modal class="calendar-import-result-dialog" :header="t('organization.calendar.day.importResultTitle')" :draggable="false"><div v-if="calendarStore.importSummary" class="calendar-import-result"><div class="calendar-import-result__grid"><div><span>{{ t('organization.calendar.day.totalRows') }}</span><strong>{{ calendarStore.importSummary.totalRows }}</strong></div><div><span>{{ t('organization.calendar.day.createdRows') }}</span><strong>{{ calendarStore.importSummary.created }}</strong></div><div><span>{{ t('organization.calendar.day.updatedRows') }}</span><strong>{{ calendarStore.importSummary.updated }}</strong></div><div><span>{{ t('organization.calendar.day.skippedRows') }}</span><strong>{{ calendarStore.importSummary.skipped }}</strong></div></div><div v-if="calendarStore.importSummary.errors?.length" class="calendar-import-result__errors"><h4>{{ t('organization.calendar.day.validationErrors') }}</h4><DataTable size="small" :value="calendarStore.importSummary.errors"><Column field="rowNumber" :header="t('organization.calendar.day.rowNumber')" style="width:7rem" /><Column field="field" :header="t('organization.calendar.day.field')" style="width:12rem" /><Column :header="t('organization.calendar.day.issue')"><template #body="{ data }">{{ translateImportError(data) }}</template></Column></DataTable></div></div><template #footer><Button :label="t('common.close')" @click="importResultDialogVisible = false" /></template></Dialog>
     </section>
 </template>
 

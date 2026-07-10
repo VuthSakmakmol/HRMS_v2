@@ -182,7 +182,7 @@ watch(
             date-format="yy-mm-dd"
             show-icon
             :disabled="disabled"
-            :placeholder="placeholder || t('calendar.day.selectDate')"
+            :placeholder="placeholder || t('organization.calendar.day.selectDate')"
         />
 
         <div
@@ -192,10 +192,10 @@ watch(
             <Tag
                 v-if="resolvedDay"
                 :severity="statusSeverity"
-                :value="`${t(`calendar.dayTypes.${resolvedDay.dayType}`)} - ${resolvedDay.name}`"
+                :value="`${t(`organization.calendar.dayTypes.${resolvedDay.dayType}`)} - ${resolvedDay.name}`"
             />
 
-            <span v-else>{{ t("calendar.day.resolving") }}</span>
+            <span v-else>{{ t("organization.calendar.day.resolving") }}</span>
         </div>
     </div>
 </template>
