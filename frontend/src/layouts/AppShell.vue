@@ -151,6 +151,21 @@ const navGroups = computed(() => {
             ],
         },
 
+
+        {
+            labelKey: "nav.attendance",
+            items: [
+                {
+                    labelKey: "nav.attendanceRecords",
+                    icon: "pi pi-calendar-clock",
+                    to: {
+                        name: "attendance-records",
+                    },
+                    permissionCode: "ATTENDANCE.RECORD.VIEW",
+                },
+            ],
+        },
+
         {
             labelKey: "nav.reports",
             items: [

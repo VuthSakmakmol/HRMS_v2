@@ -179,6 +179,18 @@ const router = createRouter({
                     },
                 },
 
+
+                {
+                    path: "attendance/records",
+                    name: "attendance-records",
+                    component: () =>
+                        import("@/modules/attendance/views/AttendanceRecordsView.vue"),
+                    meta: {
+                        titleKey: "nav.attendanceRecords",
+                        permissionCode: "ATTENDANCE.RECORD.VIEW",
+                    },
+                },
+
                 {
                     path: "reports/hr-dashboard",
                     name: "reports-hr-dashboard",
