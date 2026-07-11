@@ -5,12 +5,15 @@
 html,
 body,
 #app {
-    min-height: 100%;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
 body {
     margin: 0;
     min-width: 320px;
+    min-height: 100%;
     background: var(--hrms-app-background);
     color: var(--hrms-text);
     font-family: var(--hrms-font-family);

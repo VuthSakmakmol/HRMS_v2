@@ -192,6 +192,39 @@ const router = createRouter({
                 },
 
                 {
+                    path: "attendance/policies",
+                    name: "attendance-policies",
+                    component: () =>
+                        import("@/modules/attendance/views/AttendancePolicyView.vue"),
+                    meta: {
+                        titleKey: "nav.attendancePolicies",
+                        permissionCode: "ATTENDANCE.POLICY.VIEW",
+                    },
+                },
+
+                {
+                    path: "attendance/raw-scans",
+                    name: "attendance-raw-scans",
+                    component: () =>
+                        import("@/modules/attendance/views/AttendanceImportView.vue"),
+                    meta: {
+                        titleKey: "nav.attendanceRawScans",
+                        permissionCode: "ATTENDANCE.SCAN.VIEW",
+                    },
+                },
+
+                {
+                    path: "attendance/verification",
+                    name: "attendance-verification",
+                    component: () =>
+                        import("@/modules/attendance/views/AttendanceVerificationView.vue"),
+                    meta: {
+                        titleKey: "nav.attendanceVerification",
+                        permissionCode: "ATTENDANCE.VERIFICATION.VIEW",
+                    },
+                },
+
+                {
                     path: "reports/hr-dashboard",
                     name: "reports-hr-dashboard",
                     component: () =>

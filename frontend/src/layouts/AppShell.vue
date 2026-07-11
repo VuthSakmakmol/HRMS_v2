@@ -151,21 +151,6 @@ const navGroups = computed(() => {
             ],
         },
 
-
-        {
-            labelKey: "nav.attendance",
-            items: [
-                {
-                    labelKey: "nav.attendanceRecords",
-                    icon: "pi pi-calendar-clock",
-                    to: {
-                        name: "attendance-records",
-                    },
-                    permissionCode: "ATTENDANCE.RECORD.VIEW",
-                },
-            ],
-        },
-
         {
             labelKey: "nav.reports",
             items: [
@@ -340,10 +325,9 @@ async function logout() {
                         @click="toggleSidebar"
                     />
 
-                    <div>
-                        <h1>{{ pageTitle }}</h1>
-                        <span>{{ t("app.subtitle") }}</span>
-                    </div>
+                    <h1 class="app-topbar__title">
+                        {{ pageTitle }}
+                    </h1>
                 </div>
 
                 <div class="app-topbar__actions">
@@ -388,27 +372,31 @@ async function logout() {
 
 <style scoped>
 .app-shell {
-    min-height: 100vh;
     display: flex;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
     background: var(--hrms-app-background);
 }
 
 .app-sidebar {
-    width: 16rem;
-    min-height: 100vh;
-    flex: 0 0 16rem;
     display: flex;
+    flex: 0 0 16rem;
     flex-direction: column;
-    background: var(--hrms-sidebar);
+    width: 16rem;
+    height: 100dvh;
+    overflow: hidden;
     color: var(--hrms-sidebar-text);
+    background: var(--hrms-sidebar);
     border-right: 1px solid rgb(255 255 255 / 0.08);
 }
 
 .app-sidebar__brand {
-    min-height: 4.5rem;
     display: flex;
+    flex: 0 0 3.75rem;
     align-items: center;
     gap: var(--hrms-space-3);
+    min-height: 3.75rem;
     padding: 0 var(--hrms-space-4);
     border-bottom: 1px solid rgb(255 255 255 / 0.08);
 }
@@ -416,15 +404,15 @@ async function logout() {
 .app-sidebar__brand-icon,
 .app-sidebar__avatar {
     display: grid;
-    place-items: center;
     flex: 0 0 auto;
+    place-items: center;
     color: white;
     background: var(--hrms-primary);
 }
 
 .app-sidebar__brand-icon {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2rem;
+    height: 2rem;
     border-radius: var(--hrms-radius-md);
 }
 
@@ -444,32 +432,49 @@ async function logout() {
 }
 
 .app-sidebar__brand-text strong {
-    font-size: 0.86rem;
+    font-size: 0.82rem;
 }
 
 .app-sidebar__brand-text span,
 .app-sidebar__profile-text span {
     margin-top: 0.125rem;
     color: rgb(229 237 248 / 0.65);
-    font-size: 0.7rem;
+    font-size: 0.67rem;
 }
 
 .app-sidebar__nav {
     display: grid;
-    gap: 0.85rem;
-    padding: var(--hrms-space-4) var(--hrms-space-3);
+    flex: 1 1 auto;
+    align-content: start;
+    gap: 0.7rem;
+    min-height: 0;
+    padding: 0.75rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+}
+
+.app-sidebar__nav::-webkit-scrollbar {
+    width: 0.35rem;
+}
+
+.app-sidebar__nav::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 0.18);
+    border-radius: 999px;
 }
 
 .app-sidebar__group {
     display: grid;
-    gap: 0.25rem;
+    gap: 0.2rem;
 }
 
 .app-sidebar__section-label {
-    padding: 0 var(--hrms-space-2);
-    margin-bottom: var(--hrms-space-1);
+    margin-bottom: 0.125rem;
+    padding: 0 0.5rem;
     color: rgb(229 237 248 / 0.5);
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -478,13 +483,23 @@ async function logout() {
 .app-sidebar__link {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    min-height: 2.5rem;
-    padding: 0 0.75rem;
+    gap: 0.625rem;
+    min-height: 2.125rem;
+    padding: 0 0.625rem;
     color: rgb(229 237 248 / 0.78);
-    border-radius: var(--hrms-radius-md);
-    font-size: 0.8rem;
+    border-radius: 0.375rem;
+    font-size: 0.76rem;
     font-weight: 600;
+    transition:
+        color 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.app-sidebar__link > i {
+    width: 1rem;
+    flex: 0 0 1rem;
+    font-size: 0.9rem;
+    text-align: center;
 }
 
 .app-sidebar__link:hover {
@@ -509,47 +524,57 @@ async function logout() {
 
 .app-sidebar__bottom {
     display: grid;
-    gap: var(--hrms-space-3);
-    margin-top: auto;
-    padding: var(--hrms-space-3);
+    flex: 0 0 auto;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    background: var(--hrms-sidebar);
     border-top: 1px solid rgb(255 255 255 / 0.08);
 }
 
 .app-sidebar__profile {
     display: flex;
     align-items: center;
-    gap: var(--hrms-space-3);
+    gap: 0.625rem;
     min-width: 0;
 }
 
 .app-sidebar__avatar {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 1.875rem;
+    height: 1.875rem;
     border-radius: 999px;
+    font-size: 0.72rem;
     font-weight: 700;
 }
 
 .app-sidebar__profile-text strong {
-    font-size: 0.76rem;
+    font-size: 0.72rem;
 }
 
 .app-sidebar__logout {
-    justify-content: flex-start;
     width: 100%;
+    min-height: 1.875rem;
+    justify-content: flex-start;
+    padding: 0 0.5rem;
+    font-size: 0.72rem;
 }
 
 .app-main {
-    min-width: 0;
+    display: flex;
     flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+    height: 100dvh;
+    overflow: hidden;
 }
 
 .app-topbar {
-    min-height: 4.5rem;
     display: flex;
+    flex: 0 0 3.75rem;
     align-items: center;
     justify-content: space-between;
-    gap: var(--hrms-space-4);
-    padding: 0 var(--hrms-space-5);
+    gap: var(--hrms-space-3);
+    min-height: 3.75rem;
+    padding: 0 1rem;
     background: var(--hrms-surface);
     border-bottom: 1px solid var(--hrms-border);
 }
@@ -561,32 +586,32 @@ async function logout() {
 }
 
 .app-topbar__left {
-    gap: var(--hrms-space-3);
+    gap: 0.5rem;
     min-width: 0;
 }
 
-.app-topbar__left h1,
-.app-topbar__left span {
+.app-topbar__title {
+    min-width: 0;
     margin: 0;
-    display: block;
     overflow: hidden;
+    color: var(--hrms-text);
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.2;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.app-topbar__left h1 {
-    color: var(--hrms-text);
-    font-size: 0.95rem;
-}
-
-.app-topbar__left span {
-    margin-top: 0.125rem;
-    color: var(--hrms-text-muted);
-    font-size: 0.7rem;
-}
-
 .app-topbar__actions {
-    gap: var(--hrms-space-2);
+    flex: 0 0 auto;
+    gap: 0.375rem;
+}
+
+.app-topbar__actions :deep(.p-button) {
+    min-height: 2rem;
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+    font-size: 0.72rem;
 }
 
 .app-topbar__menu-button {
@@ -594,9 +619,14 @@ async function logout() {
 }
 
 .app-content {
+    flex: 1 1 auto;
     width: 100%;
-    min-height: calc(100vh - 4.5rem);
-    padding: 1.25rem;
+    min-height: 0;
+    padding: 0.875rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
 }
 
 .app-shell__overlay {
@@ -631,22 +661,23 @@ async function logout() {
 }
 
 @media (max-width: 600px) {
-    .app-topbar,
-    .app-content {
-        padding-left: 1rem;
-        padding-right: 1rem;
+    .app-topbar {
+        padding-right: 0.625rem;
+        padding-left: 0.625rem;
     }
 
-    .app-topbar {
-        gap: var(--hrms-space-2);
+    .app-content {
+        padding: 0.625rem;
     }
 
     .app-topbar__actions {
         gap: 0.125rem;
     }
 
-    .app-topbar__left span {
-        display: none;
+    .app-topbar__actions :deep(.p-button) {
+        min-width: 2rem;
+        padding-right: 0.45rem;
+        padding-left: 0.45rem;
     }
 }
 </style>

@@ -16,20 +16,26 @@ import Select from "primevue/select"
 import Tag from "primevue/tag"
 import Textarea from "primevue/textarea"
 
-import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
+import { useModulePermissions } from "@/shared/auth/useModulePermissions.js"
+import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
+import AppModuleToolbar from "@/shared/components/page/AppModuleToolbar.vue"
+import AppTableActions from "@/shared/components/table/AppTableActions.vue"
 import { fetchBranches } from "../services/branch.api.js"
 import { fetchCompanies } from "../services/company.api.js"
 import { fetchDepartments } from "../services/department.api.js"
 import { fetchPositions } from "../services/position.api.js"
 import { usePositionStore } from "../stores/position.store.js"
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const toast = useToast()
 
-const authStore = useAuthStore()
 const uiStore = useUiStore()
 const positionStore = usePositionStore()
+
+function tr(key, fallback) {
+    return te(key) ? t(key) : fallback
+}
 
 const POSITION_PERMISSIONS = Object.freeze({
     VIEW: "ORGANIZATION.POSITION.VIEW",
@@ -74,24 +80,17 @@ const filters = reactive({
 
 const form = reactive(createEmptyForm())
 
-const canCreate = computed(() =>
-    authStore.hasPermission(POSITION_PERMISSIONS.CREATE),
-)
+const permissions = useModulePermissions({
+    view: POSITION_PERMISSIONS.VIEW,
+    create: POSITION_PERMISSIONS.CREATE,
+    update: POSITION_PERMISSIONS.UPDATE,
+    archive: POSITION_PERMISSIONS.ARCHIVE,
+    import: POSITION_PERMISSIONS.IMPORT,
+    export: POSITION_PERMISSIONS.EXPORT,
+})
 
-const canUpdate = computed(() =>
-    authStore.hasPermission(POSITION_PERMISSIONS.UPDATE),
-)
-
-const canArchive = computed(() =>
-    authStore.hasPermission(POSITION_PERMISSIONS.ARCHIVE),
-)
-
-const canImport = computed(() =>
-    authStore.hasPermission(POSITION_PERMISSIONS.IMPORT),
-)
-
-const canExport = computed(() =>
-    authStore.hasPermission(POSITION_PERMISSIONS.EXPORT),
+const canShowRowActions = computed(
+    () => permissions.canUpdate.value || permissions.canArchive.value,
 )
 
 const dialogTitle = computed(() => {
@@ -109,7 +108,7 @@ const companyOptions = computed(() =>
 
 const companyFilterOptions = computed(() => [
     {
-        label: t("organization.position.allCompanies"),
+        label: tr("organization.position.allCompanies", "All companies"),
         value: "",
     },
     ...companyOptions.value,
@@ -132,7 +131,7 @@ const branchOptions = computed(() =>
 
 const branchFilterOptions = computed(() => [
     {
-        label: t("organization.position.allBranches"),
+        label: tr("organization.position.allBranches", "All branches"),
         value: "",
     },
     ...branches.value
@@ -170,7 +169,7 @@ const departmentOptions = computed(() =>
 
 const departmentFilterOptions = computed(() => [
     {
-        label: t("organization.position.allDepartments"),
+        label: tr("organization.position.allDepartments", "All departments"),
         value: "",
     },
     ...departments.value
@@ -212,7 +211,7 @@ const reportsToOptions = computed(() => [
 
 const statusOptions = computed(() => [
     {
-        label: t("organization.position.statusAll"),
+        label: tr("organization.position.statusAll", "All statuses"),
         value: "ALL",
     },
     {
@@ -617,6 +616,10 @@ async function onFormDepartmentChange() {
 }
 
 async function openCreateDialog() {
+    if (!permissions.assert("create")) {
+        return
+    }
+
     if (companies.value.length === 0) {
         await loadCompanies()
     }
@@ -656,6 +659,10 @@ async function openCreateDialog() {
 }
 
 async function openEditDialog(position) {
+    if (!permissions.assert("update")) {
+        return
+    }
+
     dialogMode.value = "edit"
     selectedPositionId.value = position.id
     formErrors.value = {}
@@ -720,6 +727,10 @@ async function savePosition() {
 }
 
 function openArchiveDialog(position) {
+    if (!permissions.assert("archive")) {
+        return
+    }
+
     archiveCandidate.value = position
     archiveDialogVisible.value = true
 }
@@ -757,6 +768,10 @@ async function confirmArchivePosition() {
 }
 
 async function downloadSample() {
+    if (!permissions.assert("import")) {
+        return
+    }
+
     try {
         await positionStore.downloadImportTemplate()
 
@@ -777,6 +792,10 @@ async function downloadSample() {
 }
 
 async function exportExcel() {
+    if (!permissions.assert("export")) {
+        return
+    }
+
     try {
         await positionStore.exportPositions()
 
@@ -797,6 +816,10 @@ async function exportExcel() {
 }
 
 function openImportDialog() {
+    if (!permissions.assert("import")) {
+        return
+    }
+
     selectedImportFile.value = null
     importDialogVisible.value = true
 }
@@ -923,63 +946,49 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="position-page">
-        <div class="position-page__header">
-            <div>
-                <span class="position-page__eyebrow">
-                    {{ t("organization.position.eyebrow") }}
-                </span>
+    <section class="position-page hrms-compact">
+        <AppModuleToolbar>
+            <Button
+                v-if="permissions.canImport"
+                severity="secondary"
+                outlined
+                icon="pi pi-download"
+                :loading="positionStore.downloadingTemplate"
+                :label="t('organization.position.downloadSample')"
+                @click="downloadSample"
+            />
 
-                <h2>{{ t("organization.position.title") }}</h2>
+            <Button
+                v-if="permissions.canImport"
+                severity="secondary"
+                outlined
+                icon="pi pi-upload"
+                :label="t('organization.position.importExcel')"
+                @click="openImportDialog"
+            />
 
-                <p>
-                    {{ t("organization.position.description") }}
-                </p>
-            </div>
+            <Button
+                v-if="permissions.canExport"
+                severity="secondary"
+                outlined
+                icon="pi pi-file-export"
+                :loading="positionStore.exporting"
+                :label="t('organization.position.exportExcel')"
+                @click="exportExcel"
+            />
 
-            <div class="position-page__header-actions">
-                <Button
-                    v-if="canImport"
-                    severity="secondary"
-                    outlined
-                    icon="pi pi-download"
-                    :loading="positionStore.downloadingTemplate"
-                    :label="t('organization.position.downloadSample')"
-                    @click="downloadSample"
-                />
-
-                <Button
-                    v-if="canImport"
-                    severity="secondary"
-                    outlined
-                    icon="pi pi-upload"
-                    :label="t('organization.position.importExcel')"
-                    @click="openImportDialog"
-                />
-
-                <Button
-                    v-if="canExport"
-                    severity="secondary"
-                    outlined
-                    icon="pi pi-file-export"
-                    :loading="positionStore.exporting"
-                    :label="t('organization.position.exportExcel')"
-                    @click="exportExcel"
-                />
-
-                <Button
-                    v-if="canCreate"
-                    icon="pi pi-plus"
-                    :label="t('organization.position.newPosition')"
-                    @click="openCreateDialog"
-                />
-            </div>
-        </div>
+            <Button
+                v-if="permissions.canCreate"
+                icon="pi pi-plus"
+                :label="t('organization.position.newPosition')"
+                @click="openCreateDialog"
+            />
+        </AppModuleToolbar>
 
         <Card class="position-card">
             <template #content>
-                <div class="position-toolbar">
-                    <div class="position-toolbar__filters">
+                <AppFilterBar>
+                    <div class="app-filter-field app-filter-field--search">
                         <span class="position-search">
                             <i class="pi pi-search" />
 
@@ -992,40 +1001,52 @@ onMounted(async () => {
                                 @keyup.enter="applyFilters"
                             />
                         </span>
+                    </div>
 
+                    <div class="app-filter-field">
                         <Select
                             v-model="filters.companyId"
-                            class="position-company-filter"
+                            class="position-filter-select"
+                            :placeholder="tr('organization.position.allCompanies', 'All companies')"
                             :options="companyFilterOptions"
                             option-label="label"
                             option-value="value"
                             :loading="companyLoading"
                             @change="onFilterCompanyChange"
                         />
+                    </div>
 
+                    <div class="app-filter-field">
                         <Select
                             v-model="filters.branchId"
-                            class="position-branch-filter"
+                            class="position-filter-select"
+                            :placeholder="tr('organization.position.allBranches', 'All branches')"
                             :options="branchFilterOptions"
                             option-label="label"
                             option-value="value"
                             :loading="branchLoading"
                             @change="onFilterBranchChange"
                         />
+                    </div>
 
+                    <div class="app-filter-field">
                         <Select
                             v-model="filters.departmentId"
-                            class="position-department-filter"
+                            class="position-filter-select"
+                            :placeholder="tr('organization.position.allDepartments', 'All departments')"
                             :options="departmentFilterOptions"
                             option-label="label"
                             option-value="value"
                             :loading="departmentLoading"
                             @change="applyFilters"
                         />
+                    </div>
 
+                    <div class="app-filter-field app-filter-field--status">
                         <Select
                             v-model="filters.status"
-                            class="position-status-filter"
+                            class="position-filter-select"
+                            :placeholder="tr('organization.position.statusAll', 'All statuses')"
                             :options="statusOptions"
                             option-label="label"
                             option-value="value"
@@ -1033,16 +1054,14 @@ onMounted(async () => {
                         />
                     </div>
 
-                    <div class="position-toolbar__actions">
+                    <template #actions>
                         <Button
-                            size="small"
                             icon="pi pi-filter"
                             :label="t('common.apply')"
                             @click="applyFilters"
                         />
 
                         <Button
-                            size="small"
                             severity="secondary"
                             outlined
                             icon="pi pi-times"
@@ -1051,19 +1070,19 @@ onMounted(async () => {
                         />
 
                         <Button
-                            size="small"
                             severity="secondary"
                             outlined
                             icon="pi pi-refresh"
-                            :label="t('common.refresh')"
+                            :aria-label="t('common.refresh')"
                             @click="loadPositions"
                         />
-                    </div>
-                </div>
+                    </template>
+                </AppFilterBar>
 
                 <div class="position-table-wrap">
                     <DataTable
                         lazy
+                        class="position-table"
                         paginator
                         striped-rows
                         data-key="id"
@@ -1218,47 +1237,29 @@ onMounted(async () => {
                         </Column>
 
                         <Column
+                            v-if="canShowRowActions"
                             :header="t('common.actions')"
                             align-frozen="right"
                             frozen
                             style="min-width: 10rem"
                         >
                             <template #body="{ data }">
-                                <div class="position-actions">
-                                    <Button
-                                        v-if="
-                                            canUpdate &&
-                                            data.status !== 'ARCHIVED'
-                                        "
-                                        size="small"
-                                        text
-                                        rounded
-                                        icon="pi pi-pencil"
-                                        :aria-label="t('common.edit')"
-                                        @click="openEditDialog(data)"
-                                    />
+                                <AppTableActions
+                                    v-if="data.status !== 'ARCHIVED'"
+                                    :can-edit="permissions.canUpdate"
+                                    :can-archive="permissions.canArchive"
+                                    :edit-label="t('common.edit')"
+                                    :archive-label="t('common.archive')"
+                                    @edit="openEditDialog(data)"
+                                    @archive="openArchiveDialog(data)"
+                                />
 
-                                    <Button
-                                        v-if="
-                                            canArchive &&
-                                            data.status !== 'ARCHIVED'
-                                        "
-                                        size="small"
-                                        text
-                                        rounded
-                                        severity="danger"
-                                        icon="pi pi-archive"
-                                        :aria-label="t('common.archive')"
-                                        @click="openArchiveDialog(data)"
-                                    />
-
-                                    <span
-                                        v-if="data.status === 'ARCHIVED'"
-                                        class="position-archived-text"
-                                    >
-                                        {{ t("organization.position.readOnly") }}
-                                    </span>
-                                </div>
+                                <span
+                                    v-else
+                                    class="position-archived-text"
+                                >
+                                    {{ t("organization.position.readOnly") }}
+                                </span>
                             </template>
                         </Column>
                     </DataTable>
@@ -1677,47 +1678,9 @@ onMounted(async () => {
 
 <style scoped>
 .position-page {
-    width: 100%;
     display: grid;
-    gap: 1rem;
-}
-
-.position-page__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.position-page__header-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.position-page__eyebrow {
-    color: var(--hrms-primary);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.position-page h2 {
-    margin: 0.35rem 0;
-    color: var(--hrms-text);
-    font-size: 1.45rem;
-    line-height: 1.2;
-}
-
-.position-page p {
-    max-width: 54rem;
-    margin: 0;
-    color: var(--hrms-text-muted);
-    font-size: 0.78rem;
-    line-height: 1.6;
+    width: 100%;
+    gap: var(--hrms-space-3, 0.75rem);
 }
 
 .position-card {
@@ -1727,64 +1690,52 @@ onMounted(async () => {
     box-shadow: var(--hrms-shadow-sm);
 }
 
-.position-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.position-toolbar__filters,
-.position-toolbar__actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.position-toolbar__filters {
-    min-width: 0;
-    flex: 1 1 auto;
-}
-
-.position-toolbar__actions {
-    flex: 0 0 auto;
-}
-
 .position-search {
-    width: min(100%, 20rem);
     position: relative;
     display: block;
+    width: 100%;
 }
 
 .position-search i {
     position: absolute;
+    z-index: 1;
     top: 50%;
-    left: 0.75rem;
-    transform: translateY(-50%);
+    left: 0.65rem;
     color: var(--hrms-text-muted);
-    font-size: 0.78rem;
+    font-size: 0.72rem;
+    transform: translateY(-50%);
+    pointer-events: none;
 }
 
 .position-search__input {
     width: 100%;
-    padding-left: 2.1rem;
-}
-
-.position-company-filter,
-.position-branch-filter,
-.position-department-filter {
-    width: 13rem;
-}
-
-.position-status-filter {
-    width: 11rem;
+    padding-left: 1.9rem;
 }
 
 .position-table-wrap {
     width: 100%;
     min-width: 0;
     overflow-x: auto;
+}
+
+.position-table :deep(.p-datatable-thead > tr > th),
+.position-table :deep(.p-datatable-tbody > tr > td) {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.position-table :deep(.p-datatable-column-header-content) {
+    justify-content: center;
+}
+
+.position-table .position-name-cell,
+.position-table .position-muted-cell {
+    justify-items: center;
+    text-align: center;
+}
+
+.position-table :deep(.p-tag) {
+    justify-content: center;
 }
 
 .position-code {
@@ -1841,13 +1792,13 @@ onMounted(async () => {
 
 .position-form {
     display: grid;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .position-form__section {
     display: grid;
-    gap: 0.75rem;
-    padding: 0.9rem;
+    gap: 0.55rem;
+    padding: 0.7rem;
     background: var(--hrms-surface-muted);
     border: 1px solid var(--hrms-border);
     border-radius: var(--hrms-radius-md);
@@ -1862,7 +1813,7 @@ onMounted(async () => {
 .position-form__grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
+    gap: 0.6rem;
 }
 
 .position-field {
@@ -2019,6 +1970,27 @@ onMounted(async () => {
 
 :deep(.p-dialog-content) {
     padding: 0 1rem 1rem;
+}
+
+
+:deep(.position-filter-select) {
+    width: 100%;
+}
+
+:deep(.position-filter-select .p-select-label) {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 1.2;
+}
+
+:deep(.position-filter-select .p-select-dropdown) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 @media (max-width: 1250px) {

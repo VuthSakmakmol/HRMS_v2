@@ -3,6 +3,7 @@ import { createPinia } from "pinia"
 import PrimeVue from "primevue/config"
 import ToastService from "primevue/toastservice"
 import ConfirmationService from "primevue/confirmationservice"
+import Tooltip from "primevue/tooltip"
 
 import App from "./App.vue"
 import router from "./app/router"
@@ -14,6 +15,7 @@ import { hrmsPreset } from "./app/theme/hrmsPreset.js"
 import "primeicons/primeicons.css"
 import "./styles/tokens.css"
 import "./styles/base.css"
+import "./styles/components.css"
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -45,5 +47,6 @@ app.use(PrimeVue, {
 
 app.use(ToastService)
 app.use(ConfirmationService)
+app.directive("tooltip", Tooltip)
 
 app.mount("#app")

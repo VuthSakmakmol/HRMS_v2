@@ -23,6 +23,9 @@ import approvalRoutes from "./modules/approval/routes/approval.routes.js"
 import calendarRoutes from "./modules/calendar/routes/calendar.routes.js"
 import hrDashboardRoutes from "./modules/hrDashboard/routes/hrDashboard.routes.js"
 import attendanceRoutes from "./modules/attendance/routes/attendance.routes.js"
+import attendancePolicyRoutes from "./modules/attendance/routes/attendancePolicy.routes.js"
+import attendanceScanRoutes from "./modules/attendance/routes/attendanceScan.routes.js"
+import attendanceVerificationRoutes from "./modules/attendance/routes/attendanceVerification.routes.js"
 
 import { AppError } from "./shared/errors/AppError.js"
 import { errorHandler } from "./shared/middleware/errorHandler.js"
@@ -97,6 +100,9 @@ app.use("/api/v1/approvals", approvalRoutes)
 app.use("/api/v1/calendar", calendarRoutes)
 app.use("/api/v1/hr-dashboard", hrDashboardRoutes)
 app.use("/api/v1/attendance", attendanceRoutes)
+app.use("/api/v1/attendance/policies", attendancePolicyRoutes)
+app.use("/api/v1/attendance/scans", attendanceScanRoutes)
+app.use("/api/v1/attendance/verification", attendanceVerificationRoutes)
 
 app.use(notFound)
 app.use(errorHandler)

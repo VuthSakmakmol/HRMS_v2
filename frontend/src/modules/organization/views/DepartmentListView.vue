@@ -14,19 +14,25 @@ import Select from "primevue/select"
 import Tag from "primevue/tag"
 import Textarea from "primevue/textarea"
 
-import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
+import { useModulePermissions } from "@/shared/auth/useModulePermissions.js"
+import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
+import AppModuleToolbar from "@/shared/components/page/AppModuleToolbar.vue"
+import AppTableActions from "@/shared/components/table/AppTableActions.vue"
 import { fetchBranches } from "../services/branch.api.js"
 import { fetchCompanies } from "../services/company.api.js"
 import { fetchDepartments } from "../services/department.api.js"
 import { useDepartmentStore } from "../stores/department.store.js"
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const toast = useToast()
 
-const authStore = useAuthStore()
 const uiStore = useUiStore()
 const departmentStore = useDepartmentStore()
+
+function tr(key, fallback) {
+    return te(key) ? t(key) : fallback
+}
 
 const DEPARTMENT_PERMISSIONS = Object.freeze({
     VIEW: "ORGANIZATION.DEPARTMENT.VIEW",
@@ -73,24 +79,17 @@ const filters = reactive({
 
 const form = reactive(createEmptyForm())
 
-const canCreate = computed(() =>
-    authStore.hasPermission(DEPARTMENT_PERMISSIONS.CREATE),
-)
+const permissions = useModulePermissions({
+    view: DEPARTMENT_PERMISSIONS.VIEW,
+    create: DEPARTMENT_PERMISSIONS.CREATE,
+    update: DEPARTMENT_PERMISSIONS.UPDATE,
+    archive: DEPARTMENT_PERMISSIONS.ARCHIVE,
+    import: DEPARTMENT_PERMISSIONS.IMPORT,
+    export: DEPARTMENT_PERMISSIONS.EXPORT,
+})
 
-const canUpdate = computed(() =>
-    authStore.hasPermission(DEPARTMENT_PERMISSIONS.UPDATE),
-)
-
-const canArchive = computed(() =>
-    authStore.hasPermission(DEPARTMENT_PERMISSIONS.ARCHIVE),
-)
-
-const canImport = computed(() =>
-    authStore.hasPermission(DEPARTMENT_PERMISSIONS.IMPORT),
-)
-
-const canExport = computed(() =>
-    authStore.hasPermission(DEPARTMENT_PERMISSIONS.EXPORT),
+const canShowRowActions = computed(
+    () => permissions.canUpdate.value || permissions.canArchive.value,
 )
 
 const dialogTitle = computed(() => {
@@ -108,7 +107,7 @@ const companyOptions = computed(() =>
 
 const companyFilterOptions = computed(() => [
     {
-        label: t("organization.department.allCompanies"),
+        label: tr("organization.department.allCompanies", "All companies"),
         value: "",
     },
     ...companyOptions.value,
@@ -131,7 +130,7 @@ const branchOptions = computed(() =>
 
 const branchFilterOptions = computed(() => [
     {
-        label: t("organization.department.allBranches"),
+        label: tr("organization.department.allBranches", "All branches"),
         value: "",
     },
     ...branches.value
@@ -163,7 +162,7 @@ const parentDepartmentOptions = computed(() => [
 
 const statusOptions = computed(() => [
     {
-        label: t("organization.department.statusAll"),
+        label: tr("organization.department.statusAll", "All statuses"),
         value: "ALL",
     },
     {
@@ -515,6 +514,10 @@ async function onFormBranchChange() {
 }
 
 async function openCreateDialog() {
+    if (!permissions.assert("create")) {
+        return
+    }
+
     if (companies.value.length === 0) {
         await loadCompanies()
     }
@@ -543,6 +546,10 @@ async function openCreateDialog() {
 }
 
 async function openEditDialog(department) {
+    if (!permissions.assert("update")) {
+        return
+    }
+
     dialogMode.value = "edit"
     selectedDepartmentId.value = department.id
     formErrors.value = {}
@@ -562,6 +569,12 @@ function closeDialog() {
 }
 
 async function saveDepartment() {
+    const requiredAction = dialogMode.value === "create" ? "create" : "update"
+
+    if (!permissions.assert(requiredAction)) {
+        return
+    }
+
     formErrors.value = {}
 
     try {
@@ -603,6 +616,10 @@ async function saveDepartment() {
 }
 
 function openArchiveDialog(department) {
+    if (!permissions.assert("archive")) {
+        return
+    }
+
     archiveCandidate.value = department
     archiveDialogVisible.value = true
 }
@@ -613,6 +630,10 @@ function closeArchiveDialog() {
 }
 
 async function confirmArchiveDepartment() {
+    if (!permissions.assert("archive")) {
+        return
+    }
+
     if (!archiveCandidate.value?.id) {
         return
     }
@@ -640,6 +661,10 @@ async function confirmArchiveDepartment() {
 }
 
 async function downloadTemplate() {
+    if (!permissions.assert("import")) {
+        return
+    }
+
     try {
         await departmentStore.downloadImportTemplate()
 
@@ -660,6 +685,10 @@ async function downloadTemplate() {
 }
 
 async function exportDepartmentExcel() {
+    if (!permissions.assert("export")) {
+        return
+    }
+
     try {
         await departmentStore.exportDepartments({
             search: filters.search,
@@ -685,6 +714,10 @@ async function exportDepartmentExcel() {
 }
 
 function openImportDialog() {
+    if (!permissions.assert("import")) {
+        return
+    }
+
     selectedImportFile.value = null
     importSummary.value = null
 
@@ -763,6 +796,10 @@ function failImportProgress() {
 }
 
 async function submitImport() {
+    if (!permissions.assert("import")) {
+        return
+    }
+
     if (!selectedImportFile.value) {
         toast.add({
             severity: "warn",
@@ -846,138 +883,126 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="department-page">
-        <div class="department-page__header">
-            <div>
-                <span class="department-page__eyebrow">
-                    {{ t("organization.department.eyebrow") }}
-                </span>
+    <section class="department-page hrms-compact">
+        <AppModuleToolbar>
+            <Button
+                v-if="permissions.canImport"
+                severity="secondary"
+                outlined
+                icon="pi pi-download"
+                :loading="departmentStore.downloadingTemplate"
+                :label="t('organization.department.downloadSample')"
+                @click="downloadTemplate"
+            />
 
-                <h2>{{ t("organization.department.title") }}</h2>
+            <Button
+                v-if="permissions.canImport"
+                severity="secondary"
+                outlined
+                icon="pi pi-upload"
+                :label="t('organization.department.importExcel')"
+                @click="openImportDialog"
+            />
 
-                <p>
-                    {{ t("organization.department.description") }}
-                </p>
+            <Button
+                v-if="permissions.canExport"
+                severity="secondary"
+                outlined
+                icon="pi pi-file-export"
+                :loading="departmentStore.exporting"
+                :label="t('organization.department.exportExcel')"
+                @click="exportDepartmentExcel"
+            />
+
+            <Button
+                v-if="permissions.canCreate"
+                icon="pi pi-plus"
+                :label="t('organization.department.newDepartment')"
+                @click="openCreateDialog"
+            />
+        </AppModuleToolbar>
+
+        <AppFilterBar :loading="departmentStore.loading">
+            <span class="app-filter-field app-filter-field--search department-search">
+                <i class="pi pi-search" />
+
+                <InputText
+                    v-model="filters.search"
+                    class="department-search__input"
+                    :placeholder="t('organization.department.searchPlaceholder')"
+                    @keyup.enter="applyFilters"
+                />
+            </span>
+
+            <div class="app-filter-field">
+                <Select
+                    v-model="filters.companyId"
+                    class="department-filter-select"
+                    :placeholder="tr('organization.department.allCompanies', 'All companies')"
+                    :options="companyFilterOptions"
+                    option-label="label"
+                    option-value="value"
+                    :loading="companyLoading"
+                    @change="onFilterCompanyChange"
+                />
             </div>
 
-            <div class="department-header-actions">
-                <Button
-                    v-if="canExport"
-                    severity="secondary"
-                    outlined
-                    icon="pi pi-download"
-                    :loading="departmentStore.downloadingTemplate"
-                    :label="t('organization.department.downloadSample')"
-                    @click="downloadTemplate"
-                />
-
-                <Button
-                    v-if="canImport"
-                    severity="secondary"
-                    outlined
-                    icon="pi pi-upload"
-                    :label="t('organization.department.importExcel')"
-                    @click="openImportDialog"
-                />
-
-                <Button
-                    v-if="canExport"
-                    severity="secondary"
-                    outlined
-                    icon="pi pi-file-export"
-                    :loading="departmentStore.exporting"
-                    :label="t('organization.department.exportExcel')"
-                    @click="exportDepartmentExcel"
-                />
-
-                <Button
-                    v-if="canCreate"
-                    icon="pi pi-plus"
-                    :label="t('organization.department.newDepartment')"
-                    @click="openCreateDialog"
+            <div class="app-filter-field">
+                <Select
+                    v-model="filters.branchId"
+                    class="department-filter-select"
+                    :placeholder="tr('organization.department.allBranches', 'All branches')"
+                    :options="branchFilterOptions"
+                    option-label="label"
+                    option-value="value"
+                    :loading="branchLoading"
+                    @change="applyFilters"
                 />
             </div>
-        </div>
 
-        <Card class="department-card">
+            <div class="app-filter-field department-status-field">
+                <Select
+                    v-model="filters.status"
+                    class="department-filter-select"
+                    :placeholder="tr('organization.department.statusAll', 'All statuses')"
+                    :options="statusOptions"
+                    option-label="label"
+                    option-value="value"
+                    @change="applyFilters"
+                />
+            </div>
+
+            <template #actions>
+                <Button
+                    icon="pi pi-filter"
+                    :label="t('common.apply')"
+                    @click="applyFilters"
+                />
+
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-times"
+                    :label="t('common.clear')"
+                    @click="clearFilters"
+                />
+
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-refresh"
+                    :aria-label="t('common.refresh')"
+                    :loading="departmentStore.loading"
+                    @click="loadDepartments"
+                />
+            </template>
+        </AppFilterBar>
+
+        <Card class="department-card hrms-card">
             <template #content>
-                <div class="department-toolbar">
-                    <div class="department-toolbar__filters">
-                        <span class="department-search">
-                            <i class="pi pi-search" />
-
-                            <InputText
-                                v-model="filters.search"
-                                class="department-search__input"
-                                :placeholder="
-                                    t(
-                                        'organization.department.searchPlaceholder',
-                                    )
-                                "
-                                @keyup.enter="applyFilters"
-                            />
-                        </span>
-
-                        <Select
-                            v-model="filters.companyId"
-                            class="department-company-filter"
-                            :options="companyFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="companyLoading"
-                            @change="onFilterCompanyChange"
-                        />
-
-                        <Select
-                            v-model="filters.branchId"
-                            class="department-branch-filter"
-                            :options="branchFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="branchLoading"
-                            @change="applyFilters"
-                        />
-
-                        <Select
-                            v-model="filters.status"
-                            class="department-status-filter"
-                            :options="statusOptions"
-                            option-label="label"
-                            option-value="value"
-                            @change="applyFilters"
-                        />
-                    </div>
-
-                    <div class="department-toolbar__actions">
-                        <Button
-                            size="small"
-                            icon="pi pi-filter"
-                            :label="t('common.apply')"
-                            @click="applyFilters"
-                        />
-
-                        <Button
-                            size="small"
-                            severity="secondary"
-                            outlined
-                            icon="pi pi-times"
-                            :label="t('common.clear')"
-                            @click="clearFilters"
-                        />
-
-                        <Button
-                            size="small"
-                            severity="secondary"
-                            outlined
-                            icon="pi pi-refresh"
-                            :label="t('common.refresh')"
-                            @click="loadDepartments"
-                        />
-                    </div>
-                </div>
-
                 <div class="department-table-wrap">
                     <DataTable
+                        class="department-table"
                         lazy
                         paginator
                         striped-rows
@@ -1113,53 +1138,29 @@ onMounted(async () => {
                         </Column>
 
                         <Column
+                            v-if="canShowRowActions"
                             :header="t('common.actions')"
                             align-frozen="right"
                             frozen
-                            style="min-width: 10rem"
+                            header-class="department-action-column"
+                            body-class="department-action-column"
+                            style="width: 5rem; min-width: 5rem"
                         >
                             <template #body="{ data }">
-                                <div class="department-actions">
-                                    <Button
-                                        v-if="
-                                            canUpdate &&
-                                            data.status !== 'ARCHIVED'
-                                        "
-                                        size="small"
-                                        text
-                                        rounded
-                                        icon="pi pi-pencil"
-                                        :aria-label="t('common.edit')"
-                                        @click="openEditDialog(data)"
-                                    />
-
-                                    <Button
-                                        v-if="
-                                            canArchive &&
-                                            data.status !== 'ARCHIVED'
-                                        "
-                                        size="small"
-                                        text
-                                        rounded
-                                        severity="danger"
-                                        icon="pi pi-archive"
-                                        :aria-label="
-                                            t('common.archive')
-                                        "
-                                        @click="openArchiveDialog(data)"
-                                    />
-
-                                    <span
-                                        v-if="data.status === 'ARCHIVED'"
-                                        class="department-archived-text"
-                                    >
-                                        {{
-                                            t(
-                                                'organization.department.readOnly',
-                                            )
-                                        }}
-                                    </span>
-                                </div>
+                                <AppTableActions
+                                    :can-edit="
+                                        permissions.canUpdate &&
+                                        data.status !== 'ARCHIVED'
+                                    "
+                                    :can-archive="
+                                        permissions.canArchive &&
+                                        data.status !== 'ARCHIVED'
+                                    "
+                                    :edit-label="t('common.edit')"
+                                    :archive-label="t('common.archive')"
+                                    @edit="openEditDialog(data)"
+                                    @archive="openArchiveDialog(data)"
+                                />
                             </template>
                         </Column>
                     </DataTable>
@@ -1627,6 +1628,45 @@ onMounted(async () => {
     overflow-x: auto;
 }
 
+
+
+.department-table :deep(.p-datatable-thead > tr > th),
+.department-table :deep(.p-datatable-tbody > tr > td) {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.department-table :deep(.p-datatable-column-header-content) {
+    justify-content: center;
+}
+
+.department-table :deep(.p-datatable-tbody > tr > td > *) {
+    margin-inline: auto;
+}
+
+.department-table .department-name-cell,
+.department-table .department-muted-cell {
+    justify-items: center;
+    text-align: center;
+}
+
+.department-table .department-code,
+.department-table .department-date,
+.department-table .department-muted-text {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.department-table :deep(.p-tag) {
+    margin-inline: auto;
+}
+
+.department-table :deep(.department-action-column .p-datatable-column-header-content),
+.department-table :deep(.department-action-column) {
+    text-align: center;
+}
+
 .department-code {
     color: var(--hrms-primary);
     font-size: 0.78rem;
@@ -1898,6 +1938,178 @@ onMounted(async () => {
 
     .department-page h2 {
         font-size: 1.2rem;
+    }
+}
+
+
+/* Step 3: compact reusable department layout */
+.department-page {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 100%;
+}
+
+.department-card {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.department-card :deep(.p-card-body),
+.department-card :deep(.p-card-content) {
+    height: 100%;
+    min-height: 0;
+}
+
+.department-card :deep(.p-card-body) {
+    padding: 0;
+}
+
+.department-card :deep(.p-card-content) {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.department-table-wrap {
+    flex: 1 1 auto;
+    min-height: 20rem;
+    overflow: hidden;
+}
+
+.department-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.department-search > i {
+    position: absolute;
+    left: 0.625rem;
+    z-index: 1;
+    color: var(--hrms-text-muted);
+    font-size: 0.76rem;
+    pointer-events: none;
+}
+
+.department-search__input {
+    width: 100%;
+    padding-left: 1.85rem !important;
+}
+
+.department-status-field {
+    flex-basis: 9rem !important;
+    min-width: 8rem !important;
+}
+
+.department-table-wrap :deep(.p-datatable-table) {
+    font-size: var(--hrms-table-font-size);
+}
+
+.department-table-wrap :deep(.p-datatable-thead > tr > th) {
+    height: var(--hrms-table-header-height);
+    padding: 0.4rem 0.55rem;
+    white-space: nowrap;
+}
+
+.department-table-wrap :deep(.p-datatable-tbody > tr > td) {
+    height: var(--hrms-table-row-height);
+    padding: 0.35rem 0.55rem;
+}
+
+.department-table-wrap :deep(.p-tag) {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+}
+
+.department-name-cell,
+.department-muted-cell {
+    gap: 0.05rem;
+}
+
+.department-name-cell strong,
+.department-muted-cell strong {
+    font-size: 0.75rem;
+    line-height: 1.15;
+}
+
+.department-name-cell span,
+.department-muted-cell span,
+.department-muted-text,
+.department-date {
+    font-size: 0.67rem;
+    line-height: 1.15;
+}
+
+.department-action-column {
+    text-align: center !important;
+}
+
+.department-dialog :deep(.p-dialog-content) {
+    padding: 0.75rem 0.875rem;
+}
+
+.department-dialog :deep(.p-dialog-header),
+.department-import-dialog :deep(.p-dialog-header),
+.department-result-dialog :deep(.p-dialog-header) {
+    padding: 0.7rem 0.875rem;
+}
+
+.department-form {
+    gap: 0.75rem;
+}
+
+.department-form__section {
+    padding: 0.75rem;
+}
+
+.department-form__section h3 {
+    margin-bottom: 0.6rem;
+    font-size: 0.78rem;
+}
+
+.department-field {
+    gap: 0.25rem;
+}
+
+.department-field > span {
+    font-size: 0.69rem;
+}
+
+.department-field textarea {
+    min-height: 4.5rem;
+}
+
+:deep(.department-filter-select) {
+    width: 100%;
+}
+
+:deep(.department-filter-select .p-select-label) {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 1.2;
+}
+
+:deep(.department-filter-select .p-select-dropdown) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 640px) {
+    .department-table-wrap {
+        min-height: 24rem;
+    }
+
+    .department-dialog {
+        width: calc(100vw - 1rem) !important;
+        max-width: none !important;
     }
 }
 </style>
