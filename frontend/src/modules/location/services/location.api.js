@@ -29,6 +29,22 @@ function downloadBlob(blob, filename) {
     window.URL.revokeObjectURL(url)
 }
 
+export async function fetchLocationLookup(entity, params = {}) {
+    const response = await apiClient.get(
+        `${LOCATION_ENDPOINT}/${entity}/lookup`,
+        {
+            params: {
+                page: 1,
+                limit: 100,
+                status: "ACTIVE",
+                ...params,
+            },
+        },
+    )
+
+    return response.data.data.items || []
+}
+
 export async function fetchLocations(entity, params = {}) {
     const response = await apiClient.get(`${LOCATION_ENDPOINT}/${entity}`, {
         params,

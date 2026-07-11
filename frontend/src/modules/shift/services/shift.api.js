@@ -29,6 +29,19 @@ function downloadBlob(blob, filename) {
     window.URL.revokeObjectURL(url)
 }
 
+export async function fetchShiftLookup(params = {}) {
+    const response = await apiClient.get(`${SHIFT_ENDPOINT}/lookup`, {
+        params: {
+            page: 1,
+            limit: 100,
+            status: "ACTIVE",
+            ...params,
+        },
+    })
+
+    return response.data.data
+}
+
 export async function fetchShifts(params = {}) {
     const response = await apiClient.get(SHIFT_ENDPOINT, {
         params,

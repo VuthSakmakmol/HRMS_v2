@@ -14,12 +14,11 @@ import Select from "primevue/select"
 import Tag from "primevue/tag"
 import Textarea from "primevue/textarea"
 
-import { useAuthStore } from "@/app/stores/auth.store.js"
+import { useModulePermissions } from "@/shared/auth/useModulePermissions.js"
 import { useAttendanceStore } from "../stores/attendance.store.js"
 
 const { t } = useI18n()
 const toast = useToast()
-const authStore = useAuthStore()
 const attendanceStore = useAttendanceStore()
 
 const today = new Date().toISOString().slice(0, 10)
@@ -47,15 +46,12 @@ const form = reactive({
 const importDialogVisible = ref(false)
 const selectedFile = ref(null)
 
-const canCreate = computed(() =>
-    authStore.hasPermission("ATTENDANCE.RECORD.CREATE"),
-)
-const canUpdate = computed(() =>
-    authStore.hasPermission("ATTENDANCE.RECORD.UPDATE"),
-)
-const canImport = computed(() =>
-    authStore.hasPermission("ATTENDANCE.RECORD.IMPORT"),
-)
+const { canCreate, canUpdate, canImport } = useModulePermissions({
+    view: "ATTENDANCE.RECORD.VIEW",
+    create: "ATTENDANCE.RECORD.CREATE",
+    update: "ATTENDANCE.RECORD.UPDATE",
+    import: "ATTENDANCE.RECORD.IMPORT",
+})
 
 const statusOptions = computed(() => [
     { label: t("attendance.status.all"), value: "ALL" },
@@ -101,9 +97,9 @@ function statusSeverity(status) {
     return "info"
 }
 
-async function loadRecords(page = filters.page) {
+async function loadRecords(page = filters.page, force = false) {
     filters.page = page
-    await attendanceStore.load({ ...filters })
+    await attendanceStore.load({ ...filters }, { force })
 }
 
 function resetForm() {
@@ -149,7 +145,7 @@ async function saveRecord() {
         detail: t("attendance.saved"),
         life: 2500,
     })
-    await loadRecords()
+    await loadRecords(filters.page, true)
 }
 
 function onFileChange(event) {
@@ -163,7 +159,7 @@ async function runImport() {
 
     await attendanceStore.importFile(selectedFile.value)
     importDialogVisible.value = false
-    await loadRecords(1)
+    await loadRecords(1, true)
 }
 
 onMounted(() => {
@@ -267,7 +263,7 @@ onMounted(() => {
                             />
                         </template>
                     </Column>
-                    <Column :header="t('common.actions')">
+                    <Column v-if="canUpdate" :header="t('common.actions')">
                         <template #body="{ data }">
                             <Button
                                 v-if="canUpdate"
@@ -426,6 +422,50 @@ onMounted(() => {
 
     .full-width {
         grid-column: auto;
+    }
+}
+
+.filters {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 145px 145px 155px auto;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.filters :deep(.p-inputtext),
+.filters :deep(.p-select),
+.native-input {
+    width: 100%;
+    min-height: 2.25rem;
+    border: 1px solid var(--surface-border);
+    border-radius: 0.45rem;
+}
+
+:deep(.p-datatable-header-cell),
+:deep(.p-datatable-tbody > tr > td) {
+    text-align: center;
+    white-space: nowrap;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.78rem;
+}
+
+@media (max-width: 900px) {
+    .filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .filters {
+        grid-template-columns: 1fr;
+    }
+
+    .page-actions {
+        width: 100%;
+    }
+
+    .page-actions :deep(.p-button) {
+        flex: 1 1 auto;
     }
 }
 </style>

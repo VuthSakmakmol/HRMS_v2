@@ -16,6 +16,9 @@ import Textarea from "primevue/textarea"
 
 import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
+import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
+import AppModuleToolbar from "@/shared/components/page/AppModuleToolbar.vue"
+import AppTableActions from "@/shared/components/table/AppTableActions.vue"
 
 import { fetchLocations } from "../services/location.api.js"
 import { useLocationStore } from "../stores/location.store.js"
@@ -825,51 +828,44 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="location-page">
-        <div class="location-page__header">
-            <div>
-                <p class="location-page__eyebrow">
-                    {{ t("organization.location.eyebrow") }}
-                </p>
-                <h2>{{ t("organization.location.title") }}</h2>
-                <p>{{ t("organization.location.description") }}</p>
-            </div>
+    <section class="location-page hrms-compact">
+        <AppModuleToolbar>
+            <Button
+                v-if="canImport"
+                icon="pi pi-download"
+                :label="t('organization.location.downloadSample')"
+                outlined
+                severity="secondary"
+                :loading="locationStore.downloadingTemplate"
+                @click="downloadSample"
+            />
 
-            <div class="location-page__actions">
-                <Button
-                    v-if="canImport"
-                    icon="pi pi-download"
-                    :label="t('organization.location.downloadSample')"
-                    outlined
-                    :loading="locationStore.downloadingTemplate"
-                    @click="downloadSample"
-                />
+            <Button
+                v-if="canImport"
+                icon="pi pi-upload"
+                :label="t('organization.location.importExcel')"
+                outlined
+                severity="secondary"
+                @click="openImportDialog"
+            />
 
-                <Button
-                    v-if="canImport"
-                    icon="pi pi-upload"
-                    :label="t('organization.location.importExcel')"
-                    outlined
-                    @click="openImportDialog"
-                />
+            <Button
+                v-if="canExport"
+                icon="pi pi-file-excel"
+                :label="t('organization.location.exportExcel')"
+                outlined
+                severity="secondary"
+                :loading="locationStore.exporting"
+                @click="exportExcel"
+            />
 
-                <Button
-                    v-if="canExport"
-                    icon="pi pi-file-excel"
-                    :label="t('organization.location.exportExcel')"
-                    outlined
-                    :loading="locationStore.exporting"
-                    @click="exportExcel"
-                />
-
-                <Button
-                    v-if="canCreate"
-                    icon="pi pi-plus"
-                    :label="t('organization.location.newLocation', { entity: activeEntityLabel })"
-                    @click="openCreateDialog"
-                />
-            </div>
-        </div>
+            <Button
+                v-if="canCreate"
+                icon="pi pi-plus"
+                :label="t('organization.location.newLocation', { entity: activeEntityLabel })"
+                @click="openCreateDialog"
+            />
+        </AppModuleToolbar>
 
         <div class="location-page__tabs">
             <button
@@ -887,101 +883,110 @@ onMounted(async () => {
             </button>
         </div>
 
-        <Card class="location-card">
+        <Card class="location-card hrms-card">
             <template #content>
-                <div class="location-filter-bar">
-                    <span class="location-search">
+                <AppFilterBar :loading="locationStore.loading">
+                    <span class="app-filter-field app-filter-field--search location-search">
                         <i class="pi pi-search" />
                         <InputText
                             v-model="filters.search"
+                            class="location-search__input"
                             :placeholder="t('organization.location.searchPlaceholder')"
                             @keyup.enter="applyFilters"
                         />
                     </span>
 
-                    <Select
-                        v-if="!isCountryEntity"
-                        v-model="filters.countryId"
-                        class="location-select"
-                        :options="countryFilterOptions"
-                        option-label="label"
-                        option-value="value"
-                        :placeholder="t('organization.location.selectCountry')"
-                        filter
-                        :loading="lookupLoading"
-                        @change="resetFilterParents('countryId')"
-                    />
+                    <div v-if="!isCountryEntity" class="app-filter-field">
+                        <Select
+                            v-model="filters.countryId"
+                            class="location-filter-select"
+                            :options="countryFilterOptions"
+                            option-label="label"
+                            option-value="value"
+                            :placeholder="t('organization.location.selectCountry')"
+                            filter
+                            :loading="lookupLoading"
+                            @change="resetFilterParents('countryId')"
+                        />
+                    </div>
 
-                    <Select
-                        v-if="needsProvince"
-                        v-model="filters.provinceId"
-                        class="location-select"
-                        :options="provinceFilterOptions"
-                        option-label="label"
-                        option-value="value"
-                        :placeholder="t('organization.location.selectProvince')"
-                        filter
-                        :loading="lookupLoading"
-                        @change="resetFilterParents('provinceId')"
-                    />
+                    <div v-if="needsProvince" class="app-filter-field">
+                        <Select
+                            v-model="filters.provinceId"
+                            class="location-filter-select"
+                            :options="provinceFilterOptions"
+                            option-label="label"
+                            option-value="value"
+                            :placeholder="t('organization.location.selectProvince')"
+                            filter
+                            :loading="lookupLoading"
+                            @change="resetFilterParents('provinceId')"
+                        />
+                    </div>
 
-                    <Select
-                        v-if="needsDistrict"
-                        v-model="filters.districtId"
-                        class="location-select"
-                        :options="districtFilterOptions"
-                        option-label="label"
-                        option-value="value"
-                        :placeholder="t('organization.location.selectDistrict')"
-                        filter
-                        :loading="lookupLoading"
-                        @change="resetFilterParents('districtId')"
-                    />
+                    <div v-if="needsDistrict" class="app-filter-field">
+                        <Select
+                            v-model="filters.districtId"
+                            class="location-filter-select"
+                            :options="districtFilterOptions"
+                            option-label="label"
+                            option-value="value"
+                            :placeholder="t('organization.location.selectDistrict')"
+                            filter
+                            :loading="lookupLoading"
+                            @change="resetFilterParents('districtId')"
+                        />
+                    </div>
 
-                    <Select
-                        v-if="needsCommune"
-                        v-model="filters.communeId"
-                        class="location-select"
-                        :options="communeFilterOptions"
-                        option-label="label"
-                        option-value="value"
-                        :placeholder="t('organization.location.selectCommune')"
-                        filter
-                        :loading="lookupLoading"
-                    />
+                    <div v-if="needsCommune" class="app-filter-field">
+                        <Select
+                            v-model="filters.communeId"
+                            class="location-filter-select"
+                            :options="communeFilterOptions"
+                            option-label="label"
+                            option-value="value"
+                            :placeholder="t('organization.location.selectCommune')"
+                            filter
+                            :loading="lookupLoading"
+                        />
+                    </div>
 
-                    <Select
-                        v-model="filters.status"
-                        class="location-select location-select--status"
-                        :options="statusFilterOptions"
-                        option-label="label"
-                        option-value="value"
-                    />
+                    <div class="app-filter-field location-status-field">
+                        <Select
+                            v-model="filters.status"
+                            class="location-filter-select"
+                            :options="statusFilterOptions"
+                            option-label="label"
+                            option-value="value"
+                        />
+                    </div>
 
-                    <Button
-                        icon="pi pi-filter"
-                        :label="t('common.apply')"
-                        :loading="locationStore.loading"
-                        @click="applyFilters"
-                    />
+                    <template #actions>
+                        <Button
+                            icon="pi pi-filter"
+                            :label="t('common.apply')"
+                            :loading="locationStore.loading"
+                            @click="applyFilters"
+                        />
 
-                    <Button
-                        icon="pi pi-times"
-                        :label="t('common.clear')"
-                        outlined
-                        severity="secondary"
-                        @click="clearFilters"
-                    />
+                        <Button
+                            icon="pi pi-times"
+                            :label="t('common.clear')"
+                            outlined
+                            severity="secondary"
+                            @click="clearFilters"
+                        />
 
-                    <Button
-                        icon="pi pi-refresh"
-                        :label="t('common.refresh')"
-                        outlined
-                        severity="secondary"
-                        :loading="locationStore.loading"
-                        @click="loadLocationItems(locationStore.pagination.page)"
-                    />
-                </div>
+                        <Button
+                            icon="pi pi-refresh"
+                            outlined
+                            severity="secondary"
+                            :aria-label="t('common.refresh')"
+                            :loading="locationStore.loading"
+                            @click="loadLocationItems(locationStore.pagination.page)"
+                        />
+                    </template>
+                </AppFilterBar>
 
                 <DataTable
                     :value="locationStore.items"
@@ -989,6 +994,7 @@ onMounted(async () => {
                     :loading="locationStore.loading"
                     :empty-message="emptyMessage"
                     responsive-layout="scroll"
+                    size="small"
                     striped-rows
                     class="location-table"
                 >
@@ -1089,26 +1095,14 @@ onMounted(async () => {
                         style="width: 8rem"
                     >
                         <template #body="slotProps">
-                            <div class="location-row-actions">
-                                <Button
-                                    v-if="canUpdate && slotProps.data.status !== 'ARCHIVED'"
-                                    text
-                                    rounded
-                                    icon="pi pi-pencil"
-                                    :aria-label="t('common.edit')"
-                                    @click="openEditDialog(slotProps.data)"
-                                />
-
-                                <Button
-                                    v-if="canArchive && slotProps.data.status !== 'ARCHIVED'"
-                                    text
-                                    rounded
-                                    severity="danger"
-                                    icon="pi pi-trash"
-                                    :aria-label="t('common.archive')"
-                                    @click="openArchiveDialog(slotProps.data)"
-                                />
-                            </div>
+                            <AppTableActions
+                                :can-edit="canUpdate && slotProps.data.status !== 'ARCHIVED'"
+                                :can-archive="canArchive && slotProps.data.status !== 'ARCHIVED'"
+                                :edit-label="t('common.edit')"
+                                :archive-label="t('common.archive')"
+                                @edit="openEditDialog(slotProps.data)"
+                                @archive="openArchiveDialog(slotProps.data)"
+                            />
                         </template>
                     </Column>
                 </DataTable>
@@ -1749,4 +1743,149 @@ onMounted(async () => {
         flex-direction: column;
     }
 }
+/* Compact enterprise layout aligned with Shift and Department. */
+.location-page {
+    gap: 0.8rem;
+}
+
+.location-page__tabs {
+    gap: 0.35rem;
+}
+
+.location-page__tab {
+    min-height: 2.1rem;
+    padding: 0 0.72rem;
+    border-radius: 6px;
+    font-size: 0.74rem;
+}
+
+.location-card {
+    min-width: 0;
+}
+
+.location-card :deep(.p-card-body),
+.location-card :deep(.p-card-content) {
+    height: 100%;
+}
+
+.location-card :deep(.p-card-content) {
+    gap: 0.75rem;
+}
+
+.location-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: min(31rem, 100%);
+    min-width: 15rem;
+    height: 2.5rem;
+    padding: 0;
+    overflow: hidden;
+    background: var(--hrms-surface, #ffffff);
+    border: 1px solid var(--hrms-border, #cbd5e1);
+    border-radius: 6px;
+}
+
+.location-search > i {
+    position: absolute;
+    left: 0.85rem;
+    z-index: 2;
+    color: var(--hrms-text-muted);
+    pointer-events: none;
+}
+
+.location-search :deep(.p-inputtext) {
+    width: 100%;
+    height: 100%;
+    padding: 0.55rem 0.75rem 0.55rem 2.55rem;
+    background: transparent;
+    border: 0 !important;
+    border-radius: 0;
+    box-shadow: none !important;
+    font-size: 0.78rem;
+}
+
+.location-search:focus-within {
+    border-color: var(--p-primary-color, #3b82f6);
+    box-shadow: 0 0 0 1px var(--p-primary-color, #3b82f6);
+}
+
+.location-filter-select {
+    width: 100%;
+    min-width: 11rem;
+}
+
+.location-status-field {
+    max-width: 12rem;
+}
+
+.location-filter-select :deep(.p-select-label) {
+    padding-block: 0.55rem;
+    font-size: 0.78rem;
+}
+
+.location-table {
+    padding: 0 0.75rem;
+    font-size: 0.76rem;
+}
+
+.location-table :deep(.p-datatable-thead > tr > th),
+.location-table :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.5rem 0.48rem;
+    text-align: center;
+}
+
+.location-table :deep(.p-datatable-thead > tr > th .p-column-header-content) {
+    justify-content: center;
+}
+
+.location-pagination {
+    padding: 0 0.75rem 0.75rem;
+}
+
+@media (max-width: 1180px) {
+    .location-search {
+        width: min(100%, 28rem);
+        flex: 1 1 24rem;
+    }
+
+    .location-filter-select {
+        min-width: 10rem;
+    }
+}
+
+@media (max-width: 760px) {
+    .location-page__tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .location-page__tab {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .location-search,
+    .location-status-field {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+    }
+
+    .location-filter-select {
+        min-width: 0;
+    }
+
+    .location-pagination {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .location-page__tabs {
+        grid-template-columns: 1fr;
+    }
+}
+
 </style>

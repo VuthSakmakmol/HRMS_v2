@@ -10,6 +10,8 @@ import DataTable from "primevue/datatable"
 import InputText from "primevue/inputtext"
 import ProgressBar from "primevue/progressbar"
 
+import { useModulePermissions } from "@/shared/auth/useModulePermissions.js"
+
 import {
     downloadRawScanTemplate,
     fetchRawScans,
@@ -18,6 +20,11 @@ import {
 
 const { t } = useI18n()
 const toast = useToast()
+
+const { canImport } = useModulePermissions({
+    view: "ATTENDANCE.SCAN.VIEW",
+    import: "ATTENDANCE.SCAN.IMPORT",
+})
 const today = new Date().toISOString().slice(0, 10)
 const firstDay = `${today.slice(0, 8)}01`
 
@@ -93,6 +100,7 @@ onMounted(() => load(1))
                 <p>{{ t("attendance.scan.description") }}</p>
             </div>
             <Button
+                v-if="canImport"
                 icon="pi pi-download"
                 :label="t('attendance.scan.template')"
                 severity="secondary"
@@ -103,7 +111,7 @@ onMounted(() => load(1))
 
         <Card>
             <template #content>
-                <div class="import-row">
+                <div v-if="canImport" class="import-row">
                     <input type="file" accept=".xlsx" @change="onFileChange" />
                     <Button
                         icon="pi pi-upload"
@@ -113,7 +121,7 @@ onMounted(() => load(1))
                         @click="runImport"
                     />
                 </div>
-                <ProgressBar v-if="importing" :value="progress" class="progress" />
+                <ProgressBar v-if="canImport && importing" :value="progress" class="progress" />
             </template>
         </Card>
 

@@ -9,10 +9,16 @@ import Checkbox from "primevue/checkbox"
 import Message from "primevue/message"
 import ProgressSpinner from "primevue/progressspinner"
 
+import { useModulePermissions } from "@/shared/auth/useModulePermissions.js"
 import { runAttendanceVerification } from "../services/attendance.api.js"
 
 const { t } = useI18n()
 const toast = useToast()
+
+const { canRun } = (() => {
+    const permissions = useModulePermissions({ run: "ATTENDANCE.VERIFICATION.RUN" })
+    return { canRun: permissions.has("ATTENDANCE.VERIFICATION.RUN") }
+})()
 const today = new Date().toISOString().slice(0, 10)
 
 const running = ref(false)
@@ -65,6 +71,7 @@ async function runVerification() {
                         <label for="overwriteCorrected">{{ t("attendance.verification.overwriteCorrected") }}</label>
                     </div>
                     <Button
+                        v-if="canRun"
                         icon="pi pi-play"
                         :label="t('attendance.verification.run')"
                         :loading="running"

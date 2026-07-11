@@ -217,38 +217,144 @@ onMounted(async () => {
             class="policy-dialog"
         >
             <div class="form-grid">
-                <Select
-                    v-model="form.companyId"
-                    :options="companies"
-                    option-label="displayName"
-                    option-value="id"
-                    :placeholder="t('organization.company.title')"
-                    filter
-                />
-                <Select
-                    v-model="form.branchId"
-                    :options="branches"
-                    option-label="name"
-                    option-value="id"
-                    :placeholder="t('organization.branch.title')"
-                    filter
-                    show-clear
-                />
-                <InputText v-model="form.code" :placeholder="t('common.code')" />
-                <InputText v-model="form.name" :placeholder="t('common.name')" />
-                <InputNumber v-model="form.graceInMinutes" :placeholder="t('attendance.policy.graceIn')" />
-                <InputNumber v-model="form.graceOutMinutes" :placeholder="t('attendance.policy.graceOut')" />
-                <InputNumber v-model="form.minimumWorkedMinutes" :placeholder="t('attendance.policy.minimumWorked')" />
-                <InputNumber v-model="form.lateRoundUnitMinutes" :placeholder="t('attendance.policy.lateRoundUnit')" />
-                <Select v-model="form.lateRoundMethod" :options="roundMethods" option-label="label" option-value="value" />
-                <InputNumber v-model="form.earlyLeaveRoundUnitMinutes" :placeholder="t('attendance.policy.earlyRoundUnit')" />
-                <Select v-model="form.earlyLeaveRoundMethod" :options="roundMethods" option-label="label" option-value="value" />
-                <Select
-                    v-model="form.status"
-                    :options="[{ label: 'ACTIVE', value: 'ACTIVE' }, { label: 'INACTIVE', value: 'INACTIVE' }]"
-                    option-label="label"
-                    option-value="value"
-                />
+                <div class="form-field">
+                    <label for="policyCompany">{{ t("organization.company.title") }}</label>
+                    <Select
+                        id="policyCompany"
+                        v-model="form.companyId"
+                        :options="companies"
+                        option-label="displayName"
+                        option-value="id"
+                        :placeholder="t('organization.company.title')"
+                        filter
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="policyBranch">{{ t("organization.branch.title") }}</label>
+                    <Select
+                        id="policyBranch"
+                        v-model="form.branchId"
+                        :options="branches"
+                        option-label="name"
+                        option-value="id"
+                        :placeholder="t('organization.branch.title')"
+                        filter
+                        show-clear
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="policyCode">{{ t("common.code") }}</label>
+                    <InputText
+                        id="policyCode"
+                        v-model.trim="form.code"
+                        :placeholder="t('common.code')"
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="policyName">{{ t("common.name") }}</label>
+                    <InputText
+                        id="policyName"
+                        v-model.trim="form.name"
+                        :placeholder="t('common.name')"
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="graceInMinutes">{{ t("attendance.policy.graceIn") }}</label>
+                    <InputNumber
+                        input-id="graceInMinutes"
+                        v-model="form.graceInMinutes"
+                        :min="0"
+                        :use-grouping="false"
+                        :placeholder="t('attendance.policy.graceIn')"
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="graceOutMinutes">{{ t("attendance.policy.graceOut") }}</label>
+                    <InputNumber
+                        input-id="graceOutMinutes"
+                        v-model="form.graceOutMinutes"
+                        :min="0"
+                        :use-grouping="false"
+                        :placeholder="t('attendance.policy.graceOut')"
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="minimumWorkedMinutes">{{ t("attendance.policy.minimumWorked") }}</label>
+                    <InputNumber
+                        input-id="minimumWorkedMinutes"
+                        v-model="form.minimumWorkedMinutes"
+                        :min="0"
+                        :use-grouping="false"
+                        :placeholder="t('attendance.policy.minimumWorked')"
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="lateRoundUnitMinutes">{{ t("attendance.policy.lateRoundUnit") }}</label>
+                    <InputNumber
+                        input-id="lateRoundUnitMinutes"
+                        v-model="form.lateRoundUnitMinutes"
+                        :min="1"
+                        :use-grouping="false"
+                        :placeholder="t('attendance.policy.lateRoundUnit')"
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="lateRoundMethod">Late Round Method</label>
+                    <Select
+                        id="lateRoundMethod"
+                        v-model="form.lateRoundMethod"
+                        :options="roundMethods"
+                        option-label="label"
+                        option-value="value"
+                        placeholder="Late Round Method"
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="earlyLeaveRoundUnitMinutes">{{ t("attendance.policy.earlyRoundUnit") }}</label>
+                    <InputNumber
+                        input-id="earlyLeaveRoundUnitMinutes"
+                        v-model="form.earlyLeaveRoundUnitMinutes"
+                        :min="1"
+                        :use-grouping="false"
+                        :placeholder="t('attendance.policy.earlyRoundUnit')"
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="earlyLeaveRoundMethod">Early Leave Round Method</label>
+                    <Select
+                        id="earlyLeaveRoundMethod"
+                        v-model="form.earlyLeaveRoundMethod"
+                        :options="roundMethods"
+                        option-label="label"
+                        option-value="value"
+                        placeholder="Early Leave Round Method"
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="policyStatus">{{ t("common.status") }}</label>
+                    <Select
+                        id="policyStatus"
+                        v-model="form.status"
+                        :options="[
+                            { label: 'ACTIVE', value: 'ACTIVE' },
+                            { label: 'INACTIVE', value: 'INACTIVE' },
+                        ]"
+                        option-label="label"
+                        option-value="value"
+                        :placeholder="t('common.status')"
+                    />
+                </div>
             </div>
 
             <div class="check-row">
@@ -293,7 +399,26 @@ onMounted(async () => {
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.85rem;
+    gap: 0.85rem 1rem;
+}
+
+.form-field {
+    display: grid;
+    min-width: 0;
+    gap: 0.38rem;
+}
+
+.form-field > label {
+    color: var(--text-color);
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.form-field :deep(.p-inputtext),
+.form-field :deep(.p-inputnumber),
+.form-field :deep(.p-select) {
+    width: 100%;
 }
 
 .check-row {

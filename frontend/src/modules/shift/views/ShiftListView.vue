@@ -17,18 +17,26 @@ import Textarea from "primevue/textarea"
 
 import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
+import { useModulePermissions } from "@/shared/auth/useModulePermissions.js"
+import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
+import AppModuleToolbar from "@/shared/components/page/AppModuleToolbar.vue"
+import AppTableActions from "@/shared/components/table/AppTableActions.vue"
 
-import { fetchBranches } from "@/modules/organization/services/branch.api.js"
-import { fetchCompanies } from "@/modules/organization/services/company.api.js"
+import { fetchBranchesLookup } from "@/modules/organization/services/branch.api.js"
+import { fetchCompaniesLookup } from "@/modules/organization/services/company.api.js"
 
 import { useShiftStore } from "../stores/shift.store.js"
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const toast = useToast()
 
 const authStore = useAuthStore()
 const uiStore = useUiStore()
 const shiftStore = useShiftStore()
+
+function tr(key, fallback) {
+    return te(key) ? t(key) : fallback
+}
 
 const SHIFT_PERMISSIONS = Object.freeze({
     VIEW: "ORGANIZATION.SHIFT.VIEW",
@@ -37,6 +45,8 @@ const SHIFT_PERMISSIONS = Object.freeze({
     ARCHIVE: "ORGANIZATION.SHIFT.ARCHIVE",
     IMPORT: "ORGANIZATION.SHIFT.IMPORT",
     EXPORT: "ORGANIZATION.SHIFT.EXPORT",
+    COMPANY_LOOKUP: "ORGANIZATION.COMPANY.LOOKUP",
+    BRANCH_LOOKUP: "ORGANIZATION.BRANCH.LOOKUP",
 })
 
 const companies = ref([])
@@ -68,20 +78,42 @@ const filters = reactive({
 
 const form = reactive(createEmptyForm())
 
-const canCreate = computed(() =>
-    authStore.hasPermission(SHIFT_PERMISSIONS.CREATE),
+const permissions = useModulePermissions({
+    view: SHIFT_PERMISSIONS.VIEW,
+    create: SHIFT_PERMISSIONS.CREATE,
+    update: SHIFT_PERMISSIONS.UPDATE,
+    archive: SHIFT_PERMISSIONS.ARCHIVE,
+    import: SHIFT_PERMISSIONS.IMPORT,
+    export: SHIFT_PERMISSIONS.EXPORT,
+})
+
+const canLookupCompany = computed(() =>
+    authStore.hasPermission(SHIFT_PERMISSIONS.COMPANY_LOOKUP),
 )
-const canUpdate = computed(() =>
-    authStore.hasPermission(SHIFT_PERMISSIONS.UPDATE),
+const canLookupBranch = computed(() =>
+    authStore.hasPermission(SHIFT_PERMISSIONS.BRANCH_LOOKUP),
 )
-const canArchive = computed(() =>
-    authStore.hasPermission(SHIFT_PERMISSIONS.ARCHIVE),
+
+const canCreateShift = computed(
+    () =>
+        permissions.canCreate.value &&
+        canLookupCompany.value &&
+        canLookupBranch.value,
 )
-const canImport = computed(() =>
-    authStore.hasPermission(SHIFT_PERMISSIONS.IMPORT),
+
+const canUpdateShift = computed(
+    () =>
+        permissions.canUpdate.value &&
+        canLookupCompany.value &&
+        canLookupBranch.value,
 )
-const canExport = computed(() =>
-    authStore.hasPermission(SHIFT_PERMISSIONS.EXPORT),
+
+const canArchiveShift = computed(() => permissions.canArchive.value)
+const canImportShift = computed(() => permissions.canImport.value)
+const canExportShift = computed(() => permissions.canExport.value)
+
+const canShowRowActions = computed(
+    () => canUpdateShift.value || canArchiveShift.value,
 )
 
 const dialogTitle = computed(() => {
@@ -442,14 +474,14 @@ async function loadCompanies() {
     companyLoading.value = true
 
     try {
-        const result = await fetchCompanies({
+        const result = await fetchCompaniesLookup({
             page: 1,
             limit: 100,
             status: "ACTIVE",
             search: "",
         })
 
-        companies.value = result.items || []
+        companies.value = Array.isArray(result) ? result : []
     } catch (error) {
         toast.add({
             severity: "error",
@@ -466,7 +498,7 @@ async function loadBranches(companyId = "") {
     branchLoading.value = true
 
     try {
-        const result = await fetchBranches({
+        const result = await fetchBranchesLookup({
             page: 1,
             limit: 100,
             status: "ACTIVE",
@@ -474,7 +506,7 @@ async function loadBranches(companyId = "") {
             search: "",
         })
 
-        branches.value = result.items || []
+        branches.value = Array.isArray(result) ? result : []
     } catch (error) {
         toast.add({
             severity: "error",
@@ -558,6 +590,10 @@ function onFormBranchChange() {
 }
 
 async function openCreateDialog() {
+    if (!canCreateShift.value) {
+        return
+    }
+
     if (companies.value.length === 0) {
         await loadCompanies()
     }
@@ -585,6 +621,10 @@ async function openCreateDialog() {
 }
 
 async function openEditDialog(shift) {
+    if (!canUpdateShift.value) {
+        return
+    }
+
     dialogMode.value = "edit"
     selectedShiftId.value = shift.id
     formErrors.value = {}
@@ -644,6 +684,10 @@ async function saveShift() {
 }
 
 function openArchiveDialog(shift) {
+    if (!canArchiveShift.value) {
+        return
+    }
+
     archiveCandidate.value = shift
     archiveDialogVisible.value = true
 }
@@ -814,141 +858,147 @@ watch(
 )
 
 onMounted(async () => {
-    await Promise.all([loadCompanies(), loadBranches(), loadShifts()])
+    const tasks = [loadShifts()]
+
+    if (canLookupCompany.value) {
+        tasks.push(loadCompanies())
+    }
+
+    if (canLookupBranch.value) {
+        tasks.push(loadBranches())
+    }
+
+    await Promise.all(tasks)
 })
 </script>
 
 <template>
-    <section class="shift-page">
-        <div class="shift-page__header">
-            <div>
-                <span class="shift-page__eyebrow">
-                    {{ t("organization.shift.eyebrow") }}
-                </span>
+    <section class="shift-page hrms-compact">
+        <AppModuleToolbar>
+            <Button
+                v-if="canImportShift"
+                severity="secondary"
+                outlined
+                icon="pi pi-download"
+                :loading="shiftStore.downloadingTemplate"
+                :label="t('organization.shift.downloadSample')"
+                @click="downloadSample"
+            />
 
-                <h2>{{ t("organization.shift.title") }}</h2>
+            <Button
+                v-if="canImportShift"
+                severity="secondary"
+                outlined
+                icon="pi pi-upload"
+                :label="t('organization.shift.importExcel')"
+                @click="openImportDialog"
+            />
 
-                <p>
-                    {{ t("organization.shift.description") }}
-                </p>
+            <Button
+                v-if="canExportShift"
+                severity="secondary"
+                outlined
+                icon="pi pi-file-export"
+                :loading="shiftStore.exporting"
+                :label="t('organization.shift.exportExcel')"
+                @click="exportExcel"
+            />
+
+            <Button
+                v-if="canCreateShift"
+                icon="pi pi-plus"
+                :label="t('organization.shift.newShift')"
+                @click="openCreateDialog"
+            />
+        </AppModuleToolbar>
+
+        <AppFilterBar :loading="shiftStore.loading">
+            <span class="app-filter-field app-filter-field--search shift-search">
+                <i class="pi pi-search" />
+
+                <InputText
+                    v-model="filters.search"
+                    class="shift-search__input"
+                    :placeholder="t('organization.shift.searchPlaceholder')"
+                    @keyup.enter="applyFilters"
+                />
+            </span>
+
+            <div
+                v-if="canLookupCompany"
+                class="app-filter-field"
+            >
+                <Select
+                    v-model="filters.companyId"
+                    class="shift-filter-select"
+                    :placeholder="tr('organization.shift.allCompanies', 'All companies')"
+                    :options="companyFilterOptions"
+                    option-label="label"
+                    option-value="value"
+                    :loading="companyLoading"
+                    @change="onFilterCompanyChange"
+                />
             </div>
 
-            <div class="shift-page__header-actions">
-                <Button
-                    v-if="canImport"
-                    severity="secondary"
-                    outlined
-                    icon="pi pi-download"
-                    :loading="shiftStore.downloadingTemplate"
-                    :label="t('organization.shift.downloadSample')"
-                    @click="downloadSample"
-                />
-
-                <Button
-                    v-if="canImport"
-                    severity="secondary"
-                    outlined
-                    icon="pi pi-upload"
-                    :label="t('organization.shift.importExcel')"
-                    @click="openImportDialog"
-                />
-
-                <Button
-                    v-if="canExport"
-                    severity="secondary"
-                    outlined
-                    icon="pi pi-file-export"
-                    :loading="shiftStore.exporting"
-                    :label="t('organization.shift.exportExcel')"
-                    @click="exportExcel"
-                />
-
-                <Button
-                    v-if="canCreate"
-                    icon="pi pi-plus"
-                    :label="t('organization.shift.newShift')"
-                    @click="openCreateDialog"
+            <div
+                v-if="canLookupBranch"
+                class="app-filter-field"
+            >
+                <Select
+                    v-model="filters.branchId"
+                    class="shift-filter-select"
+                    :placeholder="tr('organization.shift.allBranches', 'All branches')"
+                    :options="branchFilterOptions"
+                    option-label="label"
+                    option-value="value"
+                    :loading="branchLoading"
+                    @change="onFilterBranchChange"
                 />
             </div>
-        </div>
 
-        <Card class="shift-card">
+            <div class="app-filter-field shift-status-field">
+                <Select
+                    v-model="filters.status"
+                    class="shift-filter-select"
+                    :placeholder="tr('organization.shift.statusAll', 'All statuses')"
+                    :options="statusOptions"
+                    option-label="label"
+                    option-value="value"
+                    @change="applyFilters"
+                />
+            </div>
+
+            <template #actions>
+                <Button
+                    icon="pi pi-filter"
+                    :label="t('common.apply')"
+                    @click="applyFilters"
+                />
+
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-times"
+                    :label="t('common.clear')"
+                    @click="clearFilters"
+                />
+
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-refresh"
+                    :aria-label="t('common.refresh')"
+                    :loading="shiftStore.loading"
+                    @click="loadShifts"
+                />
+            </template>
+        </AppFilterBar>
+
+        <Card class="shift-card hrms-card">
             <template #content>
-                <div class="shift-toolbar">
-                    <div class="shift-toolbar__filters">
-                        <span class="shift-search">
-                            <i class="pi pi-search" />
-
-                            <InputText
-                                v-model="filters.search"
-                                class="shift-search__input"
-                                :placeholder="
-                                    t('organization.shift.searchPlaceholder')
-                                "
-                                @keyup.enter="applyFilters"
-                            />
-                        </span>
-
-                        <Select
-                            v-model="filters.companyId"
-                            class="shift-filter"
-                            :options="companyFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="companyLoading"
-                            @change="onFilterCompanyChange"
-                        />
-
-                        <Select
-                            v-model="filters.branchId"
-                            class="shift-filter"
-                            :options="branchFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="branchLoading"
-                            @change="onFilterBranchChange"
-                        />
-
-                        <Select
-                            v-model="filters.status"
-                            class="shift-status-filter"
-                            :options="statusOptions"
-                            option-label="label"
-                            option-value="value"
-                            @change="applyFilters"
-                        />
-                    </div>
-
-                    <div class="shift-toolbar__actions">
-                        <Button
-                            size="small"
-                            icon="pi pi-filter"
-                            :label="t('common.apply')"
-                            @click="applyFilters"
-                        />
-
-                        <Button
-                            size="small"
-                            severity="secondary"
-                            outlined
-                            icon="pi pi-times"
-                            :label="t('common.clear')"
-                            @click="clearFilters"
-                        />
-
-                        <Button
-                            size="small"
-                            severity="secondary"
-                            outlined
-                            icon="pi pi-refresh"
-                            :label="t('common.refresh')"
-                            @click="loadShifts"
-                        />
-                    </div>
-                </div>
-
                 <div class="shift-table-wrap">
                     <DataTable
+                        class="shift-table"
                         lazy
                         paginator
                         striped-rows
@@ -1099,47 +1149,29 @@ onMounted(async () => {
                         </Column>
 
                         <Column
+                            v-if="canShowRowActions"
                             :header="t('common.actions')"
                             align-frozen="right"
                             frozen
-                            style="min-width: 10rem"
+                            header-class="shift-action-column"
+                            body-class="shift-action-column"
+                            style="width: 5rem; min-width: 5rem"
                         >
                             <template #body="{ data }">
-                                <div class="shift-actions">
-                                    <Button
-                                        v-if="
-                                            canUpdate &&
-                                            data.status !== 'ARCHIVED'
-                                        "
-                                        size="small"
-                                        text
-                                        rounded
-                                        icon="pi pi-pencil"
-                                        :aria-label="t('common.edit')"
-                                        @click="openEditDialog(data)"
-                                    />
-
-                                    <Button
-                                        v-if="
-                                            canArchive &&
-                                            data.status !== 'ARCHIVED'
-                                        "
-                                        size="small"
-                                        text
-                                        rounded
-                                        severity="danger"
-                                        icon="pi pi-archive"
-                                        :aria-label="t('common.archive')"
-                                        @click="openArchiveDialog(data)"
-                                    />
-
-                                    <span
-                                        v-if="data.status === 'ARCHIVED'"
-                                        class="shift-archived-text"
-                                    >
-                                        {{ t("organization.shift.readOnly") }}
-                                    </span>
-                                </div>
+                                <AppTableActions
+                                    :can-edit="
+                                        canUpdateShift &&
+                                        data.status !== 'ARCHIVED'
+                                    "
+                                    :can-archive="
+                                        canArchiveShift &&
+                                        data.status !== 'ARCHIVED'
+                                    "
+                                    :edit-label="t('common.edit')"
+                                    :archive-label="t('common.archive')"
+                                    @edit="openEditDialog(data)"
+                                    @archive="openArchiveDialog(data)"
+                                />
                             </template>
                         </Column>
                     </DataTable>
@@ -1957,4 +1989,102 @@ onMounted(async () => {
         height: 32rem;
     }
 }
+
+
+/* Department/Position enterprise setup-page standard */
+.shift-card {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--hrms-border);
+    box-shadow: var(--hrms-shadow-sm);
+}
+
+.shift-search {
+    width: min(100%, 21rem);
+    position: relative;
+    display: block;
+    min-height: 2.5rem;
+    border: 1px solid var(--surface-border, #cbd5e1);
+    border-radius: 6px;
+    background: var(--surface-0, #ffffff);
+    overflow: hidden;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.shift-search:hover {
+    border-color: var(--primary-300, #93c5fd);
+}
+
+.shift-search:focus-within {
+    border-color: var(--primary-color, #3b82f6);
+    box-shadow: 0 0 0 1px var(--primary-color, #3b82f6);
+}
+
+.shift-search i {
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    transform: translateY(-50%);
+    z-index: 1;
+    color: var(--hrms-text-muted);
+    font-size: 0.78rem;
+}
+
+.shift-search__input {
+    width: 100%;
+    min-height: 2.5rem;
+    padding-left: 2.1rem;
+    border: 0 !important;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none !important;
+}
+
+.shift-search__input:enabled:focus {
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.shift-filter-select {
+    width: 14rem;
+}
+
+.shift-status-field .shift-filter-select {
+    width: 11rem;
+}
+
+.shift-table-wrap {
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.shift-table :deep(.p-datatable-thead > tr > th),
+.shift-table :deep(.p-datatable-tbody > tr > td) {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.shift-table :deep(.p-datatable-column-header-content) {
+    justify-content: center;
+}
+
+.shift-table :deep(.p-datatable-tbody > tr > td) {
+    padding-top: 0.58rem;
+    padding-bottom: 0.58rem;
+}
+
+.shift-action-column {
+    text-align: center !important;
+}
+
+@media (max-width: 900px) {
+    .shift-filter-select,
+    .shift-status-field .shift-filter-select {
+        width: 100%;
+    }
+}
+
 </style>

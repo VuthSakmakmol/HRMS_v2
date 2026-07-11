@@ -152,6 +152,36 @@ const navGroups = computed(() => {
         },
 
         {
+            labelKey: "nav.attendance",
+            items: [
+                {
+                    labelKey: "nav.attendanceRecords",
+                    icon: "pi pi-calendar-clock",
+                    to: { name: "attendance-records" },
+                    permissionCode: "ATTENDANCE.RECORD.VIEW",
+                },
+                {
+                    labelKey: "nav.attendancePolicies",
+                    icon: "pi pi-sliders-h",
+                    to: { name: "attendance-policies" },
+                    permissionCode: "ATTENDANCE.POLICY.VIEW",
+                },
+                {
+                    labelKey: "nav.attendanceRawScans",
+                    icon: "pi pi-qrcode",
+                    to: { name: "attendance-raw-scans" },
+                    permissionCode: "ATTENDANCE.SCAN.VIEW",
+                },
+                {
+                    labelKey: "nav.attendanceVerification",
+                    icon: "pi pi-check-circle",
+                    to: { name: "attendance-verification" },
+                    permissionCode: "ATTENDANCE.VERIFICATION.VIEW",
+                },
+            ],
+        },
+
+        {
             labelKey: "nav.reports",
             items: [
                 {

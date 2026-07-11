@@ -4,6 +4,18 @@ import Employee from "../../employee/models/Employee.js"
 import Shift from "../../shift/models/Shift.js"
 import AttendanceRecord from "../models/AttendanceRecord.js"
 import { AppError } from "../../../shared/errors/AppError.js"
+import {
+    clearCacheByPrefix,
+    getCache,
+    setCache,
+} from "../../../shared/cache/memoryCache.js"
+
+const ATTENDANCE_LIST_CACHE_PREFIX = "attendance:records:list:"
+const ATTENDANCE_LIST_CACHE_TTL_MS = 15_000
+
+function invalidateAttendanceRecordCache() {
+    clearCacheByPrefix(ATTENDANCE_LIST_CACHE_PREFIX)
+}
 
 function startOfDay(value) {
     const date = new Date(value)
@@ -195,6 +207,8 @@ export async function upsertAttendanceRecord({ payload, user, source = "MANUAL" 
         },
     )
 
+    invalidateAttendanceRecordCache()
+
     return record.toJSON()
 }
 
@@ -225,6 +239,13 @@ export async function updateAttendanceRecord({ attendanceId, payload, user }) {
 }
 
 export async function listAttendanceRecords({ query }) {
+    const cacheKey = `${ATTENDANCE_LIST_CACHE_PREFIX}${JSON.stringify(query)}`
+    const cached = getCache(cacheKey)
+
+    if (cached) {
+        return cached
+    }
+
     const filter = {
         attendanceDate: {
             $gte: startOfDay(query.dateFrom),
@@ -281,7 +302,7 @@ export async function listAttendanceRecords({ query }) {
         AttendanceRecord.countDocuments(filter),
     ])
 
-    return {
+    const result = {
         items: items.map((item) => ({
             ...item,
             id: item._id.toString(),
@@ -294,4 +315,6 @@ export async function listAttendanceRecords({ query }) {
             totalPages: Math.max(1, Math.ceil(total / query.limit)),
         },
     }
+
+    return setCache(cacheKey, result, ATTENDANCE_LIST_CACHE_TTL_MS)
 }

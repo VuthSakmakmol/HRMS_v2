@@ -1,5 +1,17 @@
 import AttendancePolicy from "../models/AttendancePolicy.js"
 import { AppError } from "../../../shared/errors/AppError.js"
+import {
+    clearCacheByPrefix,
+    getCache,
+    setCache,
+} from "../../../shared/cache/memoryCache.js"
+
+const ATTENDANCE_POLICY_CACHE_PREFIX = "attendance:policies:"
+const ATTENDANCE_POLICY_CACHE_TTL_MS = 60_000
+
+function invalidateAttendancePolicyCache() {
+    clearCacheByPrefix(ATTENDANCE_POLICY_CACHE_PREFIX)
+}
 
 function normalizePayload(payload) {
     return {
@@ -10,6 +22,13 @@ function normalizePayload(payload) {
 }
 
 export async function listAttendancePolicies({ query }) {
+    const cacheKey = `${ATTENDANCE_POLICY_CACHE_PREFIX}list:${JSON.stringify(query)}`
+    const cached = getCache(cacheKey)
+
+    if (cached) {
+        return cached
+    }
+
     const filter = {}
 
     if (query.companyId) {
@@ -30,11 +49,13 @@ export async function listAttendancePolicies({ query }) {
         .sort({ companyId: 1, branchId: 1, name: 1 })
         .lean()
 
-    return items.map((item) => ({
+    const result = items.map((item) => ({
         ...item,
         id: item._id.toString(),
         _id: undefined,
     }))
+
+    return setCache(cacheKey, result, ATTENDANCE_POLICY_CACHE_TTL_MS)
 }
 
 export async function createAttendancePolicy({ payload, user }) {
@@ -43,6 +64,8 @@ export async function createAttendancePolicy({ payload, user }) {
         createdByAccountId: user.accountId,
         updatedByAccountId: user.accountId,
     })
+
+    invalidateAttendancePolicyCache()
 
     return policy.toJSON()
 }
@@ -69,6 +92,8 @@ export async function updateAttendancePolicy({ policyId, payload, user }) {
             messageKey: "errors.attendance.policyNotFound",
         })
     }
+
+    invalidateAttendancePolicyCache()
 
     return policy.toJSON()
 }
