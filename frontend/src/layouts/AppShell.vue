@@ -209,6 +209,14 @@ const navGroups = computed(() => {
                     },
                     permissionCode: "REPORT.HR_ANALYTICS.VIEW",
                 },
+
+                {
+                    labelKey: "nav.attendanceDashboard",
+                    icon: "pi pi-chart-pie",
+                    to: { name: "attendance-dashboard" },
+                    permissionCode: "ATTENDANCE.DASHBOARD.VIEW",
+                },
+
             ],
         },
 

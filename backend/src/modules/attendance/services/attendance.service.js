@@ -10,11 +10,13 @@ import {
     setCache,
 } from "../../../shared/cache/memoryCache.js"
 
-const ATTENDANCE_LIST_CACHE_PREFIX = "attendance:records:list:"
+export const ATTENDANCE_LIST_CACHE_PREFIX = "attendance:records:list:"
+export const ATTENDANCE_DASHBOARD_CACHE_PREFIX = "attendance:dashboard:"
 const ATTENDANCE_LIST_CACHE_TTL_MS = 15_000
 
-function invalidateAttendanceRecordCache() {
+export function invalidateAttendanceCaches() {
     clearCacheByPrefix(ATTENDANCE_LIST_CACHE_PREFIX)
+    clearCacheByPrefix(ATTENDANCE_DASHBOARD_CACHE_PREFIX)
 }
 
 function startOfDay(value) {
@@ -207,7 +209,7 @@ export async function upsertAttendanceRecord({ payload, user, source = "MANUAL" 
         },
     )
 
-    invalidateAttendanceRecordCache()
+    invalidateAttendanceCaches()
 
     return record.toJSON()
 }

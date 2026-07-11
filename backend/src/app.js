@@ -26,6 +26,7 @@ import attendanceRoutes from "./modules/attendance/routes/attendance.routes.js"
 import attendancePolicyRoutes from "./modules/attendance/routes/attendancePolicy.routes.js"
 import attendanceScanRoutes from "./modules/attendance/routes/attendanceScan.routes.js"
 import attendanceVerificationRoutes from "./modules/attendance/routes/attendanceVerification.routes.js"
+import attendanceDashboardRoutes from "./modules/attendanceDashboard/routes/attendanceDashboard.routes.js"
 
 import { AppError } from "./shared/errors/AppError.js"
 import { errorHandler } from "./shared/middleware/errorHandler.js"
@@ -103,6 +104,7 @@ app.use("/api/v1/attendance", attendanceRoutes)
 app.use("/api/v1/attendance/policies", attendancePolicyRoutes)
 app.use("/api/v1/attendance/scans", attendanceScanRoutes)
 app.use("/api/v1/attendance/verification", attendanceVerificationRoutes)
+app.use("/api/v1/attendance/dashboard", attendanceDashboardRoutes)
 
 app.use(notFound)
 app.use(errorHandler)

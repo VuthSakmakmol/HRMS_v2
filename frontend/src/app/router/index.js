@@ -235,6 +235,17 @@ const router = createRouter({
                     },
                 },
 
+                {
+                    path: "attendance/dashboard",
+                    name: "attendance-dashboard",
+                    component: () =>
+                        import("@/modules/attendanceDashboard/views/AttendanceDashboardView.vue"),
+                    meta: {
+                        titleKey: "nav.attendanceDashboard",
+                        permissionCode: "ATTENDANCE.DASHBOARD.VIEW",
+                    },
+                },
+
             ],
         },
 

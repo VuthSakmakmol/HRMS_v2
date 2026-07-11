@@ -2,8 +2,9 @@ import AttendanceRecord from "../models/AttendanceRecord.js"
 import AttendanceRawScan from "../models/AttendanceRawScan.js"
 import Employee from "../../employee/models/Employee.js"
 import Shift from "../../shift/models/Shift.js"
-import CalendarDay from "../../calendar/models/CalendarDay.js"
+import { resolveCalendarDay } from "../../calendar/services/calendar.service.js"
 import { resolveAttendancePolicy } from "./attendancePolicy.service.js"
+import { invalidateAttendanceCaches } from "./attendance.service.js"
 
 function dateKey(date) {
     return new Date(date).toISOString().slice(0, 10)
@@ -174,33 +175,36 @@ function calculateWorkingResult({ workDate, scans, shift, policy }) {
     }
 }
 
-async function resolveDayType({ workDate, employee, policy }) {
-    const key = dateKey(workDate)
-    const calendarDay = await CalendarDay.findOne({
-        dateKey: key,
-        status: "ACTIVE",
-        $or: [
-            { branchId: employee.branchId },
-            { companyId: employee.companyId, scopeLevel: "COMPANY" },
-            { scopeLevel: "GLOBAL" },
-        ],
+async function resolveDayType({ workDate, employee, policy, user, calendarCache }) {
+    const key = `${dateKey(workDate)}:${employee.companyId}:${employee.branchId}`
+    const cached = calendarCache.get(key)
+
+    if (cached) {
+        return cached
+    }
+
+    const calendarDay = await resolveCalendarDay({
+        query: {
+            date: dateKey(workDate),
+            companyId: employee.companyId?.toString?.() || employee.companyId,
+            branchId: employee.branchId?.toString?.() || employee.branchId,
+        },
+        user,
     })
-        .sort({ scopeLevel: -1 })
-        .lean()
 
-    if (calendarDay?.dayType === "HOLIDAY") {
-        return "HOLIDAY"
+    let dayType = "WORKING_DAY"
+
+    if (["HOLIDAY", "CLOSED_DAY"].includes(calendarDay.dayType)) {
+        dayType = "HOLIDAY"
+    } else if (calendarDay.dayType === "WEEKEND" || calendarDay.isWorkingDay === false) {
+        dayType = "REST_DAY"
+    } else if (policy?.treatSundayAsRestDay && new Date(workDate).getDay() === 0) {
+        dayType = "REST_DAY"
     }
 
-    if (calendarDay && calendarDay.isWorkingDay === false) {
-        return "REST_DAY"
-    }
+    calendarCache.set(key, dayType)
 
-    if (policy?.treatSundayAsRestDay && new Date(workDate).getDay() === 0) {
-        return "REST_DAY"
-    }
-
-    return "WORKING_DAY"
+    return dayType
 }
 
 function buildEmployeeFilter(payload) {
@@ -258,6 +262,7 @@ export async function verifyAttendanceRange({ payload, user }) {
     }
 
     const policyCache = new Map()
+    const calendarCache = new Map()
     const operations = []
     const summary = {
         employeeCount: employees.length,
@@ -312,6 +317,8 @@ export async function verifyAttendanceRange({ payload, user }) {
                 workDate,
                 employee,
                 policy,
+                user,
+                calendarCache,
             })
             const employeeScans = (scansByEmployee.get(employee.employeeCode) || []).filter(
                 (scan) => scan.scannedAt >= dayStart && scan.scannedAt <= dayEnd,
@@ -407,6 +414,8 @@ export async function verifyAttendanceRange({ payload, user }) {
             ordered: false,
         })
     }
+
+    invalidateAttendanceCaches()
 
     return summary
 }

@@ -58,6 +58,7 @@ export default {
         employeeMovements: "ចលនាបុគ្គលិក",
         reports: "របាយការណ៍",
         hrManagementDashboard: "ផ្ទាំងគ្រប់គ្រង HR",
+        attendanceDashboard: "ផ្ទាំងសង្ខេបវត្តមាន",
     },
 
     attendance: {
@@ -130,6 +131,56 @@ export default {
             review: "ត្រូវពិនិត្យ",
             skipped: "បានរំលង",
         },
+        attendanceDashboard: {
+            eyebrow: "វិភាគវត្តមាន",
+            title: "ផ្ទាំងសង្ខេបវត្តមាន",
+            description:
+                "វិភាគវត្តមានប្រចាំថ្ងៃតាមបុគ្គលិក នាយកដ្ឋាន Line វេន និងស្ថានភាពត្រួតពិនិត្យ។ ប្រើ Attendance Records ដែលបាន verify និង Internal Calendar ជា source of truth។",
+            loadFailed: "មិនអាចទាញយកផ្ទាំងសង្ខេបវត្តមានបានទេ",
+            lookupLoadFailed: "មិនអាចទាញយក filter បានទេ",
+            filters: {
+                search: "ស្វែងរក Employee ID ឈ្មោះ លេខទូរស័ព្ទ...",
+                dateFrom: "ចាប់ពីថ្ងៃ",
+                dateTo: "ដល់ថ្ងៃ",
+                allCompanies: "ក្រុមហ៊ុនទាំងអស់",
+                allBranches: "សាខាទាំងអស់",
+                allDepartments: "នាយកដ្ឋានទាំងអស់",
+                allPositions: "តួនាទីទាំងអស់",
+                allLines: "Line ទាំងអស់",
+                allShifts: "វេនទាំងអស់",
+                allEmployeeTypes: "ប្រភេទបុគ្គលិកទាំងអស់",
+            },
+            cards: {
+                expectedEmployees: "បុគ្គលិករំពឹងទុក",
+                processedRecords: "Records បានដំណើរការ",
+                present: "មានវត្តមាន",
+                absent: "អវត្តមាន",
+                late: "មកយឺត",
+                earlyLeave: "ចេញមុន",
+                needsReview: "ត្រូវពិនិត្យ",
+                holiday: "ថ្ងៃឈប់សម្រាក",
+                missing: "ខ្វះ Scan",
+            },
+            sections: {
+                statusBreakdown: "បែងចែកតាមស្ថានភាព",
+                dailyTrend: "និន្នាការប្រចាំថ្ងៃ",
+                departmentSummary: "សង្ខេបតាមនាយកដ្ឋាន",
+                lineSummary: "សង្ខេបតាម Line",
+                shiftSummary: "សង្ខេបតាមវេន",
+                needsReview: "Records ត្រូវពិនិត្យ",
+                topLateEmployees: "បុគ្គលិកមកយឺតច្រើន",
+                minutesSummary: "សង្ខេបនាទី",
+            },
+            fields: {
+                lateDays: "ថ្ងៃមកយឺត",
+                totalLate: "យឺតសរុប",
+                maxLate: "យឺតខ្ពស់បំផុត",
+                totalWorked: "ធ្វើការសរុប",
+                totalEarlyLeave: "ចេញមុនសរុប",
+                presentRate: "ភាគរយមានវត្តមាន",
+            },
+        },
+
 },
 
     hrDashboard: {
