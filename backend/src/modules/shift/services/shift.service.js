@@ -104,6 +104,12 @@ function calculateShiftTiming(payload) {
     }
 }
 
+function hasGlobalScope(user) {
+    return (user?.roleAssignments || []).some(
+        (assignment) => assignment.roleScope === "GLOBAL",
+    )
+}
+
 function getUserCompanyIds(user) {
     return [
         ...new Set(
@@ -115,7 +121,7 @@ function getUserCompanyIds(user) {
 }
 
 function getCompanyScopeFilter(user) {
-    if (user?.isRootAdmin) {
+    if (user?.isRootAdmin || hasGlobalScope(user)) {
         return {}
     }
 
@@ -133,7 +139,7 @@ function getCompanyScopeFilter(user) {
 }
 
 function getBranchScopeFilter(user) {
-    if (user?.isRootAdmin) {
+    if (user?.isRootAdmin || hasGlobalScope(user)) {
         return {}
     }
 
@@ -176,7 +182,7 @@ function getBranchScopeFilter(user) {
 }
 
 function getShiftScopeFilter(user) {
-    if (user?.isRootAdmin) {
+    if (user?.isRootAdmin || hasGlobalScope(user)) {
         return {}
     }
 
@@ -500,6 +506,75 @@ export async function listShifts({ query, user }) {
     return setCache(cacheKey, result, 30_000)
 }
 
+export async function lookupShifts({ query, user }) {
+    const normalizedQuery = {
+        ...query,
+        page: 1,
+        limit: Math.min(Number(query.limit || 100), 100),
+        status: "ACTIVE",
+    }
+
+    const cacheKey = `shift:lookup:${user?.accountId || "anonymous"}:${JSON.stringify(normalizedQuery)}`
+    const cachedResult = getCache(cacheKey)
+
+    if (cachedResult) {
+        return cachedResult
+    }
+
+    const filter = {
+        ...getShiftScopeFilter(user),
+        ...buildShiftSearchFilter(normalizedQuery.search),
+        status: "ACTIVE",
+    }
+
+    if (normalizedQuery.companyId) {
+        await ensureCompanyExists({
+            companyId: normalizedQuery.companyId,
+            user,
+        })
+
+        filter.companyId = normalizedQuery.companyId
+    }
+
+    if (normalizedQuery.branchId) {
+        if (normalizedQuery.companyId) {
+            await ensureBranchExists({
+                companyId: normalizedQuery.companyId,
+                branchId: normalizedQuery.branchId,
+                user,
+            })
+        }
+
+        filter.branchId = normalizedQuery.branchId
+    }
+
+    const shifts = await Shift.find(filter)
+        .select(
+            "companyId branchId code name shortName startTime endTime workingMinutes isOvernight status",
+        )
+        .sort({ name: 1, code: 1 })
+        .limit(normalizedQuery.limit)
+        .lean()
+
+    const result = {
+        items: shifts.map((shift) => ({
+            id: shift._id.toString(),
+            companyId: shift.companyId?.toString?.() || shift.companyId,
+            branchId: shift.branchId?.toString?.() || shift.branchId,
+            code: shift.code,
+            name: shift.name,
+            shortName: shift.shortName || "",
+            startTime: shift.startTime,
+            endTime: shift.endTime,
+            workingMinutes: Number(shift.workingMinutes || 0),
+            isOvernight: Boolean(shift.isOvernight),
+            status: shift.status,
+        })),
+    }
+
+    return setCache(cacheKey, result, 60_000)
+}
+
 export async function getShiftById({ shiftId, user }) {
     ensureValidObjectId(
         shiftId,
@@ -570,6 +645,7 @@ export async function createShift({ payload, user }) {
         })
 
         clearCacheByPrefix("shift:list:")
+        clearCacheByPrefix("shift:lookup:")
 
         return getShiftById({
             shiftId: shift._id,
@@ -635,6 +711,7 @@ export async function updateShift({ shiftId, payload, user }) {
         ).lean()
 
         clearCacheByPrefix("shift:list:")
+        clearCacheByPrefix("shift:lookup:")
 
         return getShiftById({
             shiftId: updatedShift._id,
@@ -681,6 +758,7 @@ export async function archiveShift({ shiftId, user }) {
     ).lean()
 
     clearCacheByPrefix("shift:list:")
+    clearCacheByPrefix("shift:lookup:")
 
     return getShiftById({
         shiftId: archivedShift._id,

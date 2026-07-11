@@ -19,6 +19,7 @@ import {
     createShift,
     getShiftById,
     listShifts,
+    lookupShifts,
     updateShift,
 } from "../services/shift.service.js"
 
@@ -40,6 +41,7 @@ const upload = multer({
 })
 
 const SHIFT_PERMISSIONS = Object.freeze({
+    LOOKUP: "ORGANIZATION.SHIFT.LOOKUP",
     VIEW: "ORGANIZATION.SHIFT.VIEW",
     CREATE: "ORGANIZATION.SHIFT.CREATE",
     UPDATE: "ORGANIZATION.SHIFT.UPDATE",
@@ -64,6 +66,28 @@ function parseRequest(schema, value) {
 }
 
 router.use(requireAuthentication)
+
+router.get(
+    "/lookup",
+    requirePermission(SHIFT_PERMISSIONS.LOOKUP),
+    async (req, res, next) => {
+        try {
+            const query = parseRequest(shiftListQuerySchema, req.query)
+
+            const result = await lookupShifts({
+                query,
+                user: req.auth.user,
+            })
+
+            res.status(200).json({
+                success: true,
+                data: result,
+            })
+        } catch (error) {
+            next(error)
+        }
+    },
+)
 
 router.get(
     "/",

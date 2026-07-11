@@ -518,6 +518,43 @@ function buildLocationFilter({ entity, query }) {
     return filter
 }
 
+export async function lookupLocations({ entity, query }) {
+    const config = getConfig(entity)
+    const normalizedQuery = {
+        ...query,
+        page: 1,
+        limit: Math.min(query.limit || 100, 100),
+        status: "ACTIVE",
+    }
+    const filter = buildLocationFilter({
+        entity,
+        query: normalizedQuery,
+    })
+    const findQuery = config.model
+        .find(filter)
+        .sort(config.sort)
+        .limit(normalizedQuery.limit)
+
+    const items = await addPopulate(findQuery, config.populate).lean()
+
+    return {
+        items: items.map((item) => {
+            const location = serializeLocation(entity, item)
+
+            return {
+                id: location.id,
+                code: location.code,
+                name: location.name,
+                shortName: location.shortName || "",
+                countryId: location.countryId || null,
+                provinceId: location.provinceId || null,
+                districtId: location.districtId || null,
+                communeId: location.communeId || null,
+            }
+        }),
+    }
+}
+
 export async function listLocations({ entity, query }) {
     const config = getConfig(entity)
     const cacheKey = `${config.cachePrefix}${JSON.stringify(query)}`

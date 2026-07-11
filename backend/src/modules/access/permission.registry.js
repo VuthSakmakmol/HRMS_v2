@@ -27,14 +27,12 @@ export const PERMISSION_REGISTRY = Object.freeze([
         "CREATE",
         "UPDATE",
         "ARCHIVE",
-        "LOOKUP",
     ]),
     ...permissionGroup("ORGANIZATION.BRANCH", [
         "VIEW",
         "CREATE",
         "UPDATE",
         "ARCHIVE",
-        "LOOKUP",
     ]),
     
     ...permissionGroup("ORGANIZATION.DEPARTMENT", [
@@ -44,7 +42,6 @@ export const PERMISSION_REGISTRY = Object.freeze([
         "ARCHIVE",
         "IMPORT",
         "EXPORT",
-        "LOOKUP",
     ]),
     
     ...permissionGroup("ORGANIZATION.POSITION", [
@@ -54,10 +51,10 @@ export const PERMISSION_REGISTRY = Object.freeze([
         "ARCHIVE",
         "IMPORT",
         "EXPORT",
-        "LOOKUP",
     ]),
 
     ...permissionGroup("ORGANIZATION.SHIFT", [
+        "LOOKUP",
         "VIEW",
         "CREATE",
         "UPDATE",
@@ -85,6 +82,7 @@ export const PERMISSION_REGISTRY = Object.freeze([
     ]),
 
         ...permissionGroup("ORGANIZATION.LOCATION", [
+        "LOOKUP",
         "VIEW",
         "CREATE",
         "UPDATE",

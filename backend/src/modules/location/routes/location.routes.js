@@ -18,6 +18,7 @@ import {
     createLocation,
     getLocationById,
     listLocations,
+    lookupLocations,
     updateLocation,
 } from "../services/location.service.js"
 import {
@@ -40,6 +41,7 @@ const upload = multer({
 })
 
 const LOCATION_PERMISSIONS = Object.freeze({
+    LOOKUP: "ORGANIZATION.LOCATION.LOOKUP",
     VIEW: "ORGANIZATION.LOCATION.VIEW",
     CREATE: "ORGANIZATION.LOCATION.CREATE",
     UPDATE: "ORGANIZATION.LOCATION.UPDATE",
@@ -64,6 +66,32 @@ function parseRequest(schema, value) {
 }
 
 router.use(requireAuthentication)
+
+router.get(
+    "/:entity/lookup",
+    requirePermission(LOCATION_PERMISSIONS.LOOKUP),
+    async (req, res, next) => {
+        try {
+            const { entity } = parseRequest(
+                locationEntityParamSchema,
+                req.params,
+            )
+            const query = parseRequest(locationListQuerySchema, req.query)
+            const result = await lookupLocations({
+                entity,
+                query,
+                user: req.auth.user,
+            })
+
+            res.status(200).json({
+                success: true,
+                data: result,
+            })
+        } catch (error) {
+            next(error)
+        }
+    },
+)
 
 router.get(
     "/:entity",
