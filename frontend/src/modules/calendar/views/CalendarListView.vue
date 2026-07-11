@@ -17,8 +17,8 @@ import Textarea from "primevue/textarea"
 
 import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
-import { fetchBranches } from "@/modules/organization/services/branch.api.js"
-import { fetchCompanies } from "@/modules/organization/services/company.api.js"
+import { fetchBranchesLookup } from "@/modules/organization/services/branch.api.js"
+import { fetchCompaniesLookup } from "@/modules/organization/services/company.api.js"
 
 import InternalCalendarDatePicker from "../components/InternalCalendarDatePicker.vue"
 import { useCalendarStore } from "../stores/calendar.store.js"
@@ -238,8 +238,8 @@ function formatDateTime(value) {
 async function loadCompanies() {
     companyLoading.value = true
     try {
-        const result = await fetchCompanies({ page: 1, limit: 100, status: "ACTIVE", search: "" })
-        companies.value = result.items || []
+        const result = await fetchCompaniesLookup({ page: 1, limit: 100, status: "ACTIVE", search: "" })
+        companies.value = result || []
     } finally {
         companyLoading.value = false
     }
@@ -248,8 +248,8 @@ async function loadCompanies() {
 async function loadBranches(companyId = "") {
     branchLoading.value = true
     try {
-        const result = await fetchBranches({ page: 1, limit: 100, status: "ACTIVE", companyId: companyId || undefined, search: "" })
-        branches.value = result.items || []
+        const result = await fetchBranchesLookup({ page: 1, limit: 100, status: "ACTIVE", companyId: companyId || undefined, search: "" })
+        branches.value = result || []
     } finally {
         branchLoading.value = false
     }

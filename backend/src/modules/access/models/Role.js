@@ -48,7 +48,7 @@ const roleSchema = new Schema(
 
         scope: {
             type: String,
-            enum: ["GLOBAL", "COMPANY"],
+            enum: ["GLOBAL", "COMPANY", "BRANCH"],
             default: "COMPANY",
             required: true,
         },
@@ -57,6 +57,16 @@ const roleSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: "Company",
             default: null,
+        },
+
+        branchIds: {
+            type: [
+                {
+                    type: Schema.Types.ObjectId,
+                    ref: "Branch",
+                },
+            ],
+            default: [],
         },
 
         permissionIds: {

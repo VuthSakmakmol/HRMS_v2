@@ -9,6 +9,7 @@ import Dialog from "primevue/dialog"
 import InputIcon from "primevue/inputicon"
 import IconField from "primevue/iconfield"
 import InputText from "primevue/inputtext"
+import MultiSelect from "primevue/multiselect"
 import Select from "primevue/select"
 import Tag from "primevue/tag"
 import Textarea from "primevue/textarea"
@@ -42,6 +43,7 @@ const loadingPermissions = ref(false)
 const items = ref([])
 const permissions = ref([])
 const companies = ref([])
+const branches = ref([])
 const total = ref(0)
 const page = ref(1)
 const limit = ref(20)
@@ -59,6 +61,7 @@ const form = reactive({
     description: "",
     scope: "COMPANY",
     companyId: null,
+    branchIds: [],
     permissionIds: [],
     isActive: true,
 })
@@ -72,6 +75,7 @@ const statusOptions = Object.freeze([
 const scopeOptions = Object.freeze([
     { label: "Global", value: "GLOBAL" },
     { label: "Company", value: "COMPANY" },
+    { label: "Branch", value: "BRANCH" },
 ])
 
 const companyOptions = computed(() => [
@@ -81,6 +85,23 @@ const companyOptions = computed(() => [
         value: company.id,
     })),
 ])
+
+
+const branchOptions = computed(() => {
+    if (!form.companyId) {
+        return []
+    }
+
+    return branches.value
+        .filter(
+            (branch) =>
+                normalizeObjectId(branch.companyId) === form.companyId,
+        )
+        .map((branch) => ({
+            label: [branch.code, branch.name].filter(Boolean).join(" - "),
+            value: branch.id,
+        }))
+})
 
 const filteredPermissions = computed(() => {
     const query = permissionSearch.value.trim().toLowerCase()
@@ -199,6 +220,7 @@ function resetForm() {
         description: "",
         scope: "COMPANY",
         companyId: null,
+        branchIds: [],
         permissionIds: [],
         isActive: true,
     })
@@ -241,6 +263,7 @@ async function loadLookups() {
 
         permissions.value = permissionResponse.items || []
         companies.value = scopeResponse.companies || []
+        branches.value = scopeResponse.branches || []
     } catch (error) {
         showError("Unable to load role options", error)
     } finally {
@@ -282,7 +305,8 @@ function openEdit(role) {
         name: role.name || "",
         description: role.description || "",
         scope: role.scope || "COMPANY",
-        companyId: role.companyId?.id || role.companyId || null,
+        companyId: normalizeObjectId(role.companyId),
+        branchIds: normalizePermissionIds(role.branchIds),
         permissionIds: normalizePermissionIds(role.permissionIds),
         isActive: Boolean(role.isActive),
     })
@@ -310,10 +334,19 @@ function validateForm() {
         return false
     }
 
-    if (form.scope === "COMPANY" && !form.companyId) {
+    if (["COMPANY", "BRANCH"].includes(form.scope) && !form.companyId) {
         toast.add({
             severity: "warn",
-            summary: "Company is required for company-scoped roles",
+            summary: "Company is required for this role scope",
+            life: 3500,
+        })
+        return false
+    }
+
+    if (form.scope === "BRANCH" && form.branchIds.length === 0) {
+        toast.add({
+            severity: "warn",
+            summary: "Select at least one branch",
             life: 3500,
         })
         return false
@@ -338,6 +371,10 @@ async function saveRole() {
             description: form.description.trim(),
             scope: form.scope,
             companyId: form.scope === "GLOBAL" ? null : form.companyId,
+            branchIds:
+                form.scope === "BRANCH"
+                    ? normalizePermissionIds(form.branchIds)
+                    : [],
             permissionIds: normalizePermissionIds(form.permissionIds),
             isActive: form.isActive,
         }
@@ -436,7 +473,17 @@ function toggleAllVisiblePermissions() {
 function onScopeChange() {
     if (form.scope === "GLOBAL") {
         form.companyId = null
+        form.branchIds = []
+        return
     }
+
+    if (form.scope === "COMPANY") {
+        form.branchIds = []
+    }
+}
+
+function onCompanyChange() {
+    form.branchIds = []
 }
 
 function onPage(event) {
@@ -583,8 +630,11 @@ onMounted(async () => {
                                 :value="data.scope"
                                 :severity="data.scope === 'GLOBAL' ? 'info' : 'secondary'"
                             />
-                            <small v-if="data.scope === 'COMPANY'">
-                                {{ data.companyId?.displayName || data.companyId?.code || "All companies" }}
+                            <small v-if="data.scope !== 'GLOBAL'">
+                                {{ data.companyId?.displayName || data.companyId?.code || "No company" }}
+                            </small>
+                            <small v-if="data.scope === 'BRANCH'">
+                                {{ data.branchIds?.length || 0 }} branch(es)
                             </small>
                         </div>
                     </template>
@@ -673,7 +723,7 @@ onMounted(async () => {
                         </label>
 
                         <label
-                            v-if="form.scope === 'COMPANY'"
+                            v-if="form.scope !== 'GLOBAL'"
                             class="role-field"
                         >
                             <span>Company <b>*</b></span>
@@ -685,6 +735,24 @@ onMounted(async () => {
                                 filter
                                 :disabled="editing?.isSystem"
                                 placeholder="Select company"
+                                @change="onCompanyChange"
+                            />
+                        </label>
+
+                        <label
+                            v-if="form.scope === 'BRANCH'"
+                            class="role-field role-field--wide"
+                        >
+                            <span>Branches <b>*</b></span>
+                            <MultiSelect
+                                v-model="form.branchIds"
+                                :options="branchOptions"
+                                option-label="label"
+                                option-value="value"
+                                filter
+                                display="chip"
+                                :disabled="editing?.isSystem || !form.companyId"
+                                placeholder="Select one or more branches"
                             />
                         </label>
 

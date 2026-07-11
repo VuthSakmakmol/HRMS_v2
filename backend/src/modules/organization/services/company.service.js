@@ -48,6 +48,14 @@ function getCompanyScopeFilter(user) {
         return {}
     }
 
+    const hasGlobalScope = (user?.roleAssignments || []).some(
+        (assignment) => assignment.roleScope === "GLOBAL",
+    )
+
+    if (hasGlobalScope) {
+        return {}
+    }
+
     const companyIds = getUserCompanyIds(user)
 
     if (companyIds.length === 0) {
@@ -173,6 +181,26 @@ export async function listCompanies({ query, user }) {
             totalPages: Math.max(1, Math.ceil(total / limit)),
         },
     }
+}
+
+export async function lookupCompanies({ query, user }) {
+    const result = await listCompanies({
+        query: {
+            ...query,
+            page: 1,
+            limit: Math.min(query.limit || 100, 100),
+            status: "ACTIVE",
+        },
+        user,
+    })
+
+    return result.items.map((company) => ({
+        id: company.id,
+        code: company.code,
+        name: company.displayName,
+        displayName: company.displayName,
+        status: company.status,
+    }))
 }
 
 export async function getCompanyById({ companyId, user }) {

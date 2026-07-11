@@ -14,8 +14,8 @@ import InputText from "primevue/inputtext"
 import Select from "primevue/select"
 import Tag from "primevue/tag"
 
-import { fetchBranches } from "@/modules/organization/services/branch.api.js"
-import { fetchCompanies } from "@/modules/organization/services/company.api.js"
+import { fetchBranchesLookup } from "@/modules/organization/services/branch.api.js"
+import { fetchCompaniesLookup } from "@/modules/organization/services/company.api.js"
 import { useAuthStore } from "@/app/stores/auth.store.js"
 import {
     createAttendancePolicy,
@@ -113,11 +113,11 @@ function openEdit(item) {
 
 async function loadLookups() {
     const [companyResult, branchResult] = await Promise.all([
-        fetchCompanies({ page: 1, limit: 200, status: "ACTIVE" }),
-        fetchBranches({ page: 1, limit: 500, status: "ACTIVE" }),
+        fetchCompaniesLookup({ page: 1, limit: 100, status: "ACTIVE" }),
+        fetchBranchesLookup({ page: 1, limit: 100, status: "ACTIVE" }),
     ])
-    companies.value = companyResult.items || []
-    branches.value = branchResult.items || []
+    companies.value = companyResult || []
+    branches.value = branchResult || []
 }
 
 async function loadItems() {

@@ -84,17 +84,48 @@ export async function buildAuthUser(account) {
                     return null
                 }
 
+                const roleCompanyId = role.companyId
+                    ? role.companyId.toString()
+                    : null
+                const assignmentCompanyId = assignment.companyId
+                    ? assignment.companyId.toString()
+                    : null
+                const roleBranchIds = (role.branchIds || []).map((branchId) =>
+                    branchId.toString(),
+                )
+                const assignmentBranchIds = (assignment.branchIds || []).map(
+                    (branchId) => branchId.toString(),
+                )
+
+                let companyId = assignmentCompanyId || roleCompanyId
+                let allBranches = Boolean(assignment.allBranches)
+                let branchIds = assignmentBranchIds
+
+                if (role.scope === "GLOBAL") {
+                    companyId = null
+                    allBranches = true
+                    branchIds = []
+                } else if (role.scope === "BRANCH") {
+                    const allowedBranchIds = new Set(roleBranchIds)
+                    const requestedBranchIds = assignmentBranchIds.filter(
+                        (branchId) => allowedBranchIds.has(branchId),
+                    )
+
+                    allBranches = false
+                    branchIds =
+                        requestedBranchIds.length > 0
+                            ? requestedBranchIds
+                            : roleBranchIds
+                }
+
                 return {
                     roleId: assignment.roleId.toString(),
                     roleCode: role.code,
                     roleName: role.name,
-                    companyId: assignment.companyId
-                        ? assignment.companyId.toString()
-                        : null,
-                    allBranches: Boolean(assignment.allBranches),
-                    branchIds: (assignment.branchIds || []).map((branchId) =>
-                        branchId.toString(),
-                    ),
+                    roleScope: role.scope,
+                    companyId,
+                    allBranches,
+                    branchIds,
                 }
             })
             .filter(Boolean),

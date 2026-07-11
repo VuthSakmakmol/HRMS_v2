@@ -64,7 +64,7 @@ router.get(
 );
 router.get(
   "/lookups/scopes",
-  requirePermission("ACCESS.ACCOUNT.VIEW"),
+  requirePermission("ACCESS.ROLE.VIEW"),
   async (req, res, next) => {
     try {
       res.json({ success: true, data: await listScopeLookup() });

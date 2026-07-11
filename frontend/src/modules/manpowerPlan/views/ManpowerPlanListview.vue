@@ -17,10 +17,10 @@ import Textarea from "primevue/textarea"
 import ProgressBar from "primevue/progressbar"
 
 import { useAuthStore } from "@/app/stores/auth.store.js"
-import { fetchBranches } from "@/modules/organization/services/branch.api.js"
-import { fetchCompanies } from "@/modules/organization/services/company.api.js"
-import { fetchDepartments } from "@/modules/organization/services/department.api.js"
-import { fetchPositions } from "@/modules/organization/services/position.api.js"
+import { fetchBranchesLookup } from "@/modules/organization/services/branch.api.js"
+import { fetchCompaniesLookup } from "@/modules/organization/services/company.api.js"
+import { fetchDepartmentsLookup } from "@/modules/organization/services/department.api.js"
+import { fetchPositionsLookup } from "@/modules/organization/services/position.api.js"
 import { fetchLines } from "@/modules/line/services/line.api.js"
 import { fetchShifts } from "@/modules/shift/services/shift.api.js"
 import { fetchEmployeeTypes } from "@/modules/employeeType/services/employeeType.api.js"
@@ -180,18 +180,18 @@ async function loadOptions() {
     loadingOptions.value = true
     try {
         const [companyResult, branchResult, departmentResult, positionResult, lineResult, shiftResult, employeeTypeResult] = await Promise.all([
-            fetchCompanies({ page: 1, limit: 100, status: "ACTIVE" }),
-            fetchBranches({ page: 1, limit: 100, status: "ACTIVE" }),
-            fetchDepartments({ page: 1, limit: 100, status: "ACTIVE" }),
-            fetchPositions({ page: 1, limit: 100, status: "ACTIVE" }),
+            fetchCompaniesLookup({ page: 1, limit: 100, status: "ACTIVE" }),
+            fetchBranchesLookup({ page: 1, limit: 100, status: "ACTIVE" }),
+            fetchDepartmentsLookup({ page: 1, limit: 100, status: "ACTIVE" }),
+            fetchPositionsLookup({ page: 1, limit: 100, status: "ACTIVE" }),
             fetchLines({ page: 1, limit: 100, status: "ACTIVE" }),
             fetchShifts({ page: 1, limit: 100, status: "ACTIVE" }),
             fetchEmployeeTypes({ page: 1, limit: 100, status: "ACTIVE" }),
         ])
-        companies.value = companyResult.items || []
-        branches.value = branchResult.items || []
-        departments.value = departmentResult.items || []
-        positions.value = positionResult.items || []
+        companies.value = companyResult || []
+        branches.value = branchResult || []
+        departments.value = departmentResult || []
+        positions.value = positionResult || []
         lines.value = lineResult.items || []
         shifts.value = shiftResult.items || []
         employeeTypes.value = employeeTypeResult.items || []

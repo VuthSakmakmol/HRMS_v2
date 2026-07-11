@@ -18,10 +18,10 @@ import Textarea from "primevue/textarea"
 import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
 
-import { fetchBranches } from "@/modules/organization/services/branch.api.js"
-import { fetchCompanies } from "@/modules/organization/services/company.api.js"
-import { fetchDepartments } from "@/modules/organization/services/department.api.js"
-import { fetchPositions } from "@/modules/organization/services/position.api.js"
+import { fetchBranchesLookup } from "@/modules/organization/services/branch.api.js"
+import { fetchCompaniesLookup } from "@/modules/organization/services/company.api.js"
+import { fetchDepartmentsLookup } from "@/modules/organization/services/department.api.js"
+import { fetchPositionsLookup } from "@/modules/organization/services/position.api.js"
 
 import { useLineStore } from "../stores/line.store.js"
 
@@ -464,14 +464,14 @@ async function loadCompanies() {
     companyLoading.value = true
 
     try {
-        const result = await fetchCompanies({
+        const result = await fetchCompaniesLookup({
             page: 1,
             limit: 100,
             status: "ACTIVE",
             search: "",
         })
 
-        companies.value = result.items || []
+        companies.value = result || []
     } catch (error) {
         toast.add({
             severity: "error",
@@ -488,7 +488,7 @@ async function loadBranches(companyId = "") {
     branchLoading.value = true
 
     try {
-        const result = await fetchBranches({
+        const result = await fetchBranchesLookup({
             page: 1,
             limit: 100,
             status: "ACTIVE",
@@ -496,7 +496,7 @@ async function loadBranches(companyId = "") {
             search: "",
         })
 
-        branches.value = result.items || []
+        branches.value = result || []
     } catch (error) {
         toast.add({
             severity: "error",
@@ -513,7 +513,7 @@ async function loadDepartments(companyId = "", branchId = "") {
     departmentLoading.value = true
 
     try {
-        const result = await fetchDepartments({
+        const result = await fetchDepartmentsLookup({
             page: 1,
             limit: 100,
             status: "ACTIVE",
@@ -522,7 +522,7 @@ async function loadDepartments(companyId = "", branchId = "") {
             search: "",
         })
 
-        departments.value = result.items || []
+        departments.value = result || []
     } catch (error) {
         toast.add({
             severity: "error",
@@ -539,7 +539,7 @@ async function loadPositions(companyId = "", branchId = "", departmentId = "") {
     positionLoading.value = true
 
     try {
-        const result = await fetchPositions({
+        const result = await fetchPositionsLookup({
             page: 1,
             limit: 100,
             status: "ACTIVE",
@@ -549,7 +549,7 @@ async function loadPositions(companyId = "", branchId = "", departmentId = "") {
             search: "",
         })
 
-        positions.value = result.items || []
+        positions.value = result || []
     } catch (error) {
         toast.add({
             severity: "error",

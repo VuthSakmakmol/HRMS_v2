@@ -10,6 +10,14 @@ export async function fetchCompanies(params = {}) {
     return response.data.data
 }
 
+export async function fetchCompaniesLookup(params = {}) {
+    const response = await apiClient.get(`${COMPANY_ENDPOINT}/lookup`, {
+        params,
+    })
+
+    return response.data.data.items || []
+}
+
 export async function createCompany(payload) {
     const response = await apiClient.post(COMPANY_ENDPOINT, payload)
 

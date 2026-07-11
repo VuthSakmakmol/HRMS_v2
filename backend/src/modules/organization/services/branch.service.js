@@ -28,8 +28,15 @@ function getUserCompanyIds(user) {
     ]
 }
 
+function hasGlobalScope(user) {
+    return (user?.roleAssignments || []).some(
+        (assignment) => assignment.roleScope === "GLOBAL",
+    )
+}
+
+
 function getCompanyScopeFilter(user) {
-    if (user?.isRootAdmin) {
+    if (user?.isRootAdmin || hasGlobalScope(user)) {
         return {}
     }
 
@@ -47,7 +54,7 @@ function getCompanyScopeFilter(user) {
 }
 
 function getBranchScopeFilter(user) {
-    if (user?.isRootAdmin) {
+    if (user?.isRootAdmin || hasGlobalScope(user)) {
         return {}
     }
 
@@ -315,6 +322,27 @@ export async function listBranches({ query, user }) {
             totalPages: Math.max(1, Math.ceil(total / limit)),
         },
     }
+}
+
+export async function lookupBranches({ query, user }) {
+    const result = await listBranches({
+        query: {
+            ...query,
+            page: 1,
+            limit: Math.min(query.limit || 100, 100),
+            status: "ACTIVE",
+        },
+        user,
+    })
+
+    return result.items.map((branch) => ({
+        id: branch.id,
+        companyId: branch.companyId,
+        code: branch.code,
+        name: branch.name,
+        shortName: branch.shortName || "",
+        status: branch.status,
+    }))
 }
 
 export async function getBranchById({ branchId, user }) {

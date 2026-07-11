@@ -34,8 +34,15 @@ function getUserCompanyIds(user) {
     ]
 }
 
+function hasGlobalScope(user) {
+    return (user?.roleAssignments || []).some(
+        (assignment) => assignment.roleScope === "GLOBAL",
+    )
+}
+
+
 function getCompanyScopeFilter(user) {
-    if (user?.isRootAdmin) {
+    if (user?.isRootAdmin || hasGlobalScope(user)) {
         return {}
     }
 
@@ -53,7 +60,7 @@ function getCompanyScopeFilter(user) {
 }
 
 function getBranchScopeFilter(user) {
-    if (user?.isRootAdmin) {
+    if (user?.isRootAdmin || hasGlobalScope(user)) {
         return {}
     }
 
@@ -96,7 +103,7 @@ function getBranchScopeFilter(user) {
 }
 
 function getDepartmentScopeFilter(user) {
-    if (user?.isRootAdmin) {
+    if (user?.isRootAdmin || hasGlobalScope(user)) {
         return {}
     }
 
@@ -509,6 +516,29 @@ export async function listDepartments({ query, user }) {
     }
 
     return setCache(cacheKey, result, 30_000)
+}
+
+export async function lookupDepartments({ query, user }) {
+    const result = await listDepartments({
+        query: {
+            ...query,
+            page: 1,
+            limit: Math.min(query.limit || 100, 100),
+            status: "ACTIVE",
+        },
+        user,
+    })
+
+    return result.items.map((department) => ({
+        id: department.id,
+        companyId: department.companyId,
+        branchId: department.branchId,
+        parentDepartmentId: department.parentDepartmentId || null,
+        code: department.code,
+        name: department.name,
+        shortName: department.shortName || "",
+        status: department.status,
+    }))
 }
 
 export async function getDepartmentById({ departmentId, user }) {

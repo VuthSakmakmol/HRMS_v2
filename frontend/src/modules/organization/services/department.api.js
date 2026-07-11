@@ -22,6 +22,14 @@ export async function fetchDepartments(params = {}) {
     return response.data.data
 }
 
+export async function fetchDepartmentsLookup(params = {}) {
+    const response = await apiClient.get(`${DEPARTMENT_ENDPOINT}/lookup`, {
+        params,
+    })
+
+    return response.data.data.items || []
+}
+
 export async function createDepartment(payload) {
     const response = await apiClient.post(DEPARTMENT_ENDPOINT, payload)
 

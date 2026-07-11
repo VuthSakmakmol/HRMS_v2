@@ -21,10 +21,10 @@ import { useModulePermissions } from "@/shared/auth/useModulePermissions.js"
 import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
 import AppModuleToolbar from "@/shared/components/page/AppModuleToolbar.vue"
 import AppTableActions from "@/shared/components/table/AppTableActions.vue"
-import { fetchBranches } from "../services/branch.api.js"
-import { fetchCompanies } from "../services/company.api.js"
-import { fetchDepartments } from "../services/department.api.js"
-import { fetchPositions } from "../services/position.api.js"
+import { fetchBranchesLookup } from "../services/branch.api.js"
+import { fetchCompaniesLookup } from "../services/company.api.js"
+import { fetchDepartmentsLookup } from "../services/department.api.js"
+import { fetchPositionsLookup } from "../services/position.api.js"
 import { usePositionStore } from "../stores/position.store.js"
 
 const { t, te } = useI18n()
@@ -414,14 +414,14 @@ async function loadCompanies() {
     companyLoading.value = true
 
     try {
-        const result = await fetchCompanies({
+        const result = await fetchCompaniesLookup({
             page: 1,
             limit: 100,
             status: "ACTIVE",
             search: "",
         })
 
-        companies.value = result.items || []
+        companies.value = result || []
     } catch (error) {
         toast.add({
             severity: "error",
@@ -438,7 +438,7 @@ async function loadBranches(companyId = "") {
     branchLoading.value = true
 
     try {
-        const result = await fetchBranches({
+        const result = await fetchBranchesLookup({
             page: 1,
             limit: 100,
             status: "ACTIVE",
@@ -446,7 +446,7 @@ async function loadBranches(companyId = "") {
             search: "",
         })
 
-        branches.value = result.items || []
+        branches.value = result || []
     } catch (error) {
         toast.add({
             severity: "error",
@@ -463,7 +463,7 @@ async function loadDepartments(companyId = "", branchId = "") {
     departmentLoading.value = true
 
     try {
-        const result = await fetchDepartments({
+        const result = await fetchDepartmentsLookup({
             page: 1,
             limit: 100,
             status: "ACTIVE",
@@ -472,7 +472,7 @@ async function loadDepartments(companyId = "", branchId = "") {
             search: "",
         })
 
-        departments.value = result.items || []
+        departments.value = result || []
     } catch (error) {
         toast.add({
             severity: "error",
@@ -494,7 +494,7 @@ async function loadReportsToPositions() {
     reportsToLoading.value = true
 
     try {
-        const result = await fetchPositions({
+        const result = await fetchPositionsLookup({
             page: 1,
             limit: 100,
             status: "ACTIVE",
@@ -503,7 +503,7 @@ async function loadReportsToPositions() {
             search: "",
         })
 
-        reportsToPositions.value = result.items || []
+        reportsToPositions.value = result || []
     } catch (error) {
         toast.add({
             severity: "error",

@@ -17,6 +17,7 @@ import {
     createDepartment,
     getDepartmentById,
     listDepartments,
+    lookupDepartments,
     updateDepartment,
 } from "../services/department.service.js"
 import {
@@ -37,6 +38,7 @@ const upload = multer({
 })
 
 const DEPARTMENT_PERMISSIONS = Object.freeze({
+    LOOKUP: "ORGANIZATION.DEPARTMENT.LOOKUP",
     VIEW: "ORGANIZATION.DEPARTMENT.VIEW",
     CREATE: "ORGANIZATION.DEPARTMENT.CREATE",
     UPDATE: "ORGANIZATION.DEPARTMENT.UPDATE",
@@ -61,6 +63,29 @@ function parseRequest(schema, value) {
 }
 
 router.use(requireAuthentication)
+
+router.get(
+    "/lookup",
+    requirePermission(DEPARTMENT_PERMISSIONS.LOOKUP),
+    async (req, res, next) => {
+        try {
+            const query = parseRequest(departmentListQuerySchema, req.query)
+            const items = await lookupDepartments({
+                query,
+                user: req.auth.user,
+            })
+
+            res.status(200).json({
+                success: true,
+                data: {
+                    items,
+                },
+            })
+        } catch (error) {
+            next(error)
+        }
+    },
+)
 
 router.get(
     "/",

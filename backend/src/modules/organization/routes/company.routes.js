@@ -16,12 +16,14 @@ import {
     createCompany,
     getCompanyById,
     listCompanies,
+    lookupCompanies,
     updateCompany,
 } from "../services/company.service.js"
 
 const router = Router()
 
 const COMPANY_PERMISSIONS = Object.freeze({
+    LOOKUP: "ORGANIZATION.COMPANY.LOOKUP",
     VIEW: "ORGANIZATION.COMPANY.VIEW",
     CREATE: "ORGANIZATION.COMPANY.CREATE",
     UPDATE: "ORGANIZATION.COMPANY.UPDATE",
@@ -44,6 +46,29 @@ function parseRequest(schema, value) {
 }
 
 router.use(requireAuthentication)
+
+router.get(
+    "/lookup",
+    requirePermission(COMPANY_PERMISSIONS.LOOKUP),
+    async (req, res, next) => {
+        try {
+            const query = parseRequest(companyListQuerySchema, req.query)
+            const items = await lookupCompanies({
+                query,
+                user: req.auth.user,
+            })
+
+            res.status(200).json({
+                success: true,
+                data: {
+                    items,
+                },
+            })
+        } catch (error) {
+            next(error)
+        }
+    },
+)
 
 router.get(
     "/",

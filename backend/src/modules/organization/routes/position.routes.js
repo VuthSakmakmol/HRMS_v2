@@ -17,6 +17,7 @@ import {
     createPosition,
     getPositionById,
     listPositions,
+    lookupPositions,
     updatePosition,
 } from "../services/position.service.js"
 import {
@@ -37,6 +38,7 @@ const upload = multer({
 })
 
 const POSITION_PERMISSIONS = Object.freeze({
+    LOOKUP: "ORGANIZATION.POSITION.LOOKUP",
     VIEW: "ORGANIZATION.POSITION.VIEW",
     CREATE: "ORGANIZATION.POSITION.CREATE",
     UPDATE: "ORGANIZATION.POSITION.UPDATE",
@@ -61,6 +63,29 @@ function parseRequest(schema, value) {
 }
 
 router.use(requireAuthentication)
+
+router.get(
+    "/lookup",
+    requirePermission(POSITION_PERMISSIONS.LOOKUP),
+    async (req, res, next) => {
+        try {
+            const query = parseRequest(positionListQuerySchema, req.query)
+            const items = await lookupPositions({
+                query,
+                user: req.auth.user,
+            })
+
+            res.status(200).json({
+                success: true,
+                data: {
+                    items,
+                },
+            })
+        } catch (error) {
+            next(error)
+        }
+    },
+)
 
 router.get(
     "/",

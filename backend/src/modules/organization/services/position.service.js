@@ -35,8 +35,15 @@ function getUserCompanyIds(user) {
     ]
 }
 
+function hasGlobalScope(user) {
+    return (user?.roleAssignments || []).some(
+        (assignment) => assignment.roleScope === "GLOBAL",
+    )
+}
+
+
 function getCompanyScopeFilter(user) {
-    if (user?.isRootAdmin) {
+    if (user?.isRootAdmin || hasGlobalScope(user)) {
         return {}
     }
 
@@ -54,7 +61,7 @@ function getCompanyScopeFilter(user) {
 }
 
 function getBranchScopeFilter(user) {
-    if (user?.isRootAdmin) {
+    if (user?.isRootAdmin || hasGlobalScope(user)) {
         return {}
     }
 
@@ -97,7 +104,7 @@ function getBranchScopeFilter(user) {
 }
 
 function getPositionScopeFilter(user) {
-    if (user?.isRootAdmin) {
+    if (user?.isRootAdmin || hasGlobalScope(user)) {
         return {}
     }
 
@@ -588,6 +595,33 @@ export async function listPositions({ query, user }) {
     }
 
     return setCache(cacheKey, result, 30_000)
+}
+
+export async function lookupPositions({ query, user }) {
+    const result = await listPositions({
+        query: {
+            ...query,
+            page: 1,
+            limit: Math.min(query.limit || 100, 100),
+            status: "ACTIVE",
+        },
+        user,
+    })
+
+    return result.items.map((position) => ({
+        id: position.id,
+        companyId: position.companyId,
+        branchId: position.branchId,
+        departmentId: position.departmentId,
+        reportsToPositionId: position.reportsToPositionId || null,
+        code: position.code,
+        name: position.title,
+        title: position.title,
+        shortName: position.shortName || "",
+        level: position.level,
+        isManager: Boolean(position.isManager),
+        status: position.status,
+    }))
 }
 
 export async function getPositionById({ positionId, user }) {

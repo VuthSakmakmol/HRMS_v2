@@ -14,8 +14,8 @@ import Select from "primevue/select"
 import Tag from "primevue/tag"
 import Textarea from "primevue/textarea"
 
-import { fetchCompanies } from "@/modules/organization/services/company.api.js"
-import { fetchBranches } from "@/modules/organization/services/branch.api.js"
+import { fetchCompaniesLookup } from "@/modules/organization/services/company.api.js"
+import { fetchBranchesLookup } from "@/modules/organization/services/branch.api.js"
 import { useApprovalStore } from "../stores/approval.store.js"
 
 const { t } = useI18n()
@@ -221,12 +221,12 @@ function getStatusSeverity(status) {
 
 async function loadLookups() {
     const [companyResult, branchResult] = await Promise.all([
-        fetchCompanies({ page: 1, limit: 100, status: "ACTIVE" }),
-        fetchBranches({ page: 1, limit: 100, status: "ACTIVE" }),
+        fetchCompaniesLookup({ page: 1, limit: 100, status: "ACTIVE" }),
+        fetchBranchesLookup({ page: 1, limit: 100, status: "ACTIVE" }),
     ])
 
-    companies.value = companyResult.items || []
-    branches.value = branchResult.items || []
+    companies.value = companyResult || []
+    branches.value = branchResult || []
 }
 
 async function loadAll() {

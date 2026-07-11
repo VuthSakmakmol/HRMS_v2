@@ -17,10 +17,10 @@ import Textarea from "primevue/textarea"
 
 import { useAuthStore } from "@/app/stores/auth.store.js"
 import { fetchEmployees } from "@/modules/employee/services/employee.api.js"
-import { fetchCompanies } from "@/modules/organization/services/company.api.js"
-import { fetchBranches } from "@/modules/organization/services/branch.api.js"
-import { fetchDepartments } from "@/modules/organization/services/department.api.js"
-import { fetchPositions } from "@/modules/organization/services/position.api.js"
+import { fetchCompaniesLookup } from "@/modules/organization/services/company.api.js"
+import { fetchBranchesLookup } from "@/modules/organization/services/branch.api.js"
+import { fetchDepartmentsLookup } from "@/modules/organization/services/department.api.js"
+import { fetchPositionsLookup } from "@/modules/organization/services/position.api.js"
 import { fetchLines } from "@/modules/line/services/line.api.js"
 import { fetchEmployeeTypes } from "@/modules/employeeType/services/employeeType.api.js"
 
@@ -158,18 +158,18 @@ async function loadOptions() {
     try {
         const [employeeResult, companyResult, branchResult, departmentResult, positionResult, lineResult, employeeTypeResult] = await Promise.all([
             fetchEmployees({ page: 1, limit: 100, recordStatus: "ACTIVE" }),
-            fetchCompanies({ page: 1, limit: 100, status: "ACTIVE" }),
-            fetchBranches({ page: 1, limit: 100, status: "ACTIVE" }),
-            fetchDepartments({ page: 1, limit: 100, status: "ACTIVE" }),
-            fetchPositions({ page: 1, limit: 100, status: "ACTIVE" }),
+            fetchCompaniesLookup({ page: 1, limit: 100, status: "ACTIVE" }),
+            fetchBranchesLookup({ page: 1, limit: 100, status: "ACTIVE" }),
+            fetchDepartmentsLookup({ page: 1, limit: 100, status: "ACTIVE" }),
+            fetchPositionsLookup({ page: 1, limit: 100, status: "ACTIVE" }),
             fetchLines({ page: 1, limit: 100, status: "ACTIVE" }),
             fetchEmployeeTypes({ page: 1, limit: 100, status: "ACTIVE" }),
         ])
         employees.value = employeeResult.items || []
-        companies.value = companyResult.items || []
-        branches.value = branchResult.items || []
-        departments.value = departmentResult.items || []
-        positions.value = positionResult.items || []
+        companies.value = companyResult || []
+        branches.value = branchResult || []
+        departments.value = departmentResult || []
+        positions.value = positionResult || []
         lines.value = lineResult.items || []
         employeeTypes.value = employeeTypeResult.items || []
     } catch (error) {

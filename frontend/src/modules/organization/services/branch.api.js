@@ -10,6 +10,14 @@ export async function fetchBranches(params = {}) {
     return response.data.data
 }
 
+export async function fetchBranchesLookup(params = {}) {
+    const response = await apiClient.get(`${BRANCH_ENDPOINT}/lookup`, {
+        params,
+    })
+
+    return response.data.data.items || []
+}
+
 export async function createBranch(payload) {
     const response = await apiClient.post(BRANCH_ENDPOINT, payload)
 

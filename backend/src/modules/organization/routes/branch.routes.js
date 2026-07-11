@@ -16,12 +16,14 @@ import {
     createBranch,
     getBranchById,
     listBranches,
+    lookupBranches,
     updateBranch,
 } from "../services/branch.service.js"
 
 const router = Router()
 
 const BRANCH_PERMISSIONS = Object.freeze({
+    LOOKUP: "ORGANIZATION.BRANCH.LOOKUP",
     VIEW: "ORGANIZATION.BRANCH.VIEW",
     CREATE: "ORGANIZATION.BRANCH.CREATE",
     UPDATE: "ORGANIZATION.BRANCH.UPDATE",
@@ -44,6 +46,29 @@ function parseRequest(schema, value) {
 }
 
 router.use(requireAuthentication)
+
+router.get(
+    "/lookup",
+    requirePermission(BRANCH_PERMISSIONS.LOOKUP),
+    async (req, res, next) => {
+        try {
+            const query = parseRequest(branchListQuerySchema, req.query)
+            const items = await lookupBranches({
+                query,
+                user: req.auth.user,
+            })
+
+            res.status(200).json({
+                success: true,
+                data: {
+                    items,
+                },
+            })
+        } catch (error) {
+            next(error)
+        }
+    },
+)
 
 router.get(
     "/",

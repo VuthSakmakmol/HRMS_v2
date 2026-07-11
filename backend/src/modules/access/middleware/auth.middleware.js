@@ -17,11 +17,15 @@ function getBearerToken(req) {
 
     const match = authorization.match(/^Bearer\s+(.+)$/i)
 
-    if (!match?.[1]) {
-        return null
-    }
+    return match?.[1]?.trim() || null
+}
 
-    return match[1].trim()
+function permissionDenied() {
+    return new AppError({
+        statusCode: 403,
+        code: "ACCESS_PERMISSION_DENIED",
+        messageKey: "errors.permissionDenied",
+    })
 }
 
 export async function requireAuthentication(req, res, next) {
@@ -64,6 +68,12 @@ export async function requireAuthentication(req, res, next) {
 }
 
 export function requirePermission(permissionCode) {
+    return requireAnyPermission(permissionCode)
+}
+
+export function requireAnyPermission(...permissionCodes) {
+    const requiredCodes = permissionCodes.flat().filter(Boolean)
+
     return (req, res, next) => {
         const user = req.auth?.user
 
@@ -77,18 +87,13 @@ export function requirePermission(permissionCode) {
             )
         }
 
+        const granted = new Set(user.effectivePermissionCodes || [])
         const hasAccess =
             user.isRootAdmin ||
-            user.effectivePermissionCodes.includes(permissionCode)
+            requiredCodes.some((permissionCode) => granted.has(permissionCode))
 
         if (!hasAccess) {
-            return next(
-                new AppError({
-                    statusCode: 403,
-                    code: "ACCESS_PERMISSION_DENIED",
-                    messageKey: "errors.permissionDenied",
-                }),
-            )
+            return next(permissionDenied())
         }
 
         next()

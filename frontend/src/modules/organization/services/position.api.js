@@ -37,6 +37,14 @@ export async function fetchPositions(params = {}) {
     return response.data.data
 }
 
+export async function fetchPositionsLookup(params = {}) {
+    const response = await apiClient.get(`${POSITION_ENDPOINT}/lookup`, {
+        params,
+    })
+
+    return response.data.data.items || []
+}
+
 export async function createPosition(payload) {
     const response = await apiClient.post(POSITION_ENDPOINT, payload)
 
