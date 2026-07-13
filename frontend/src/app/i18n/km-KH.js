@@ -212,7 +212,10 @@ export default {
             sewerMovement: "ចលនាបុគ្គលិកផ្នែកដេរ",
             nonSewerMovement: "ចលនាបុគ្គលិកក្រៅផ្នែកដេរ",
             whiteCollarMovement: "ចលនាបុគ្គលិកការិយាល័យ",
+            attendanceDashboard: "ផ្ទាំងវត្តមាន",
+            attendanceByLine: "វត្តមានតាម Line",
         },
+
         general: {
             totalEmployees: "បុគ្គលិកសរុប",
             sewerEmployees: "បុគ្គលិកផ្នែកដេរ",
@@ -267,6 +270,22 @@ export default {
             10: "តុលា",
             11: "វិច្ឆិកា",
             12: "ធ្នូ",
+        },
+        attendance: {
+            item: "វត្តមាន",
+            processed: "បានដំណើរការ",
+            present: "មានវត្តមាន",
+            absent: "អវត្តមាន",
+            late: "មកយឺត",
+            earlyLeave: "ចេញមុន",
+            missingPunch: "ខ្វះស្កេន",
+            needsReview: "ត្រូវពិនិត្យ",
+            holiday: "ថ្ងៃឈប់សម្រាក",
+            restDay: "ថ្ងៃសម្រាក",
+            attendanceRate: "អត្រាវត្តមាន",
+            line: "Line",
+            noLineData: "មិនមានទិន្នន័យវត្តមានតាម Line សម្រាប់រយៈពេលដែលបានជ្រើស។",
+            chartAria: "ក្រាហ្វវត្តមានប្រចាំខែ មានវត្តមាន អវត្តមាន និងមកយឺត",
         },
     },
 

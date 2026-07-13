@@ -211,6 +211,8 @@ export default {
             sewerMovement: "Sewer Movement",
             nonSewerMovement: "Non-Sewer Movement",
             whiteCollarMovement: "White Collar Movement",
+            attendanceDashboard: "Attendance Dashboard",
+            attendanceByLine: "Attendance by Line",
         },
         general: {
             totalEmployees: "Total employees",
@@ -268,6 +270,23 @@ export default {
             12: "Dec",
         },
     },
+    attendance: {
+        item: "Attendance",
+        processed: "Processed",
+        present: "Present",
+        absent: "Absent",
+        late: "Late",
+        earlyLeave: "Early Leave",
+        missingPunch: "Missing Punch",
+        needsReview: "Needs Review",
+        holiday: "Holiday",
+        restDay: "Rest Day",
+        attendanceRate: "Attendance Rate",
+        line: "Line",
+        noLineData: "No attendance line data for the selected period.",
+        chartAria: "Monthly attendance present absent and late chart",
+    },
+
 
     auth: {
         systemAccess: "Secure system access",

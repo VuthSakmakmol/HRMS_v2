@@ -6,6 +6,7 @@ import Button from "primevue/button"
 import Message from "primevue/message"
 import ProgressSpinner from "primevue/progressspinner"
 
+import AttendanceDashboardSection from "../components/attendance/AttendanceDashboardSection.vue"
 import DashboardFilterBar from "../components/shared/DashboardFilterBar.vue"
 import GeneralDataSection from "../components/general/GeneralDataSection.vue"
 import ManpowerSection from "../components/manpower/ManpowerSection.vue"
@@ -135,6 +136,12 @@ onMounted(async () => {
             <ManpowerSection
                 :title="t('hrDashboard.sections.nonSewerManpower')"
                 :rows="dashboard.manpower?.nonSewer || []"
+                :selected-period-key="selectedPeriodKey"
+            />
+
+            <AttendanceDashboardSection
+                :title="t('hrDashboard.sections.attendanceDashboard')"
+                :data="dashboard.attendance || {}"
                 :selected-period-key="selectedPeriodKey"
             />
 

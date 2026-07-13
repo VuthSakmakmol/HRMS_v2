@@ -1,5 +1,7 @@
 import mongoose from "mongoose"
 
+import { getCache, setCache } from "../../../shared/cache/memoryCache.js"
+import AttendanceRecord from "../../attendance/models/AttendanceRecord.js"
 import Employee from "../../employee/models/Employee.js"
 import EmployeeMovement from "../../employeeMovement/models/EmployeeMovement.js"
 import EmployeeType from "../../employeeType/models/EmployeeType.js"
@@ -43,6 +45,38 @@ const FILTER_FIELDS = Object.freeze([
     "employeeTypeId",
 ])
 
+const ATTENDANCE_FILTER_FIELDS = Object.freeze([
+    "companyId",
+    "branchId",
+    "departmentId",
+    "positionId",
+    "lineId",
+])
+
+const PRESENT_STATUSES = new Set([
+    "PRESENT",
+    "LATE",
+    "EARLY_LEAVE",
+    "LATE_AND_EARLY_LEAVE",
+    "MISSING_IN",
+    "MISSING_OUT",
+])
+
+const LATE_STATUSES = new Set([
+    "LATE",
+    "LATE_AND_EARLY_LEAVE",
+])
+
+const EARLY_STATUSES = new Set([
+    "EARLY_LEAVE",
+    "LATE_AND_EARLY_LEAVE",
+])
+
+const MISSING_STATUSES = new Set([
+    "MISSING_IN",
+    "MISSING_OUT",
+])
+
 function toObjectId(value) {
     return value ? new mongoose.Types.ObjectId(value) : undefined
 }
@@ -73,6 +107,20 @@ function buildDimensionMatch(query, prefix = "") {
 
         const key = prefix ? `${prefix}.${field}` : field
         match[key] = toObjectId(query[field])
+    }
+
+    return match
+}
+
+function buildAttendanceDimensionMatch(query) {
+    const match = {}
+
+    for (const field of ATTENDANCE_FILTER_FIELDS) {
+        if (!query[field]) {
+            continue
+        }
+
+        match[field] = toObjectId(query[field])
     }
 
     return match
@@ -205,6 +253,12 @@ async function loadEmployees(query) {
             "joinDate",
             "resignDate",
             "employmentStatus",
+            "companyId",
+            "branchId",
+            "departmentId",
+            "positionId",
+            "lineId",
+            "employeeTypeId",
             "employeeTypeChildCode",
             "employeeTypeChildName",
         ])
@@ -261,6 +315,45 @@ async function loadMovements(query, startDate, endDate) {
         .lean()
 }
 
+async function loadAttendanceRecords(query, startDate, endDate, employees) {
+    const match = {
+        ...buildAttendanceDimensionMatch(query),
+        attendanceDate: {
+            $gte: startDate,
+            $lte: endDate,
+        },
+    }
+
+    if (query.employeeTypeId) {
+        const employeeIds = employees.map((employee) => employee._id)
+
+        if (!employeeIds.length) {
+            return []
+        }
+
+        match.employeeId = {
+            $in: employeeIds,
+        }
+    }
+
+    return AttendanceRecord.find(match)
+        .select([
+            "employeeId",
+            "attendanceDate",
+            "companyId",
+            "branchId",
+            "departmentId",
+            "positionId",
+            "lineId",
+            "status",
+            "verificationStatus",
+            "workedMinutes",
+            "lateMinutes",
+            "earlyLeaveMinutes",
+        ])
+        .lean()
+}
+
 function clonePeriods(periods) {
     return periods.map((period) => ({
         key: period.key,
@@ -274,6 +367,25 @@ function clonePeriods(periods) {
         in: 0,
         out: 0,
         balance: 0,
+    }))
+}
+
+function cloneAttendancePeriods(periods) {
+    return periods.map((period) => ({
+        key: period.key,
+        year: period.year,
+        month: period.month,
+        label: period.label,
+        processed: 0,
+        present: 0,
+        absent: 0,
+        late: 0,
+        earlyLeave: 0,
+        missingPunch: 0,
+        needsReview: 0,
+        holiday: 0,
+        restDay: 0,
+        attendanceRate: 0,
     }))
 }
 
@@ -354,6 +466,172 @@ function buildMovementSeries({ movements, periods, category }) {
     return rows
 }
 
+function buildAttendanceSeries({ records, periods }) {
+    const rows = cloneAttendancePeriods(periods)
+    const rowByKey = new Map(rows.map((row) => [row.key, row]))
+
+    for (const record of records) {
+        const attendanceDate = new Date(record.attendanceDate)
+        const key = `${attendanceDate.getUTCFullYear()}-${String(
+            attendanceDate.getUTCMonth() + 1,
+        ).padStart(2, "0")}`
+        const row = rowByKey.get(key)
+
+        if (!row) {
+            continue
+        }
+
+        row.processed += 1
+
+        if (PRESENT_STATUSES.has(record.status)) {
+            row.present += 1
+        }
+
+        if (record.status === "ABSENT") {
+            row.absent += 1
+        }
+
+        if (LATE_STATUSES.has(record.status) || Number(record.lateMinutes) > 0) {
+            row.late += 1
+        }
+
+        if (
+            EARLY_STATUSES.has(record.status) ||
+            Number(record.earlyLeaveMinutes) > 0
+        ) {
+            row.earlyLeave += 1
+        }
+
+        if (MISSING_STATUSES.has(record.status)) {
+            row.missingPunch += 1
+        }
+
+        if (record.verificationStatus === "NEEDS_REVIEW") {
+            row.needsReview += 1
+        }
+
+        if (record.status === "HOLIDAY") {
+            row.holiday += 1
+        }
+
+        if (record.status === "REST_DAY") {
+            row.restDay += 1
+        }
+    }
+
+    for (const row of rows) {
+        const denominator = row.present + row.absent
+        row.attendanceRate = denominator > 0
+            ? round((row.present / denominator) * 100, 1)
+            : 0
+    }
+
+    return rows
+}
+
+function buildAttendanceSummary(rows) {
+    const summary = rows.reduce(
+        (result, row) => {
+            result.processed += row.processed
+            result.present += row.present
+            result.absent += row.absent
+            result.late += row.late
+            result.earlyLeave += row.earlyLeave
+            result.missingPunch += row.missingPunch
+            result.needsReview += row.needsReview
+            result.holiday += row.holiday
+            result.restDay += row.restDay
+            return result
+        },
+        {
+            processed: 0,
+            present: 0,
+            absent: 0,
+            late: 0,
+            earlyLeave: 0,
+            missingPunch: 0,
+            needsReview: 0,
+            holiday: 0,
+            restDay: 0,
+            attendanceRate: 0,
+        },
+    )
+
+    const denominator = summary.present + summary.absent
+    summary.attendanceRate = denominator > 0
+        ? round((summary.present / denominator) * 100, 1)
+        : 0
+
+    return summary
+}
+
+function buildAttendanceLineSummary({ records, lines }) {
+    const lineById = new Map(lines.map((line) => [line._id.toString(), line]))
+    const rowByLineId = new Map()
+
+    for (const record of records) {
+        const lineId = record.lineId?.toString?.()
+
+        if (!lineId) {
+            continue
+        }
+
+        if (!rowByLineId.has(lineId)) {
+            const line = lineById.get(lineId)
+
+            rowByLineId.set(lineId, {
+                lineId,
+                code: line?.code || "-",
+                name: line?.name || "Unknown Line",
+                processed: 0,
+                present: 0,
+                absent: 0,
+                late: 0,
+                missingPunch: 0,
+                needsReview: 0,
+                attendanceRate: 0,
+            })
+        }
+
+        const row = rowByLineId.get(lineId)
+        row.processed += 1
+
+        if (PRESENT_STATUSES.has(record.status)) {
+            row.present += 1
+        }
+
+        if (record.status === "ABSENT") {
+            row.absent += 1
+        }
+
+        if (LATE_STATUSES.has(record.status) || Number(record.lateMinutes) > 0) {
+            row.late += 1
+        }
+
+        if (MISSING_STATUSES.has(record.status)) {
+            row.missingPunch += 1
+        }
+
+        if (record.verificationStatus === "NEEDS_REVIEW") {
+            row.needsReview += 1
+        }
+    }
+
+    return [...rowByLineId.values()]
+        .map((row) => {
+            const denominator = row.present + row.absent
+
+            return {
+                ...row,
+                attendanceRate: denominator > 0
+                    ? round((row.present / denominator) * 100, 1)
+                    : 0,
+            }
+        })
+        .sort((a, b) => b.absent - a.absent || b.late - a.late)
+        .slice(0, 20)
+}
+
 function buildGeneralData({ employees, selectedDate }) {
     const activeEmployees = employees.filter((employee) =>
         employeeWasActiveOn(employee, selectedDate),
@@ -419,6 +697,13 @@ function normalizeLookupItem(document, nameField = "name") {
 }
 
 export async function getHrDashboardLookups({ query }) {
+    const cacheKey = `hr-dashboard:lookups:${JSON.stringify(query)}`
+    const cachedResult = getCache(cacheKey)
+
+    if (cachedResult) {
+        return cachedResult
+    }
+
     const companyMatch = query.companyId
         ? { _id: toObjectId(query.companyId) }
         : {}
@@ -490,7 +775,7 @@ export async function getHrDashboardLookups({ query }) {
                 .lean(),
         ])
 
-    return {
+    const result = {
         companies: companies.map((item) =>
             normalizeLookupItem(item, "displayName"),
         ),
@@ -500,22 +785,51 @@ export async function getHrDashboardLookups({ query }) {
         lines: lines.map((item) => normalizeLookupItem(item)),
         employeeTypes: employeeTypes.map((item) => normalizeLookupItem(item)),
     }
+
+    return setCache(cacheKey, result, 60_000)
 }
 
 export async function getHrDashboard({ query }) {
+    const cacheKey = `hr-dashboard:data:${JSON.stringify(query)}`
+    const cachedResult = getCache(cacheKey)
+
+    if (cachedResult) {
+        return cachedResult
+    }
+
     const startDate = parseStartDate(query.startDate)
     const endDate = parseEndDate(query.endDate)
     const periods = createPeriods(startDate, endDate)
 
-    const [employees, plans, movements] = await Promise.all([
+    const [employees, plans, movements, lines] = await Promise.all([
         loadEmployees(query),
         loadPlans(query, periods),
         loadMovements(query, startDate, endDate),
+        Line.find({
+            status: "ACTIVE",
+            ...(query.companyId ? { companyId: toObjectId(query.companyId) } : {}),
+            ...(query.branchId ? { branchId: toObjectId(query.branchId) } : {}),
+            ...(query.departmentId ? { departmentId: toObjectId(query.departmentId) } : {}),
+            ...(query.lineId ? { _id: toObjectId(query.lineId) } : {}),
+        })
+            .select(["code", "name"])
+            .lean(),
     ])
 
-    const selectedPeriod = periods.at(-1)
+    const attendanceRecords = await loadAttendanceRecords(
+        query,
+        startDate,
+        endDate,
+        employees,
+    )
 
-    return {
+    const selectedPeriod = periods.at(-1)
+    const attendanceMonthly = buildAttendanceSeries({
+        records: attendanceRecords,
+        periods,
+    })
+
+    const result = {
         filters: {
             startDate: query.startDate,
             endDate: query.endDate,
@@ -545,6 +859,14 @@ export async function getHrDashboard({ query }) {
                 category: "NON_SEWER",
             }),
         },
+        attendance: {
+            summary: buildAttendanceSummary(attendanceMonthly),
+            monthly: attendanceMonthly,
+            byLine: buildAttendanceLineSummary({
+                records: attendanceRecords,
+                lines,
+            }),
+        },
         movement: {
             sewer: buildMovementSeries({
                 movements,
@@ -563,4 +885,6 @@ export async function getHrDashboard({ query }) {
             }),
         },
     }
+
+    return setCache(cacheKey, result, 30_000)
 }
