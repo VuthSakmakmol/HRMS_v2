@@ -18,18 +18,18 @@ const props = defineProps({
 const { t } = useI18n()
 
 const width = 960
-const height = 300
+const height = 220
 const padding = {
-    top: 24,
-    right: 24,
-    bottom: 46,
-    left: 52,
+    top: 18,
+    right: 20,
+    bottom: 34,
+    left: 42,
 }
 
 const chartWidth = width - padding.left - padding.right
 const chartHeight = height - padding.top - padding.bottom
 const groupWidth = chartWidth / 12
-const barWidth = Math.min(14, groupWidth / 5)
+const barWidth = Math.min(13, groupWidth / 5)
 
 const maxValue = computed(() => {
     const values = props.rows.flatMap((row) => [
@@ -42,8 +42,8 @@ const maxValue = computed(() => {
 })
 
 const gridLines = computed(() =>
-    Array.from({ length: 6 }, (_, index) => {
-        const ratio = index / 5
+    Array.from({ length: 5 }, (_, index) => {
+        const ratio = index / 4
         const value = Math.round(maxValue.value * (1 - ratio))
         const y = padding.top + chartHeight * ratio
 
@@ -135,7 +135,7 @@ function groupX(index) {
 
                 <text
                     :x="groupX(index)"
-                    :y="height - 20"
+                    :y="height - 18"
                     text-anchor="middle"
                     class="movement-chart__month"
                 >
@@ -165,7 +165,8 @@ function groupX(index) {
 
 <style scoped>
 .movement-chart-wrap {
-    overflow-x: auto;
+    min-width: 0;
+    overflow: hidden;
     border: 1px solid #7f8fa6;
     border-top: 0;
     background: #ffffff;
@@ -174,35 +175,36 @@ function groupX(index) {
 .movement-chart {
     display: block;
     width: 100%;
-    min-width: 760px;
+    min-width: 0;
+    height: auto;
 }
 
 .movement-chart__axis-label,
 .movement-chart__month {
     fill: #404040;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 600;
 }
 
 .movement-chart__legend {
     display: flex;
     justify-content: center;
-    gap: 1.25rem;
-    padding: 0 0.75rem 0.75rem;
+    gap: 1rem;
+    padding: 0 0.6rem 0.45rem;
     color: #333333;
-    font-size: 0.7rem;
+    font-size: 0.64rem;
     font-weight: 700;
 }
 
 .movement-chart__legend span {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.3rem;
 }
 
 .movement-chart__legend i {
     display: inline-block;
-    width: 0.85rem;
-    height: 0.55rem;
+    width: 0.75rem;
+    height: 0.5rem;
 }
 </style>

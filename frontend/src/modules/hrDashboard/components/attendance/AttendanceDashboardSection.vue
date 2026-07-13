@@ -44,5 +44,6 @@ defineProps({
 .dashboard-section {
     display: grid;
     gap: 0;
+    min-width: 0;
 }
 </style>

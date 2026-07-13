@@ -83,12 +83,14 @@ const cards = computed(() => [
 .dashboard-section {
     display: grid;
     gap: 0;
+    min-width: 0;
 }
 
 .general-data-grid {
     display: grid;
-    grid-template-columns: repeat(7, minmax(8.5rem, 1fr));
-    overflow-x: auto;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    min-width: 0;
+    overflow: hidden;
     border-right: 1px solid #b4c6e7;
     border-bottom: 1px solid #b4c6e7;
     border-left: 1px solid #b4c6e7;
@@ -96,9 +98,9 @@ const cards = computed(() => [
 
 .general-data-card {
     display: grid;
-    gap: 0.45rem;
-    min-width: 8.5rem;
-    padding: 0.8rem;
+    gap: 0.25rem;
+    min-width: 0;
+    padding: 0.5rem 0.35rem;
     border-right: 1px solid #b4c6e7;
     background: #ffffff;
     text-align: center;
@@ -109,20 +111,23 @@ const cards = computed(() => [
 }
 
 .general-data-card__label {
-    min-height: 2rem;
+    min-height: 1.55rem;
+    overflow: hidden;
     color: #1f1f1f;
-    font-size: 0.68rem;
+    font-size: clamp(0.52rem, 0.72vw, 0.64rem);
     font-weight: 700;
+    line-height: 1.2;
 }
 
 .general-data-card__value {
     color: #002060;
-    font-size: 1.35rem;
+    font-size: clamp(0.9rem, 1.35vw, 1.18rem);
     font-weight: 900;
+    line-height: 1.1;
 }
 
 .general-data-card__value small {
-    font-size: 0.62rem;
+    font-size: 0.55rem;
     font-weight: 700;
 }
 </style>

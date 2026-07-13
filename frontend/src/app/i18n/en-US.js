@@ -58,7 +58,6 @@ export default {
         attendanceRawScans: "Raw Scan Import",
         attendanceVerification: "Attendance Verification",
         hrDashboard: "HR Dashboard",
-        attendanceDashboard: "Attendance Dashboard",
     },
 
     attendance: {
@@ -269,24 +268,23 @@ export default {
             11: "Nov",
             12: "Dec",
         },
+        attendance: {
+            item: "Attendance",
+            processed: "Processed",
+            present: "Present",
+            absent: "Absent",
+            late: "Late",
+            earlyLeave: "Early Leave",
+            missingPunch: "Missing Punch",
+            needsReview: "Needs Review",
+            holiday: "Holiday",
+            restDay: "Rest Day",
+            attendanceRate: "Attendance Rate",
+            line: "Line",
+            noLineData: "No attendance line data for the selected period.",
+            chartAria: "Monthly attendance present, absent, and late chart",
+        },
     },
-    attendance: {
-        item: "Attendance",
-        processed: "Processed",
-        present: "Present",
-        absent: "Absent",
-        late: "Late",
-        earlyLeave: "Early Leave",
-        missingPunch: "Missing Punch",
-        needsReview: "Needs Review",
-        holiday: "Holiday",
-        restDay: "Rest Day",
-        attendanceRate: "Attendance Rate",
-        line: "Line",
-        noLineData: "No attendance line data for the selected period.",
-        chartAria: "Monthly attendance present absent and late chart",
-    },
-
 
     auth: {
         systemAccess: "Secure system access",

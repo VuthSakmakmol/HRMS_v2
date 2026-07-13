@@ -184,9 +184,6 @@ export const PERMISSION_REGISTRY = Object.freeze([
         "EXPORT",
     ]),
 
-    ...permissionGroup("ATTENDANCE.DASHBOARD", [
-        "VIEW",
-    ]),
 
     ...permissionGroup("REPORT.HR_ANALYTICS", ["VIEW", "EXPORT"]),
 ])

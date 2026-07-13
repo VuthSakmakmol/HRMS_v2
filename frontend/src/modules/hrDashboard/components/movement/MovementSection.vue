@@ -103,17 +103,19 @@ const { t } = useI18n()
 .dashboard-section {
     display: grid;
     gap: 0;
+    min-width: 0;
 }
 
 .movement-table-wrap {
-    overflow-x: auto;
+    min-width: 0;
+    overflow: hidden;
     border: 1px solid #7f8fa6;
     border-top: 0;
 }
 
 .movement-table {
     width: 100%;
-    min-width: 860px;
+    min-width: 0;
     border-collapse: collapse;
     table-layout: fixed;
     background: #ffffff;
@@ -121,13 +123,16 @@ const { t } = useI18n()
 
 .movement-table th,
 .movement-table td {
-    height: 2rem;
-    padding: 0.35rem 0.45rem;
+    height: 1.5rem;
+    padding: 0.18rem 0.22rem;
     border: 1px solid #a6a6a6;
     color: #111111;
-    font-size: 0.69rem;
+    font-size: clamp(0.5rem, 0.72vw, 0.66rem);
     font-weight: 700;
+    line-height: 1.1;
     text-align: center;
+    vertical-align: middle;
+    word-break: break-word;
 }
 
 .movement-table thead th {
@@ -138,7 +143,7 @@ const { t } = useI18n()
 
 .movement-table thead th:first-child,
 .movement-table tbody th {
-    width: 8rem;
+    width: 7rem;
     text-align: left;
 }
 
@@ -176,5 +181,12 @@ const { t } = useI18n()
 
 .movement-table .is-positive {
     color: #548235;
+}
+
+@media (max-width: 720px) {
+    .movement-table thead th:first-child,
+    .movement-table tbody th {
+        width: 5.5rem;
+    }
 }
 </style>

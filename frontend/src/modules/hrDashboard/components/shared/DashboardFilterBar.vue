@@ -3,8 +3,9 @@ import { computed } from "vue"
 import { useI18n } from "vue-i18n"
 
 import Button from "primevue/button"
-import DatePicker from "primevue/datepicker"
 import Select from "primevue/select"
+
+import InternalCalendarDatePicker from "@/modules/calendar/components/InternalCalendarDatePicker.vue"
 
 const props = defineProps({
     modelValue: {
@@ -29,20 +30,23 @@ const emit = defineEmits([
     "update:modelValue",
     "apply",
     "reset",
+    "refresh",
     "scope-change",
 ])
 
 const { t } = useI18n()
 
+const companyOptions = computed(() => props.lookups.companies || [])
+
 const branchOptions = computed(() =>
-    props.lookups.branches.filter((item) =>
+    (props.lookups.branches || []).filter((item) =>
         !props.modelValue.companyId ||
         item.companyId === props.modelValue.companyId,
     ),
 )
 
 const departmentOptions = computed(() =>
-    props.lookups.departments.filter((item) =>
+    (props.lookups.departments || []).filter((item) =>
         (!props.modelValue.companyId ||
             item.companyId === props.modelValue.companyId) &&
         (!props.modelValue.branchId ||
@@ -51,7 +55,7 @@ const departmentOptions = computed(() =>
 )
 
 const positionOptions = computed(() =>
-    props.lookups.positions.filter((item) =>
+    (props.lookups.positions || []).filter((item) =>
         (!props.modelValue.companyId ||
             item.companyId === props.modelValue.companyId) &&
         (!props.modelValue.branchId ||
@@ -62,7 +66,7 @@ const positionOptions = computed(() =>
 )
 
 const lineOptions = computed(() =>
-    props.lookups.lines.filter((item) =>
+    (props.lookups.lines || []).filter((item) =>
         (!props.modelValue.companyId ||
             item.companyId === props.modelValue.companyId) &&
         (!props.modelValue.branchId ||
@@ -73,7 +77,7 @@ const lineOptions = computed(() =>
 )
 
 const employeeTypeOptions = computed(() =>
-    props.lookups.employeeTypes.filter((item) =>
+    (props.lookups.employeeTypes || []).filter((item) =>
         !props.modelValue.companyId ||
         item.companyId === props.modelValue.companyId,
     ),
@@ -104,192 +108,170 @@ function updateField(field, value, dependentFields = []) {
 </script>
 
 <template>
-    <section class="dashboard-filter-bar">
-        <div class="dashboard-filter-bar__grid">
-            <div class="dashboard-filter-bar__field">
-                <label for="dashboard-start-date">
-                    {{ t("hrDashboard.filters.startDate") }}
-                </label>
+    <section
+        class="dashboard-filter-bar hrms-compact"
+        :aria-busy="loading"
+    >
+        <div class="dashboard-filter-bar__fields">
+            <InternalCalendarDatePicker
+                input-id="dashboard-start-date"
+                class="dashboard-filter-field dashboard-filter-field--date"
+                :model-value="modelValue.startDate || ''"
+                :company-id="modelValue.companyId || ''"
+                :branch-id="modelValue.branchId || ''"
+                :max-date="modelValue.endDate || ''"
+                date-format="dd/mm/yy"
+                append-to="body"
+                :base-z-index="21000"
+                status-display="dot"
+                compact
+                show-status
+                :placeholder="t('hrDashboard.filters.startDate')"
+                @update:model-value="updateField('startDate', $event)"
+            />
 
-                <DatePicker
-                    id="dashboard-start-date"
-                    :model-value="modelValue.startDate"
-                    date-format="dd/mm/yy"
-                    show-icon
-                    icon-display="input"
-                    :max-date="modelValue.endDate"
-                    @update:model-value="updateField('startDate', $event)"
-                />
-            </div>
+            <InternalCalendarDatePicker
+                input-id="dashboard-end-date"
+                class="dashboard-filter-field dashboard-filter-field--date"
+                :model-value="modelValue.endDate || ''"
+                :company-id="modelValue.companyId || ''"
+                :branch-id="modelValue.branchId || ''"
+                :min-date="modelValue.startDate || ''"
+                date-format="dd/mm/yy"
+                append-to="body"
+                :base-z-index="21000"
+                status-display="dot"
+                compact
+                show-status
+                :placeholder="t('hrDashboard.filters.endDate')"
+                @update:model-value="updateField('endDate', $event)"
+            />
 
-            <div class="dashboard-filter-bar__field">
-                <label for="dashboard-end-date">
-                    {{ t("hrDashboard.filters.endDate") }}
-                </label>
-
-                <DatePicker
-                    id="dashboard-end-date"
-                    :model-value="modelValue.endDate"
-                    date-format="dd/mm/yy"
-                    show-icon
-                    icon-display="input"
-                    :min-date="modelValue.startDate"
-                    @update:model-value="updateField('endDate', $event)"
-                />
-            </div>
-
-            <div class="dashboard-filter-bar__field">
-                <label for="dashboard-company">
-                    {{ t("hrDashboard.filters.company") }}
-                </label>
-
-                <Select
-                    id="dashboard-company"
-                    :model-value="modelValue.companyId"
-                    :options="lookups.companies"
-                    :option-label="optionLabel"
-                    option-value="id"
-                    :placeholder="t('hrDashboard.filters.allCompanies')"
-                    show-clear
-                    filter
-                    :loading="lookupLoading"
-                    @update:model-value="updateField(
-                        'companyId',
-                        $event,
-                        [
-                            'branchId',
-                            'departmentId',
-                            'positionId',
-                            'lineId',
-                            'employeeTypeId',
-                        ],
-                    )"
-                />
-            </div>
-
-            <div class="dashboard-filter-bar__field">
-                <label for="dashboard-branch">
-                    {{ t("hrDashboard.filters.branch") }}
-                </label>
-
-                <Select
-                    id="dashboard-branch"
-                    :model-value="modelValue.branchId"
-                    :options="branchOptions"
-                    :option-label="optionLabel"
-                    option-value="id"
-                    :placeholder="t('hrDashboard.filters.allBranches')"
-                    show-clear
-                    filter
-                    :loading="lookupLoading"
-                    @update:model-value="updateField(
+            <Select
+                class="dashboard-filter-field"
+                :model-value="modelValue.companyId"
+                :options="companyOptions"
+                :option-label="optionLabel"
+                option-value="id"
+                :placeholder="t('hrDashboard.filters.allCompanies')"
+                show-clear
+                filter
+                :loading="lookupLoading"
+                @update:model-value="updateField(
+                    'companyId',
+                    $event,
+                    [
                         'branchId',
-                        $event,
-                        [
-                            'departmentId',
-                            'positionId',
-                            'lineId',
-                        ],
-                    )"
-                />
-            </div>
-
-            <div class="dashboard-filter-bar__field">
-                <label for="dashboard-department">
-                    {{ t("hrDashboard.filters.department") }}
-                </label>
-
-                <Select
-                    id="dashboard-department"
-                    :model-value="modelValue.departmentId"
-                    :options="departmentOptions"
-                    :option-label="optionLabel"
-                    option-value="id"
-                    :placeholder="t('hrDashboard.filters.allDepartments')"
-                    show-clear
-                    filter
-                    :loading="lookupLoading"
-                    @update:model-value="updateField(
                         'departmentId',
-                        $event,
-                        ['positionId', 'lineId'],
-                    )"
-                />
-            </div>
+                        'positionId',
+                        'lineId',
+                        'employeeTypeId',
+                    ],
+                )"
+            />
 
-            <div class="dashboard-filter-bar__field">
-                <label for="dashboard-position">
-                    {{ t("hrDashboard.filters.position") }}
-                </label>
+            <Select
+                class="dashboard-filter-field"
+                :model-value="modelValue.branchId"
+                :options="branchOptions"
+                :option-label="optionLabel"
+                option-value="id"
+                :placeholder="t('hrDashboard.filters.allBranches')"
+                show-clear
+                filter
+                :loading="lookupLoading"
+                @update:model-value="updateField(
+                    'branchId',
+                    $event,
+                    [
+                        'departmentId',
+                        'positionId',
+                        'lineId',
+                    ],
+                )"
+            />
 
-                <Select
-                    id="dashboard-position"
-                    :model-value="modelValue.positionId"
-                    :options="positionOptions"
-                    :option-label="optionLabel"
-                    option-value="id"
-                    :placeholder="t('hrDashboard.filters.allPositions')"
-                    show-clear
-                    filter
-                    :loading="lookupLoading"
-                    @update:model-value="updateField('positionId', $event)"
-                />
-            </div>
+            <Select
+                class="dashboard-filter-field"
+                :model-value="modelValue.departmentId"
+                :options="departmentOptions"
+                :option-label="optionLabel"
+                option-value="id"
+                :placeholder="t('hrDashboard.filters.allDepartments')"
+                show-clear
+                filter
+                :loading="lookupLoading"
+                @update:model-value="updateField(
+                    'departmentId',
+                    $event,
+                    ['positionId', 'lineId'],
+                )"
+            />
 
-            <div class="dashboard-filter-bar__field">
-                <label for="dashboard-line">
-                    {{ t("hrDashboard.filters.line") }}
-                </label>
+            <Select
+                class="dashboard-filter-field"
+                :model-value="modelValue.positionId"
+                :options="positionOptions"
+                :option-label="optionLabel"
+                option-value="id"
+                :placeholder="t('hrDashboard.filters.allPositions')"
+                show-clear
+                filter
+                :loading="lookupLoading"
+                @update:model-value="updateField('positionId', $event)"
+            />
 
-                <Select
-                    id="dashboard-line"
-                    :model-value="modelValue.lineId"
-                    :options="lineOptions"
-                    :option-label="optionLabel"
-                    option-value="id"
-                    :placeholder="t('hrDashboard.filters.allLines')"
-                    show-clear
-                    filter
-                    :loading="lookupLoading"
-                    @update:model-value="updateField('lineId', $event)"
-                />
-            </div>
+            <Select
+                class="dashboard-filter-field"
+                :model-value="modelValue.lineId"
+                :options="lineOptions"
+                :option-label="optionLabel"
+                option-value="id"
+                :placeholder="t('hrDashboard.filters.allLines')"
+                show-clear
+                filter
+                :loading="lookupLoading"
+                @update:model-value="updateField('lineId', $event)"
+            />
 
-            <div class="dashboard-filter-bar__field">
-                <label for="dashboard-employee-type">
-                    {{ t("hrDashboard.filters.employeeType") }}
-                </label>
-
-                <Select
-                    id="dashboard-employee-type"
-                    :model-value="modelValue.employeeTypeId"
-                    :options="employeeTypeOptions"
-                    :option-label="optionLabel"
-                    option-value="id"
-                    :placeholder="t('hrDashboard.filters.allEmployeeTypes')"
-                    show-clear
-                    filter
-                    :loading="lookupLoading"
-                    @update:model-value="updateField('employeeTypeId', $event)"
-                />
-            </div>
+            <Select
+                class="dashboard-filter-field"
+                :model-value="modelValue.employeeTypeId"
+                :options="employeeTypeOptions"
+                :option-label="optionLabel"
+                option-value="id"
+                :placeholder="t('hrDashboard.filters.allEmployeeTypes')"
+                show-clear
+                filter
+                :loading="lookupLoading"
+                @update:model-value="updateField('employeeTypeId', $event)"
+            />
         </div>
 
         <div class="dashboard-filter-bar__actions">
             <Button
-                :label="t('common.reset')"
-                icon="pi pi-undo"
+                icon="pi pi-filter"
+                :label="t('common.apply')"
+                :loading="loading"
+                @click="emit('apply')"
+            />
+
+            <Button
                 severity="secondary"
                 outlined
+                icon="pi pi-times"
+                :label="t('common.clear')"
                 :disabled="loading"
                 @click="emit('reset')"
             />
 
             <Button
-                :label="t('common.apply')"
-                icon="pi pi-filter"
+                severity="secondary"
+                outlined
+                icon="pi pi-refresh"
+                :aria-label="t('common.refresh')"
                 :loading="loading"
-                @click="emit('apply')"
+                @click="emit('refresh')"
             />
         </div>
     </section>
@@ -297,60 +279,123 @@ function updateField(field, value, dependentFields = []) {
 
 <style scoped>
 .dashboard-filter-bar {
-    display: grid;
-    gap: 0.85rem;
-    padding: 0.85rem;
-    border: 1px solid var(--surface-border);
-    border-radius: 0.75rem;
-    background: var(--surface-card);
-}
-
-.dashboard-filter-bar__grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(10rem, 1fr));
-    gap: 0.75rem;
-}
-
-.dashboard-filter-bar__field {
-    display: grid;
-    gap: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
     min-width: 0;
+    margin: 0;
+    position: relative;
+    z-index: 12000;
+    pointer-events: auto;
+    padding: 0.5rem 0.875rem;
+    background: var(--hrms-surface);
+    border-top: 0;
 }
 
-.dashboard-filter-bar__field label {
-    color: var(--text-color-secondary);
-    font-size: 0.72rem;
-    font-weight: 700;
+.dashboard-filter-bar__fields {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
 }
 
 .dashboard-filter-bar__actions {
     display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: flex-end;
-    gap: 0.6rem;
+    gap: 0.35rem;
 }
 
-:deep(.p-select),
-:deep(.p-datepicker) {
+.dashboard-filter-field {
+    flex: 1 1 9.25rem;
+    min-width: 8rem;
+    max-width: 14rem;
+}
+
+.dashboard-filter-field--date {
+    flex: 0 1 12rem;
+    min-width: 10rem;
+    max-width: 12rem;
+}
+
+:deep(.dashboard-filter-field),
+:deep(.dashboard-filter-field > .p-component),
+:deep(.dashboard-filter-field > .p-inputtext),
+:deep(.dashboard-filter-field > .p-select),
+:deep(.dashboard-filter-field > .p-datepicker),
+:deep(.dashboard-filter-field .p-datepicker),
+:deep(.dashboard-filter-field .p-inputtext) {
     width: 100%;
 }
 
-@media (max-width: 1100px) {
-    .dashboard-filter-bar__grid {
-        grid-template-columns: repeat(2, minmax(10rem, 1fr));
-    }
+:deep(.internal-calendar-picker) {
+    position: relative;
 }
 
-@media (max-width: 640px) {
-    .dashboard-filter-bar__grid {
-        grid-template-columns: 1fr;
+:deep(.internal-calendar-picker__status--dot) {
+    position: absolute;
+    top: 50%;
+    right: 2.4rem;
+    z-index: 2;
+    min-height: auto;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+:deep(.internal-calendar-picker__dot) {
+    display: block;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    box-shadow: 0 0 0 2px var(--hrms-surface);
+}
+
+:deep(.internal-calendar-picker),
+:deep(.internal-calendar-picker .p-datepicker),
+:deep(.internal-calendar-picker .p-inputtext),
+:deep(.internal-calendar-picker .p-button),
+:deep(.internal-calendar-picker .p-datepicker-input-icon-container) {
+    pointer-events: auto;
+}
+
+@media (max-width: 760px) {
+    .dashboard-filter-bar {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 0.5rem 0.625rem;
     }
 
     .dashboard-filter-bar__actions {
-        justify-content: stretch;
+        width: 100%;
     }
 
     .dashboard-filter-bar__actions :deep(.p-button) {
-        flex: 1;
+        flex: 1 1 auto;
+    }
+
+    .dashboard-filter-field,
+    .dashboard-filter-field--date {
+        flex: 1 1 10rem;
+        max-width: none;
+    }
+}
+
+@media (max-width: 520px) {
+    .dashboard-filter-bar__fields {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
+    }
+
+    .dashboard-filter-field,
+    .dashboard-filter-field--date {
+        width: 100%;
+        min-width: 0;
     }
 }
 </style>

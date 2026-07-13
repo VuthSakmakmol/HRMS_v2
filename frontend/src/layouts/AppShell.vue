@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from "vue"
+import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import { useI18n } from "vue-i18n"
 import { useRoute, useRouter } from "vue-router"
 
@@ -17,9 +17,15 @@ const authStore = useAuthStore()
 const uiStore = useUiStore()
 
 const sidebarOpen = ref(false)
+const desktopSidebarCollapsed = ref(false)
+const isMobileSidebar = ref(false)
 
 const pageTitle = computed(() =>
     t(route.meta.titleKey || "nav.overview"),
+)
+
+const isFlushContentRoute = computed(() =>
+    route.name === "reports-hr-dashboard",
 )
 
 const roleLabel = computed(() => {
@@ -210,13 +216,6 @@ const navGroups = computed(() => {
                     permissionCode: "REPORT.HR_ANALYTICS.VIEW",
                 },
 
-                {
-                    labelKey: "nav.attendanceDashboard",
-                    icon: "pi pi-chart-pie",
-                    to: { name: "attendance-dashboard" },
-                    permissionCode: "ATTENDANCE.DASHBOARD.VIEW",
-                },
-
             ],
         },
 
@@ -240,13 +239,37 @@ const navGroups = computed(() => {
         .filter((group) => group.items.length > 0)
 })
 
+function syncViewportMode() {
+    isMobileSidebar.value = window.matchMedia("(max-width: 900px)").matches
+
+    if (isMobileSidebar.value) {
+        desktopSidebarCollapsed.value = false
+    } else {
+        sidebarOpen.value = false
+    }
+}
+
 function closeSidebar() {
     sidebarOpen.value = false
 }
 
 function toggleSidebar() {
-    sidebarOpen.value = !sidebarOpen.value
+    if (isMobileSidebar.value) {
+        sidebarOpen.value = !sidebarOpen.value
+        return
+    }
+
+    desktopSidebarCollapsed.value = !desktopSidebarCollapsed.value
 }
+
+onMounted(() => {
+    syncViewportMode()
+    window.addEventListener("resize", syncViewportMode)
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener("resize", syncViewportMode)
+})
 
 async function logout() {
     authStore.logout()
@@ -259,7 +282,12 @@ async function logout() {
 </script>
 
 <template>
-    <div class="app-shell">
+    <div
+        class="app-shell"
+        :class="{
+            'app-shell--sidebar-collapsed': desktopSidebarCollapsed,
+        }"
+    >
         <div
             v-if="sidebarOpen"
             class="app-shell__overlay"
@@ -270,6 +298,7 @@ async function logout() {
             class="app-sidebar"
             :class="{
                 'app-sidebar--open': sidebarOpen,
+                'app-sidebar--desktop-collapsed': desktopSidebarCollapsed,
             }"
         >
             <div class="app-sidebar__brand">
@@ -281,6 +310,15 @@ async function logout() {
                     <strong>{{ t("app.name") }}</strong>
                     <span>{{ t("app.subtitle") }}</span>
                 </div>
+
+                <Button
+                    class="app-sidebar__collapse-button"
+                    text
+                    rounded
+                    icon="pi pi-angle-left"
+                    :aria-label="t('common.close')"
+                    @click="toggleSidebar"
+                />
             </div>
 
             <nav class="app-sidebar__nav">
@@ -401,7 +439,12 @@ async function logout() {
                 </div>
             </header>
 
-            <main class="app-content">
+            <main
+                class="app-content"
+                :class="{
+                    'app-content--flush': isFlushContentRoute,
+                }"
+            >
                 <RouterView />
             </main>
         </section>
@@ -427,6 +470,20 @@ async function logout() {
     color: var(--hrms-sidebar-text);
     background: var(--hrms-sidebar);
     border-right: 1px solid rgb(255 255 255 / 0.08);
+    transition:
+        flex-basis 0.2s ease,
+        width 0.2s ease,
+        opacity 0.16s ease;
+}
+
+
+.app-sidebar--desktop-collapsed {
+    flex-basis: 0;
+    width: 0;
+    min-width: 0;
+    opacity: 0;
+    pointer-events: none;
+    border-right: 0;
 }
 
 .app-sidebar__brand {
@@ -471,6 +528,17 @@ async function logout() {
 
 .app-sidebar__brand-text strong {
     font-size: 0.82rem;
+}
+
+.app-sidebar__collapse-button {
+    flex: 0 0 auto;
+    margin-left: auto;
+    color: rgb(229 237 248 / 0.72);
+}
+
+.app-sidebar__collapse-button:hover {
+    color: white;
+    background: rgb(255 255 255 / 0.08);
 }
 
 .app-sidebar__brand-text span,
@@ -653,7 +721,7 @@ async function logout() {
 }
 
 .app-topbar__menu-button {
-    display: none;
+    display: inline-flex;
 }
 
 .app-content {
@@ -667,6 +735,10 @@ async function logout() {
     scrollbar-gutter: stable;
 }
 
+.app-content--flush {
+    padding: 0;
+}
+
 .app-shell__overlay {
     display: none;
 }
@@ -676,6 +748,10 @@ async function logout() {
         position: fixed;
         z-index: 1200;
         inset: 0 auto 0 0;
+        flex: 0 0 16rem;
+        width: 16rem;
+        opacity: 1;
+        pointer-events: auto;
         transform: translateX(-100%);
         transition: transform 0.2s ease;
         box-shadow: var(--hrms-shadow-md);
@@ -706,6 +782,10 @@ async function logout() {
 
     .app-content {
         padding: 0.625rem;
+    }
+
+    .app-content--flush {
+        padding: 0;
     }
 
     .app-topbar__actions {

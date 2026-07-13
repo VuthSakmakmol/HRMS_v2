@@ -57,14 +57,15 @@ const { t } = useI18n()
 
 <style scoped>
 .attendance-line-table-wrap {
-    overflow-x: auto;
+    min-width: 0;
+    overflow: hidden;
     border: 1px solid #7f8fa6;
     border-top: 0;
 }
 
 .attendance-line-table {
     width: 100%;
-    min-width: 760px;
+    min-width: 0;
     border-collapse: collapse;
     table-layout: fixed;
     background: #ffffff;
@@ -72,13 +73,16 @@ const { t } = useI18n()
 
 .attendance-line-table th,
 .attendance-line-table td {
-    height: 2rem;
-    padding: 0.35rem 0.45rem;
+    height: 1.45rem;
+    padding: 0.16rem 0.2rem;
     border: 1px solid #a6a6a6;
     color: #111111;
-    font-size: 0.69rem;
+    font-size: clamp(0.48rem, 0.68vw, 0.63rem);
     font-weight: 700;
+    line-height: 1.08;
     text-align: center;
+    vertical-align: middle;
+    word-break: break-word;
 }
 
 .attendance-line-table thead th {
@@ -94,11 +98,14 @@ const { t } = useI18n()
 .attendance-line-table tbody th strong,
 .attendance-line-table tbody th span {
     display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .attendance-line-table tbody th span {
     color: #666666;
-    font-size: 0.62rem;
+    font-size: 0.56rem;
 }
 
 .attendance-line-table tbody tr:nth-child(even) td,

@@ -11,12 +11,12 @@ import {
 } from "../../../shared/cache/memoryCache.js"
 
 export const ATTENDANCE_LIST_CACHE_PREFIX = "attendance:records:list:"
-export const ATTENDANCE_DASHBOARD_CACHE_PREFIX = "attendance:dashboard:"
+export const HR_DASHBOARD_DATA_CACHE_PREFIX = "hr-dashboard:data:"
 const ATTENDANCE_LIST_CACHE_TTL_MS = 15_000
 
 export function invalidateAttendanceCaches() {
     clearCacheByPrefix(ATTENDANCE_LIST_CACHE_PREFIX)
-    clearCacheByPrefix(ATTENDANCE_DASHBOARD_CACHE_PREFIX)
+    clearCacheByPrefix(HR_DASHBOARD_DATA_CACHE_PREFIX)
 }
 
 function startOfDay(value) {
