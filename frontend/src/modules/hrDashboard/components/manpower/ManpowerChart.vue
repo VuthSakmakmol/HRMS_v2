@@ -18,47 +18,109 @@ const props = defineProps({
 const { t } = useI18n()
 
 const width = 960
-const height = 220
+const height = 245
 const padding = {
     top: 18,
     right: 20,
-    bottom: 34,
-    left: 42,
+    bottom: 36,
+    left: 46,
 }
 
 const chartWidth = width - padding.left - padding.right
 const chartHeight = height - padding.top - padding.bottom
-const groupWidth = chartWidth / 12
-const barWidth = Math.min(16, groupWidth / 4)
 
-const maxValue = computed(() => {
-    const values = props.rows.flatMap((row) => [
-        Number(row.roadmap) || 0,
-        Number(row.actual) || 0,
-    ])
+const visibleRows = computed(() => props.rows || [])
+const groupCount = computed(() => Math.max(1, visibleRows.value.length))
+const groupWidth = computed(() => chartWidth / groupCount.value)
+const barWidth = computed(() => Math.min(8, Math.max(4, groupWidth.value / 11)))
 
-    return Math.max(10, ...values) * 1.1
+const series = computed(() => [
+    {
+        key: "budget",
+        labelKey: "hrDashboard.manpower.budget",
+        color: dashboardColors.darkBlue,
+    },
+    {
+        key: "roadmap",
+        labelKey: "hrDashboard.manpower.roadmap",
+        color: dashboardColors.cyan,
+    },
+    {
+        key: "actual",
+        labelKey: "hrDashboard.manpower.actual",
+        color: dashboardColors.gray,
+    },
+    {
+        key: "targetGap",
+        labelKey: "hrDashboard.manpower.overLessTarget",
+        color: dashboardColors.orange,
+    },
+    {
+        key: "roadmapGap",
+        labelKey: "hrDashboard.manpower.overLessRoadmap",
+        color: dashboardColors.green,
+    },
+])
+
+const valueRange = computed(() => {
+    const values = visibleRows.value.flatMap((row) =>
+        series.value.map((metric) => Number(row[metric.key]) || 0),
+    )
+
+    const max = Math.max(10, ...values)
+    const min = Math.min(0, ...values)
+    const paddingValue = Math.max(1, (max - min) * 0.1)
+
+    return {
+        min: min - paddingValue,
+        max: max + paddingValue,
+    }
 })
 
-const gridLines = computed(() =>
-    Array.from({ length: 5 }, (_, index) => {
+const zeroY = computed(() => yForValue(0))
+
+const gridLines = computed(() => {
+    return Array.from({ length: 5 }, (_, index) => {
         const ratio = index / 4
-        const value = Math.round(maxValue.value * (1 - ratio))
-        const y = padding.top + chartHeight * ratio
+        const value = Math.round(
+            valueRange.value.max -
+                (valueRange.value.max - valueRange.value.min) * ratio,
+        )
 
         return {
             value,
-            y,
+            y: yForValue(value),
         }
-    }),
-)
+    })
+})
 
-function barHeight(value) {
-    return (Number(value) || 0) / maxValue.value * chartHeight
+function yForValue(value) {
+    const range = valueRange.value.max - valueRange.value.min || 1
+    const ratio = (Number(value) - valueRange.value.min) / range
+
+    return padding.top + chartHeight - ratio * chartHeight
 }
 
 function groupX(index) {
-    return padding.left + index * groupWidth + groupWidth / 2
+    return padding.left + index * groupWidth.value + groupWidth.value / 2
+}
+
+function barX(index, seriesIndex) {
+    const totalWidth = series.value.length * barWidth.value +
+        (series.value.length - 1) * 2
+    const start = groupX(index) - totalWidth / 2
+
+    return start + seriesIndex * (barWidth.value + 2)
+}
+
+function barY(value) {
+    const currentY = yForValue(value)
+
+    return Math.min(currentY, zeroY.value)
+}
+
+function barHeight(value) {
+    return Math.max(1, Math.abs(zeroY.value - yForValue(value)))
 }
 </script>
 
@@ -93,13 +155,22 @@ function groupX(index) {
                 </text>
             </g>
 
+            <line
+                :x1="padding.left"
+                :x2="width - padding.right"
+                :y1="zeroY"
+                :y2="zeroY"
+                stroke="#7f8fa6"
+                stroke-width="1.4"
+            />
+
             <g
-                v-for="(row, index) in rows"
-                :key="row.month"
+                v-for="(row, rowIndex) in visibleRows"
+                :key="row.key"
             >
                 <rect
                     v-if="row.key === selectedPeriodKey"
-                    :x="padding.left + index * groupWidth + 2"
+                    :x="padding.left + rowIndex * groupWidth + 2"
                     :y="padding.top"
                     :width="groupWidth - 4"
                     :height="chartHeight"
@@ -109,24 +180,19 @@ function groupX(index) {
                 />
 
                 <rect
-                    :x="groupX(index) - barWidth - 2"
-                    :y="padding.top + chartHeight - barHeight(row.roadmap)"
+                    v-for="(metric, metricIndex) in series"
+                    :key="`${row.key}-${metric.key}`"
+                    :x="barX(rowIndex, metricIndex)"
+                    :y="barY(Number(row[metric.key]) || 0)"
                     :width="barWidth"
-                    :height="barHeight(row.roadmap)"
-                    :fill="dashboardColors.cyan"
-                />
-
-                <rect
-                    :x="groupX(index) + 2"
-                    :y="padding.top + chartHeight - barHeight(row.actual)"
-                    :width="barWidth"
-                    :height="barHeight(row.actual)"
-                    :fill="dashboardColors.gray"
+                    :height="barHeight(Number(row[metric.key]) || 0)"
+                    :fill="metric.color"
+                    rx="1"
                 />
 
                 <text
-                    :x="groupX(index)"
-                    :y="height - 18"
+                    :x="groupX(rowIndex)"
+                    :y="height - 20"
                     text-anchor="middle"
                     class="manpower-chart__month"
                 >
@@ -136,14 +202,12 @@ function groupX(index) {
         </svg>
 
         <div class="manpower-chart__legend">
-            <span>
-                <i :style="{ background: dashboardColors.cyan }" />
-                {{ t("hrDashboard.manpower.roadmap") }}
-            </span>
-
-            <span>
-                <i :style="{ background: dashboardColors.gray }" />
-                {{ t("hrDashboard.manpower.actual") }}
+            <span
+                v-for="metric in series"
+                :key="metric.key"
+            >
+                <i :style="{ background: metric.color }" />
+                {{ t(metric.labelKey) }}
             </span>
         </div>
     </div>
@@ -174,23 +238,24 @@ function groupX(index) {
 
 .manpower-chart__legend {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    gap: 1rem;
+    gap: 0.55rem 0.9rem;
     padding: 0 0.6rem 0.45rem;
     color: #333333;
-    font-size: 0.64rem;
+    font-size: 0.58rem;
     font-weight: 700;
 }
 
 .manpower-chart__legend span {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.25rem;
 }
 
 .manpower-chart__legend i {
     display: inline-block;
-    width: 0.75rem;
-    height: 0.5rem;
+    width: 0.7rem;
+    height: 0.45rem;
 }
 </style>

@@ -1050,60 +1050,46 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="line-page">
-        <div class="line-page__header">
-            <div>
-                <span class="line-page__eyebrow">
-                    {{ t("organization.line.eyebrow") }}
-                </span>
+    <section class="line-page hrms-list-page hrms-compact">
+        <div class="line-page__header-actions line-page__header-actions--compact">
+            <Button
+                v-if="canImport"
+                severity="secondary"
+                outlined
+                icon="pi pi-download"
+                :loading="lineStore.downloadingTemplate"
+                :label="t('organization.line.downloadSample')"
+                @click="downloadSample"
+            />
 
-                <h2>{{ t("organization.line.title") }}</h2>
+            <Button
+                v-if="canImport"
+                severity="secondary"
+                outlined
+                icon="pi pi-upload"
+                :label="t('organization.line.importExcel')"
+                @click="openImportDialog"
+            />
 
-                <p>
-                    {{ t("organization.line.description") }}
-                </p>
-            </div>
+            <Button
+                v-if="canExport"
+                severity="secondary"
+                outlined
+                icon="pi pi-file-export"
+                :loading="lineStore.exporting"
+                :label="t('organization.line.exportExcel')"
+                @click="exportExcel"
+            />
 
-            <div class="line-page__header-actions">
-                <Button
-                    v-if="canImport"
-                    severity="secondary"
-                    outlined
-                    icon="pi pi-download"
-                    :loading="lineStore.downloadingTemplate"
-                    :label="t('organization.line.downloadSample')"
-                    @click="downloadSample"
-                />
-
-                <Button
-                    v-if="canImport"
-                    severity="secondary"
-                    outlined
-                    icon="pi pi-upload"
-                    :label="t('organization.line.importExcel')"
-                    @click="openImportDialog"
-                />
-
-                <Button
-                    v-if="canExport"
-                    severity="secondary"
-                    outlined
-                    icon="pi pi-file-export"
-                    :loading="lineStore.exporting"
-                    :label="t('organization.line.exportExcel')"
-                    @click="exportExcel"
-                />
-
-                <Button
-                    v-if="canCreate"
-                    icon="pi pi-plus"
-                    :label="t('organization.line.newLine')"
-                    @click="openCreateDialog"
-                />
-            </div>
+            <Button
+                v-if="canCreate"
+                icon="pi pi-plus"
+                :label="t('organization.line.newLine')"
+                @click="openCreateDialog"
+            />
         </div>
 
-        <Card class="line-card">
+        <Card class="line-card hrms-list-card">
             <template #content>
                 <div class="line-toolbar">
                     <div class="line-toolbar__filters">
@@ -1198,8 +1184,9 @@ onMounted(async () => {
                     </div>
                 </div>
 
-                <div class="line-table-wrap">
+                <div class="line-table-wrap hrms-table-wrap">
                     <DataTable
+                        class="hrms-standard-table hrms-standard-table--horizontal"
                         lazy
                         paginator
                         striped-rows
@@ -1237,10 +1224,9 @@ onMounted(async () => {
                             style="min-width: 15rem"
                         >
                             <template #body="{ data }">
-                                <div class="line-name-cell">
-                                    <strong>{{ data.name }}</strong>
-                                    <span>{{ data.shortName || "-" }}</span>
-                                </div>
+                                <strong class="hrms-cell-primary">
+                                    {{ data.name || "-" }}
+                                </strong>
                             </template>
                         </Column>
 
@@ -1249,14 +1235,9 @@ onMounted(async () => {
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <div class="line-muted-cell">
-                                    <strong>
-                                        {{ data.department?.name || "-" }}
-                                    </strong>
-                                    <span>
-                                        {{ data.department?.code || "-" }}
-                                    </span>
-                                </div>
+                                <strong class="hrms-cell-primary">
+                                    {{ data.department?.name || "-" }}
+                                </strong>
                             </template>
                         </Column>
 
@@ -1265,14 +1246,9 @@ onMounted(async () => {
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <div class="line-muted-cell">
-                                    <strong>
-                                        {{ data.branch?.name || "-" }}
-                                    </strong>
-                                    <span>
-                                        {{ data.branch?.code || "-" }}
-                                    </span>
-                                </div>
+                                <strong class="hrms-cell-primary">
+                                    {{ data.branch?.name || "-" }}
+                                </strong>
                             </template>
                         </Column>
 
@@ -1292,17 +1268,12 @@ onMounted(async () => {
                             style="min-width: 14rem"
                         >
                             <template #body="{ data }">
-                                <div
+                                <strong
                                     v-if="data.leaderPosition"
-                                    class="line-muted-cell"
+                                    class="hrms-cell-primary"
                                 >
-                                    <strong>
-                                        {{ data.leaderPosition.title }}
-                                    </strong>
-                                    <span>
-                                        {{ data.leaderPosition.code }}
-                                    </span>
-                                </div>
+                                    {{ data.leaderPosition.title }}
+                                </strong>
 
                                 <span v-else class="line-muted-text">
                                     {{
@@ -1391,16 +1362,16 @@ onMounted(async () => {
         <Dialog
             v-model:visible="dialogVisible"
             modal
-            class="line-dialog"
+            class="line-dialog hrms-standard-dialog"
             :header="dialogTitle"
             :draggable="false"
         >
-            <div class="line-form">
-                <div class="line-form__section">
+            <div class="line-form hrms-dialog-form">
+                <div class="line-form__section hrms-form-section">
                     <h3>{{ t("organization.line.basicInfo") }}</h3>
 
-                    <div class="line-form__grid">
-                        <label class="line-field">
+                    <div class="line-form__grid hrms-form-grid">
+                        <label class="line-field hrms-form-field">
                             <span>{{ t("organization.line.company") }}</span>
 
                             <Select
@@ -1422,7 +1393,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="line-field">
+                        <label class="line-field hrms-form-field">
                             <span>{{ t("organization.line.branch") }}</span>
 
                             <Select
@@ -1446,7 +1417,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="line-field">
+                        <label class="line-field hrms-form-field">
                             <span>{{ t("organization.line.department") }}</span>
 
                             <Select
@@ -1472,7 +1443,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="line-field">
+                        <label class="line-field hrms-form-field">
                             <span>{{ t("organization.line.code") }}</span>
 
                             <InputText
@@ -1488,7 +1459,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="line-field">
+                        <label class="line-field hrms-form-field">
                             <span>{{ t("organization.line.lineName") }}</span>
 
                             <InputText
@@ -1504,7 +1475,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="line-field">
+                        <label class="line-field hrms-form-field">
                             <span>{{ t("organization.line.shortName") }}</span>
 
                             <InputText
@@ -1514,7 +1485,7 @@ onMounted(async () => {
                             />
                         </label>
 
-                        <label class="line-field line-field--wide">
+                        <label class="line-field line-field--wide hrms-form-field hrms-form-field--wide">
                             <span>
                                 {{ t("organization.line.allowedPositions") }}
                             </span>
@@ -1544,7 +1515,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="line-field">
+                        <label class="line-field hrms-form-field">
                             <span>
                                 {{ t("organization.line.leaderPosition") }}
                             </span>
@@ -1562,7 +1533,7 @@ onMounted(async () => {
                             />
                         </label>
 
-                        <label class="line-field">
+                        <label class="line-field hrms-form-field">
                             <span>{{ t("organization.line.status") }}</span>
 
                             <Select
@@ -1573,7 +1544,7 @@ onMounted(async () => {
                             />
                         </label>
 
-                        <label class="line-field line-field--wide">
+                        <label class="line-field line-field--wide hrms-form-field hrms-form-field--wide">
                             <span>
                                 {{ t("organization.line.descriptionLabel") }}
                             </span>
@@ -2089,4 +2060,28 @@ onMounted(async () => {
         height: 32rem;
     }
 }
+
+
+.line-page__header-actions--compact {
+    justify-content: flex-end;
+    padding: 0;
+}
+
+:deep(.hrms-standard-table--horizontal .p-datatable-table) {
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto;
+}
+
+:deep(.hrms-standard-table--horizontal .p-datatable-thead > tr > th),
+:deep(.hrms-standard-table--horizontal .p-datatable-tbody > tr > td) {
+    white-space: nowrap;
+}
+
+:deep(.hrms-standard-table--horizontal .p-datatable-table-container),
+:deep(.hrms-standard-table--horizontal .p-datatable-wrapper) {
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
 </style>

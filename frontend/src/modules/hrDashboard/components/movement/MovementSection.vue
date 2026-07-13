@@ -9,6 +9,10 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    subtitle: {
+        type: String,
+        default: "",
+    },
     rows: {
         type: Array,
         default: () => [],
@@ -24,7 +28,10 @@ const { t } = useI18n()
 
 <template>
     <section class="dashboard-section">
-        <DashboardSectionHeader :title="title" />
+        <DashboardSectionHeader
+            :title="title"
+            :subtitle="subtitle"
+        />
 
         <div class="movement-table-wrap">
             <table class="movement-table">
@@ -34,7 +41,7 @@ const { t } = useI18n()
 
                         <th
                             v-for="row in props.rows"
-                            :key="row.month"
+                            :key="row.key"
                             :class="{
                                 'is-selected-period-key': row.key === selectedPeriodKey,
                             }"
@@ -50,7 +57,7 @@ const { t } = useI18n()
 
                         <td
                             v-for="row in props.rows"
-                            :key="`in-${row.month}`"
+                            :key="`in-${row.key}`"
                             :class="{
                                 'is-selected-period-key': row.key === selectedPeriodKey,
                             }"
@@ -64,7 +71,7 @@ const { t } = useI18n()
 
                         <td
                             v-for="row in props.rows"
-                            :key="`out-${row.month}`"
+                            :key="`out-${row.key}`"
                             :class="{
                                 'is-selected-period-key': row.key === selectedPeriodKey,
                             }"
@@ -78,7 +85,7 @@ const { t } = useI18n()
 
                         <td
                             v-for="row in props.rows"
-                            :key="`balance-${row.month}`"
+                            :key="`balance-${row.key}`"
                             :class="{
                                 'is-selected-period-key': row.key === selectedPeriodKey,
                                 'is-negative': row.balance < 0,
@@ -107,7 +114,6 @@ const { t } = useI18n()
 }
 
 .movement-table-wrap {
-    min-width: 0;
     overflow: hidden;
     border: 1px solid #7f8fa6;
     border-top: 0;
@@ -115,7 +121,6 @@ const { t } = useI18n()
 
 .movement-table {
     width: 100%;
-    min-width: 0;
     border-collapse: collapse;
     table-layout: fixed;
     background: #ffffff;
@@ -123,16 +128,13 @@ const { t } = useI18n()
 
 .movement-table th,
 .movement-table td {
-    height: 1.5rem;
-    padding: 0.18rem 0.22rem;
+    height: 1.85rem;
+    padding: 0.28rem 0.35rem;
     border: 1px solid #a6a6a6;
     color: #111111;
-    font-size: clamp(0.5rem, 0.72vw, 0.66rem);
+    font-size: 0.66rem;
     font-weight: 700;
-    line-height: 1.1;
     text-align: center;
-    vertical-align: middle;
-    word-break: break-word;
 }
 
 .movement-table thead th {
@@ -143,7 +145,7 @@ const { t } = useI18n()
 
 .movement-table thead th:first-child,
 .movement-table tbody th {
-    width: 7rem;
+    width: 8rem;
     text-align: left;
 }
 
@@ -183,10 +185,16 @@ const { t } = useI18n()
     color: #548235;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 760px) {
     .movement-table thead th:first-child,
     .movement-table tbody th {
-        width: 5.5rem;
+        width: 6rem;
+    }
+
+    .movement-table th,
+    .movement-table td {
+        font-size: 0.6rem;
+        padding: 0.22rem 0.2rem;
     }
 }
 </style>

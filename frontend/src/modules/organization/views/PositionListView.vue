@@ -4,7 +4,6 @@ import { useI18n } from "vue-i18n"
 import { useToast } from "primevue/usetoast"
 
 import Button from "primevue/button"
-import Card from "primevue/card"
 import Checkbox from "primevue/checkbox"
 import Column from "primevue/column"
 import DataTable from "primevue/datatable"
@@ -19,7 +18,6 @@ import Textarea from "primevue/textarea"
 import { useUiStore } from "@/app/stores/ui.store.js"
 import { useModulePermissions } from "@/shared/auth/useModulePermissions.js"
 import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
-import AppModuleToolbar from "@/shared/components/page/AppModuleToolbar.vue"
 import AppTableActions from "@/shared/components/table/AppTableActions.vue"
 import { fetchBranchesLookup } from "../services/branch.api.js"
 import { fetchCompaniesLookup } from "../services/company.api.js"
@@ -946,143 +944,136 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="position-page hrms-compact">
-        <AppModuleToolbar>
-            <Button
-                v-if="permissions.canImport"
-                severity="secondary"
-                outlined
-                icon="pi pi-download"
-                :loading="positionStore.downloadingTemplate"
-                :label="t('organization.position.downloadSample')"
-                @click="downloadSample"
-            />
+    <section class="hrms-list-page hrms-compact">
+        <AppFilterBar :loading="positionStore.loading">
+            <span class="app-filter-field app-filter-field--search position-search">
+                <i class="pi pi-search" />
 
-            <Button
-                v-if="permissions.canImport"
-                severity="secondary"
-                outlined
-                icon="pi pi-upload"
-                :label="t('organization.position.importExcel')"
-                @click="openImportDialog"
-            />
+                <InputText
+                    v-model="filters.search"
+                    class="position-search__input"
+                    :placeholder="t('organization.position.searchPlaceholder')"
+                    @keyup.enter="applyFilters"
+                />
+            </span>
 
-            <Button
-                v-if="permissions.canExport"
-                severity="secondary"
-                outlined
-                icon="pi pi-file-export"
-                :loading="positionStore.exporting"
-                :label="t('organization.position.exportExcel')"
-                @click="exportExcel"
-            />
+            <div class="app-filter-field">
+                <Select
+                    v-model="filters.companyId"
+                    class="position-filter-select"
+                    :placeholder="tr('organization.position.allCompanies', 'All companies')"
+                    :options="companyFilterOptions"
+                    option-label="label"
+                    option-value="value"
+                    :loading="companyLoading"
+                    @change="onFilterCompanyChange"
+                />
+            </div>
 
-            <Button
-                v-if="permissions.canCreate"
-                icon="pi pi-plus"
-                :label="t('organization.position.newPosition')"
-                @click="openCreateDialog"
-            />
-        </AppModuleToolbar>
+            <div class="app-filter-field">
+                <Select
+                    v-model="filters.branchId"
+                    class="position-filter-select"
+                    :placeholder="tr('organization.position.allBranches', 'All branches')"
+                    :options="branchFilterOptions"
+                    option-label="label"
+                    option-value="value"
+                    :loading="branchLoading"
+                    @change="onFilterBranchChange"
+                />
+            </div>
 
-        <Card class="position-card">
-            <template #content>
-                <AppFilterBar>
-                    <div class="app-filter-field app-filter-field--search">
-                        <span class="position-search">
-                            <i class="pi pi-search" />
+            <div class="app-filter-field">
+                <Select
+                    v-model="filters.departmentId"
+                    class="position-filter-select"
+                    :placeholder="tr('organization.position.allDepartments', 'All departments')"
+                    :options="departmentFilterOptions"
+                    option-label="label"
+                    option-value="value"
+                    :loading="departmentLoading"
+                    @change="applyFilters"
+                />
+            </div>
 
-                            <InputText
-                                v-model="filters.search"
-                                class="position-search__input"
-                                :placeholder="
-                                    t('organization.position.searchPlaceholder')
-                                "
-                                @keyup.enter="applyFilters"
-                            />
-                        </span>
-                    </div>
+            <div class="app-filter-field position-status-field">
+                <Select
+                    v-model="filters.status"
+                    class="position-filter-select"
+                    :placeholder="tr('organization.position.statusAll', 'All statuses')"
+                    :options="statusOptions"
+                    option-label="label"
+                    option-value="value"
+                    @change="applyFilters"
+                />
+            </div>
 
-                    <div class="app-filter-field">
-                        <Select
-                            v-model="filters.companyId"
-                            class="position-filter-select"
-                            :placeholder="tr('organization.position.allCompanies', 'All companies')"
-                            :options="companyFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="companyLoading"
-                            @change="onFilterCompanyChange"
-                        />
-                    </div>
+            <template #actions>
+                <Button icon="pi pi-filter" :label="t('common.apply')" @click="applyFilters" />
 
-                    <div class="app-filter-field">
-                        <Select
-                            v-model="filters.branchId"
-                            class="position-filter-select"
-                            :placeholder="tr('organization.position.allBranches', 'All branches')"
-                            :options="branchFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="branchLoading"
-                            @change="onFilterBranchChange"
-                        />
-                    </div>
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-times"
+                    :label="t('common.clear')"
+                    @click="clearFilters"
+                />
 
-                    <div class="app-filter-field">
-                        <Select
-                            v-model="filters.departmentId"
-                            class="position-filter-select"
-                            :placeholder="tr('organization.position.allDepartments', 'All departments')"
-                            :options="departmentFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="departmentLoading"
-                            @change="applyFilters"
-                        />
-                    </div>
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-refresh"
+                    :aria-label="t('common.refresh')"
+                    :loading="positionStore.loading"
+                    @click="loadPositions"
+                />
 
-                    <div class="app-filter-field app-filter-field--status">
-                        <Select
-                            v-model="filters.status"
-                            class="position-filter-select"
-                            :placeholder="tr('organization.position.statusAll', 'All statuses')"
-                            :options="statusOptions"
-                            option-label="label"
-                            option-value="value"
-                            @change="applyFilters"
-                        />
-                    </div>
+                <Button
+                    v-if="permissions.canImport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-download"
+                    :loading="positionStore.downloadingTemplate"
+                    :aria-label="t('organization.position.downloadSample')"
+                    v-tooltip.top="t('organization.position.downloadSample')"
+                    @click="downloadSample"
+                />
 
-                    <template #actions>
-                        <Button
-                            icon="pi pi-filter"
-                            :label="t('common.apply')"
-                            @click="applyFilters"
-                        />
+                <Button
+                    v-if="permissions.canImport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-upload"
+                    :aria-label="t('organization.position.importExcel')"
+                    v-tooltip.top="t('organization.position.importExcel')"
+                    @click="openImportDialog"
+                />
 
-                        <Button
-                            severity="secondary"
-                            outlined
-                            icon="pi pi-times"
-                            :label="t('common.clear')"
-                            @click="clearFilters"
-                        />
+                <Button
+                    v-if="permissions.canExport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-file-export"
+                    :loading="positionStore.exporting"
+                    :aria-label="t('organization.position.exportExcel')"
+                    v-tooltip.top="t('organization.position.exportExcel')"
+                    @click="exportExcel"
+                />
 
-                        <Button
-                            severity="secondary"
-                            outlined
-                            icon="pi pi-refresh"
-                            :aria-label="t('common.refresh')"
-                            @click="loadPositions"
-                        />
-                    </template>
-                </AppFilterBar>
+                <Button
+                    v-if="permissions.canCreate"
+                    icon="pi pi-plus"
+                    :label="t('organization.position.newPosition')"
+                    @click="openCreateDialog"
+                />
+            </template>
+        </AppFilterBar>
 
-                <div class="position-table-wrap">
+        <div class="hrms-list-card">
+                <div class="hrms-table-wrap">
                     <DataTable
                         lazy
-                        class="position-table"
+                        class="hrms-standard-table hrms-standard-table--horizontal"
                         paginator
                         striped-rows
                         data-key="id"
@@ -1108,7 +1099,7 @@ onMounted(async () => {
                             style="min-width: 9rem"
                         >
                             <template #body="{ data }">
-                                <strong class="position-code">
+                                <strong class="hrms-cell-primary">
                                     {{ data.code }}
                                 </strong>
                             </template>
@@ -1119,10 +1110,9 @@ onMounted(async () => {
                             style="min-width: 15rem"
                         >
                             <template #body="{ data }">
-                                <div class="position-name-cell">
-                                    <strong>{{ data.title }}</strong>
-                                    <span>{{ data.shortName || "-" }}</span>
-                                </div>
+                                <strong class="hrms-cell-primary hrms-cell-nowrap">
+                                    {{ data.title || "-" }}
+                                </strong>
                             </template>
                         </Column>
 
@@ -1131,14 +1121,9 @@ onMounted(async () => {
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <div class="position-muted-cell">
-                                    <strong>
-                                        {{ data.department?.name || "-" }}
-                                    </strong>
-                                    <span>
-                                        {{ data.department?.code || "-" }}
-                                    </span>
-                                </div>
+                                <strong class="hrms-cell-primary hrms-cell-nowrap">
+                                    {{ data.department?.name || "-" }}
+                                </strong>
                             </template>
                         </Column>
 
@@ -1147,14 +1132,9 @@ onMounted(async () => {
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <div class="position-muted-cell">
-                                    <strong>
-                                        {{ data.branch?.name || "-" }}
-                                    </strong>
-                                    <span>
-                                        {{ data.branch?.code || "-" }}
-                                    </span>
-                                </div>
+                                <strong class="hrms-cell-primary hrms-cell-nowrap">
+                                    {{ data.branch?.name || "-" }}
+                                </strong>
                             </template>
                         </Column>
 
@@ -1163,19 +1143,14 @@ onMounted(async () => {
                             style="min-width: 14rem"
                         >
                             <template #body="{ data }">
-                                <div
+                                <strong
                                     v-if="data.reportsToPosition"
-                                    class="position-muted-cell"
+                                    class="hrms-cell-primary hrms-cell-nowrap"
                                 >
-                                    <strong>
-                                        {{ data.reportsToPosition.title }}
-                                    </strong>
-                                    <span>
-                                        {{ data.reportsToPosition.code }}
-                                    </span>
-                                </div>
+                                    {{ data.reportsToPosition.title }}
+                                </strong>
 
-                                <span v-else class="position-muted-text">
+                                <span v-else class="hrms-cell-muted hrms-cell-nowrap">
                                     {{ t("organization.position.noReportsTo") }}
                                 </span>
                             </template>
@@ -1205,7 +1180,7 @@ onMounted(async () => {
                                     :value="t('common.yes')"
                                 />
 
-                                <span v-else class="position-muted-text">
+                                <span v-else class="hrms-cell-muted">
                                     {{ t("common.no") }}
                                 </span>
                             </template>
@@ -1264,22 +1239,21 @@ onMounted(async () => {
                         </Column>
                     </DataTable>
                 </div>
-            </template>
-        </Card>
+        </div>
 
         <Dialog
             v-model:visible="dialogVisible"
             modal
-            class="position-dialog"
+            class="hrms-standard-dialog position-dialog"
             :header="dialogTitle"
             :draggable="false"
         >
-            <div class="position-form">
-                <div class="position-form__section">
+            <div class="hrms-dialog-form position-form">
+                <div class="hrms-form-section position-form__section">
                     <h3>{{ t("organization.position.basicInfo") }}</h3>
 
-                    <div class="position-form__grid">
-                        <label class="position-field">
+                    <div class="hrms-form-grid position-form__grid">
+                        <label class="hrms-form-field position-field">
                             <span>{{ t("organization.position.company") }}</span>
 
                             <Select
@@ -1301,7 +1275,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="position-field">
+                        <label class="hrms-form-field position-field">
                             <span>{{ t("organization.position.branch") }}</span>
 
                             <Select
@@ -1325,7 +1299,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="position-field">
+                        <label class="hrms-form-field position-field">
                             <span>
                                 {{ t("organization.position.department") }}
                             </span>
@@ -1353,7 +1327,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="position-field">
+                        <label class="hrms-form-field position-field">
                             <span>{{ t("organization.position.reportsTo") }}</span>
 
                             <Select
@@ -1375,7 +1349,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="position-field">
+                        <label class="hrms-form-field position-field">
                             <span>{{ t("organization.position.code") }}</span>
 
                             <InputText
@@ -1391,7 +1365,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="position-field">
+                        <label class="hrms-form-field position-field">
                             <span>
                                 {{ t("organization.position.shortName") }}
                             </span>
@@ -1403,7 +1377,7 @@ onMounted(async () => {
                             />
                         </label>
 
-                        <label class="position-field position-field--wide">
+                        <label class="hrms-form-field hrms-form-field--wide position-field position-field--wide">
                             <span>{{ t("organization.position.titleField") }}</span>
 
                             <InputText
@@ -1419,7 +1393,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="position-field">
+                        <label class="hrms-form-field position-field">
                             <span>{{ t("organization.position.level") }}</span>
 
                             <InputNumber
@@ -1431,7 +1405,7 @@ onMounted(async () => {
                             />
                         </label>
 
-                        <label class="position-field">
+                        <label class="hrms-form-field position-field">
                             <span>{{ t("organization.position.status") }}</span>
 
                             <Select
@@ -1442,7 +1416,7 @@ onMounted(async () => {
                             />
                         </label>
 
-                        <div class="position-field position-field--wide">
+                        <div class="hrms-form-field hrms-form-field--wide position-field position-field--wide">
                             <div class="position-checkbox-row">
                                 <Checkbox
                                     v-model="form.isManager"
@@ -1460,7 +1434,7 @@ onMounted(async () => {
                             </div>
                         </div>
 
-                        <label class="position-field position-field--wide">
+                        <label class="hrms-form-field hrms-form-field--wide position-field position-field--wide">
                             <span>
                                 {{
                                     t(
@@ -1499,7 +1473,7 @@ onMounted(async () => {
         <Dialog
             v-model:visible="archiveDialogVisible"
             modal
-            class="position-archive-dialog"
+            class="hrms-standard-dialog position-archive-dialog"
             :header="t('organization.position.archiveTitle')"
             :draggable="false"
         >
@@ -1532,7 +1506,7 @@ onMounted(async () => {
         <Dialog
             v-model:visible="importDialogVisible"
             modal
-            class="position-import-dialog"
+            class="hrms-standard-dialog position-import-dialog"
             :header="t('organization.position.importTitle')"
             :draggable="false"
             :closable="!positionStore.importing"
@@ -1595,7 +1569,7 @@ onMounted(async () => {
         <Dialog
             v-model:visible="importResultDialogVisible"
             modal
-            class="position-import-result-dialog"
+            class="hrms-standard-dialog position-import-result-dialog"
             :header="t('organization.position.importResultTitle')"
             :draggable="false"
         >
@@ -1677,23 +1651,10 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.position-page {
-    display: grid;
-    width: 100%;
-    gap: var(--hrms-space-3, 0.75rem);
-}
-
-.position-card {
-    width: 100%;
-    min-width: 0;
-    border: 1px solid var(--hrms-border);
-    box-shadow: var(--hrms-shadow-sm);
-}
-
 .position-search {
     position: relative;
     display: block;
-    width: 100%;
+    width: min(100%, 15rem);
 }
 
 .position-search i {
@@ -1712,178 +1673,45 @@ onMounted(async () => {
     padding-left: 1.9rem;
 }
 
-.position-table-wrap {
-    width: 100%;
-    min-width: 0;
-    overflow-x: auto;
+.position-filter-select {
+    width: 11.5rem;
 }
 
-.position-table :deep(.p-datatable-thead > tr > th),
-.position-table :deep(.p-datatable-tbody > tr > td) {
-    text-align: center;
-    vertical-align: middle;
-}
-
-.position-table :deep(.p-datatable-column-header-content) {
-    justify-content: center;
-}
-
-.position-table .position-name-cell,
-.position-table .position-muted-cell {
-    justify-items: center;
-    text-align: center;
-}
-
-.position-table :deep(.p-tag) {
-    justify-content: center;
-}
-
-.position-code {
-    color: var(--hrms-primary);
-    font-size: 0.78rem;
-}
-
-.position-name-cell,
-.position-muted-cell {
-    display: grid;
-    gap: 0.15rem;
-    min-width: 0;
-}
-
-.position-name-cell strong,
-.position-muted-cell strong,
-.position-muted-cell span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.position-name-cell strong,
-.position-muted-cell strong {
-    color: var(--hrms-text);
-    font-size: 0.78rem;
-}
-
-.position-name-cell span,
-.position-muted-cell span,
-.position-date,
-.position-muted-text,
-.position-archived-text {
-    color: var(--hrms-text-muted);
-    font-size: 0.72rem;
-}
-
-.position-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-}
-
-.position-dialog {
-    width: min(62rem, calc(100vw - 2rem));
-}
-
-.position-archive-dialog,
-.position-import-dialog,
-.position-import-result-dialog {
-    width: min(36rem, calc(100vw - 2rem));
-}
-
-.position-form {
-    display: grid;
-    gap: 0.75rem;
-}
-
-.position-form__section {
-    display: grid;
-    gap: 0.55rem;
-    padding: 0.7rem;
-    background: var(--hrms-surface-muted);
-    border: 1px solid var(--hrms-border);
-    border-radius: var(--hrms-radius-md);
-}
-
-.position-form__section h3 {
-    margin: 0;
-    color: var(--hrms-text);
-    font-size: 0.82rem;
-}
-
-.position-form__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.6rem;
-}
-
-.position-field {
-    display: grid;
-    gap: 0.35rem;
-}
-
-.position-field--wide {
-    grid-column: 1 / -1;
-}
-
-.position-field span,
-.position-checkbox-row label {
-    color: var(--hrms-text-muted);
-    font-size: 0.72rem;
-    font-weight: 700;
-}
-
-.position-field small {
-    color: var(--hrms-danger);
-    font-size: 0.68rem;
+.position-status-field .position-filter-select {
+    width: 9.5rem;
 }
 
 .position-checkbox-row {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    min-height: 2.4rem;
+    min-height: 2.25rem;
+    gap: 0.55rem;
 }
 
-.position-archive-text {
+.position-archive-text,
+.position-import p {
     margin: 0;
-    color: var(--hrms-text);
-    font-size: 0.82rem;
-    line-height: 1.6;
+    color: var(--hrms-text-secondary);
+    line-height: 1.55;
 }
 
 .position-import {
     display: grid;
-    gap: 1rem;
+    gap: 0.85rem;
+}
+
+.position-import__file,
+.position-import__progress {
+    display: grid;
+    gap: 0.45rem;
 }
 
 .position-import__file {
-    display: flex;
+    grid-template-columns: auto 1fr;
     align-items: center;
-    gap: 0.5rem;
-    min-width: 0;
-    padding: 0.75rem;
-    color: var(--hrms-text);
-    background: var(--hrms-surface-muted);
+    padding: 0.7rem;
     border: 1px solid var(--hrms-border);
     border-radius: var(--hrms-radius-md);
-    font-size: 0.78rem;
-}
-
-.position-import__file span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.position-import__progress {
-    display: grid;
-    gap: 0.35rem;
-}
-
-.position-import__progress span {
-    color: var(--hrms-text-muted);
-    font-size: 0.72rem;
-    text-align: center;
 }
 
 .position-import-result {
@@ -1894,145 +1722,54 @@ onMounted(async () => {
 .position-import-result__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.5rem;
+    gap: 0.65rem;
 }
 
-.position-import-result__grid div {
+.position-import-result__grid > div {
     display: grid;
     gap: 0.25rem;
     padding: 0.75rem;
-    text-align: center;
-    background: var(--hrms-surface-muted);
     border: 1px solid var(--hrms-border);
     border-radius: var(--hrms-radius-md);
+    background: var(--hrms-surface-soft);
+    text-align: center;
 }
 
 .position-import-result__grid span {
     color: var(--hrms-text-muted);
-    font-size: 0.68rem;
+    font-size: 0.72rem;
 }
 
 .position-import-result__grid strong {
-    color: var(--hrms-text);
     font-size: 1rem;
 }
 
-.position-import-result__errors {
-    display: grid;
-    gap: 0.5rem;
-}
-
 .position-import-result__errors h4 {
-    margin: 0;
-    color: var(--hrms-danger);
-    font-size: 0.78rem;
-}
-
-:deep(.p-card-body),
-:deep(.p-card-content) {
-    padding: 0;
-}
-
-:deep(.p-card-content) {
-    padding: 1rem;
-}
-
-:deep(.p-datatable) {
-    font-size: 0.74rem;
-}
-
-:deep(.p-datatable-thead > tr > th) {
-    color: var(--hrms-text);
-    background: var(--hrms-surface-muted);
-    font-size: 0.7rem;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-:deep(.p-datatable-tbody > tr > td),
-:deep(.p-datatable-thead > tr > th) {
-    text-align: center;
-    vertical-align: middle;
-}
-
-:deep(.p-datatable-tbody > tr > td) {
-    border-color: var(--hrms-border);
-}
-
-:deep(.position-input-number) {
-    width: 100%;
-}
-
-:deep(.p-dialog-header),
-:deep(.p-dialog-footer) {
-    padding: 1rem;
-}
-
-:deep(.p-dialog-content) {
-    padding: 0 1rem 1rem;
-}
-
-
-:deep(.position-filter-select) {
-    width: 100%;
-}
-
-:deep(.position-filter-select .p-select-label) {
-    display: flex;
-    align-items: center;
-    height: 100%;
-    min-height: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    line-height: 1.2;
-}
-
-:deep(.position-filter-select .p-select-dropdown) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-@media (max-width: 1250px) {
-    .position-toolbar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .position-toolbar__filters,
-    .position-toolbar__actions {
-        width: 100%;
-        flex-wrap: wrap;
-    }
-
-    .position-search,
-    .position-company-filter,
-    .position-branch-filter,
-    .position-department-filter,
-    .position-status-filter {
-        width: 100%;
-    }
+    margin: 0 0 0.65rem;
 }
 
 @media (max-width: 900px) {
-    .position-page__header {
-        flex-direction: column;
-        align-items: stretch;
+    .position-filter-select,
+    .position-status-field .position-filter-select,
+    .position-search {
+        width: 100%;
+        max-width: none;
     }
 
-    .position-page__header-actions {
-        justify-content: flex-start;
+    .position-import-result__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
-@media (max-width: 650px) {
-    .position-form__grid,
+@media (max-width: 520px) {
     .position-import-result__grid {
         grid-template-columns: 1fr;
     }
+}
 
-    .position-page h2 {
-        font-size: 1.2rem;
-    }
+.hrms-cell-nowrap {
+    display: inline-block;
+    max-width: none;
+    white-space: nowrap;
 }
 </style>

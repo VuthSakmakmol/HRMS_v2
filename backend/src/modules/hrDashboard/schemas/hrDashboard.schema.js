@@ -14,6 +14,22 @@ function endOfCurrentYear() {
 
 const dateStringSchema = z.string().date()
 
+const employeeTypeFilterKeySchema = z
+    .string()
+    .trim()
+    .max(140)
+    .regex(/^(TYPE|CHILD):[0-9a-fA-F]{24}(:[A-Z0-9_-]{2,30})?$/, {
+        message: "Invalid employee type filter key.",
+    })
+    .optional()
+
+const employeeTypeChildCodeSchema = z
+    .string()
+    .trim()
+    .transform((value) => value.replace(/\s+/g, "_").toUpperCase())
+    .pipe(z.string().min(2).max(30).regex(/^[A-Z0-9_-]+$/))
+    .optional()
+
 export const hrDashboardQuerySchema = z
     .object({
         startDate: dateStringSchema.default(startOfCurrentYear()),
@@ -24,6 +40,8 @@ export const hrDashboardQuerySchema = z
         positionId: objectIdSchema.optional(),
         lineId: objectIdSchema.optional(),
         employeeTypeId: objectIdSchema.optional(),
+        employeeTypeChildCode: employeeTypeChildCodeSchema,
+        employeeTypeFilterKey: employeeTypeFilterKeySchema,
     })
     .superRefine((value, context) => {
         const startDate = new Date(`${value.startDate}T00:00:00.000Z`)

@@ -1,9 +1,8 @@
 export default {
     app: {
         name: "HRMS Enterprise",
-        subtitle: "ប្រព័ន្ធគ្រប់គ្រងធនធានមនុស្ស",
+        subtitle: "ប្រព័ន្ធគ្រប់គ្រងធនធានមនុស្ស"
     },
-
     common: {
         english: "English",
         khmer: "ខ្មែរ",
@@ -27,10 +26,8 @@ export default {
         success: "ជោគជ័យ",
         next: "បន្ទាប់",
         yes: "បាទ/ចាស",
-        no: "ទេ",
-        close: "បិទ",
+        no: "ទេ"
     },
-
     nav: {
         accessControl: "ការគ្រប់គ្រងសិទ្ធិ",
         accounts: "គណនី",
@@ -56,11 +53,10 @@ export default {
         reports: "របាយការណ៍",
         manpowerPlans: "ផែនការកម្លាំងពលកម្ម",
         employeeMovements: "ចលនាបុគ្គលិក",
-        reports: "របាយការណ៍",
         hrManagementDashboard: "ផ្ទាំងគ្រប់គ្រង HR",
-        hrDashboard: "ផ្ទាំងព័ត៌មាន HR",
+        hrDashboard: "ផ្ទាំងគ្រប់គ្រង HR",
+        recruitmentChannels: "ប្រភពជ្រើសរើសបុគ្គលិក"
     },
-
     attendance: {
         title: "កំណត់ត្រាវត្តមាន",
         description: "នាំចូល ពិនិត្យ និងកែតម្រូវវត្តមានប្រចាំថ្ងៃរបស់បុគ្គលិក។",
@@ -93,9 +89,9 @@ export default {
             earlyLeave: "ចេញមុន",
             missingIn: "ខ្វះម៉ោងចូល",
             missingOut: "ខ្វះម៉ោងចេញ",
-            restDay: "ថ្ងៃសម្រាក",
+            restDay: "ថ្ងៃសម្រាក"
         },
-            policy: {
+        policy: {
             title: "គោលការណ៍វត្តមាន",
             description: "កំណត់ពេលអនុគ្រោះ ការបង្គត់ និងការបង្កើតអវត្តមានដោយស្វ័យប្រវត្តិ។",
             add: "បន្ថែមគោលការណ៍",
@@ -107,7 +103,7 @@ export default {
             lateRoundUnit: "ឯកតាបង្គត់មកយឺត",
             earlyRoundUnit: "ឯកតាបង្គត់ចេញមុន",
             autoAbsent: "បង្កើតកំណត់ត្រាអវត្តមានដោយស្វ័យប្រវត្តិ",
-            sundayRest: "កំណត់ថ្ងៃអាទិត្យជាថ្ងៃសម្រាក",
+            sundayRest: "កំណត់ថ្ងៃអាទិត្យជាថ្ងៃសម្រាក"
         },
         scan: {
             title: "ម៉ោងស្កេនវត្តមានដើម",
@@ -117,7 +113,7 @@ export default {
             scannedAt: "ពេលស្កេន",
             direction: "ទិសដៅ",
             device: "ឧបករណ៍",
-            batch: "ក្រុមនាំចូល",
+            batch: "ក្រុមនាំចូល"
         },
         verification: {
             title: "ផ្ទៀងផ្ទាត់វត្តមាន",
@@ -129,13 +125,12 @@ export default {
             employees: "បុគ្គលិក",
             processed: "បានដំណើរការ",
             review: "ត្រូវពិនិត្យ",
-            skipped: "បានរំលង",
+            skipped: "បានរំលង"
         },
         attendanceDashboard: {
             eyebrow: "វិភាគវត្តមាន",
             title: "ផ្ទាំងសង្ខេបវត្តមាន",
-            description:
-                "វិភាគវត្តមានប្រចាំថ្ងៃតាមបុគ្គលិក នាយកដ្ឋាន Line វេន និងស្ថានភាពត្រួតពិនិត្យ។ ប្រើ Attendance Records ដែលបាន verify និង Internal Calendar ជា source of truth។",
+            description: "វិភាគវត្តមានប្រចាំថ្ងៃតាមបុគ្គលិក នាយកដ្ឋាន Line វេន និងស្ថានភាពត្រួតពិនិត្យ។ ប្រើ Attendance Records ដែលបាន verify និង Internal Calendar ជា source of truth។",
             loadFailed: "មិនអាចទាញយកផ្ទាំងសង្ខេបវត្តមានបានទេ",
             lookupLoadFailed: "មិនអាចទាញយក filter បានទេ",
             filters: {
@@ -148,7 +143,7 @@ export default {
                 allPositions: "តួនាទីទាំងអស់",
                 allLines: "Line ទាំងអស់",
                 allShifts: "វេនទាំងអស់",
-                allEmployeeTypes: "ប្រភេទបុគ្គលិកទាំងអស់",
+                allEmployeeTypes: "ប្រភេទបុគ្គលិកទាំងអស់"
             },
             cards: {
                 expectedEmployees: "បុគ្គលិករំពឹងទុក",
@@ -159,7 +154,7 @@ export default {
                 earlyLeave: "ចេញមុន",
                 needsReview: "ត្រូវពិនិត្យ",
                 holiday: "ថ្ងៃឈប់សម្រាក",
-                missing: "ខ្វះ Scan",
+                missing: "ខ្វះ Scan"
             },
             sections: {
                 statusBreakdown: "បែងចែកតាមស្ថានភាព",
@@ -169,7 +164,7 @@ export default {
                 shiftSummary: "សង្ខេបតាមវេន",
                 needsReview: "Records ត្រូវពិនិត្យ",
                 topLateEmployees: "បុគ្គលិកមកយឺតច្រើន",
-                minutesSummary: "សង្ខេបនាទី",
+                minutesSummary: "សង្ខេបនាទី"
             },
             fields: {
                 lateDays: "ថ្ងៃមកយឺត",
@@ -177,17 +172,14 @@ export default {
                 maxLate: "យឺតខ្ពស់បំផុត",
                 totalWorked: "ធ្វើការសរុប",
                 totalEarlyLeave: "ចេញមុនសរុប",
-                presentRate: "ភាគរយមានវត្តមាន",
-            },
-        },
-
-},
-
+                presentRate: "ភាគរយមានវត្តមាន"
+            }
+        }
+    },
     hrDashboard: {
         eyebrow: "ការវិភាគកម្លាំងពលកម្ម ដំណាក់កាលទី ១",
         title: "ផ្ទាំងព័ត៌មានធនធានមនុស្ស",
-        description:
-            "ទិន្នន័យទូទៅ ការធ្វើផែនការកម្លាំងពលកម្ម និងចលនាបុគ្គលិកតាមរយៈពេលដែលបានជ្រើសរើស។",
+        description: "ទិន្នន័យទូទៅ ការធ្វើផែនការកម្លាំងពលកម្ម និងចលនាបុគ្គលិកតាមរយៈពេលដែលបានជ្រើសរើស។",
         loadFailed: "មិនអាចផ្ទុកផ្ទាំងព័ត៌មានធនធានមនុស្សបានទេ។",
         filters: {
             startDate: "ថ្ងៃចាប់ផ្តើម",
@@ -203,7 +195,7 @@ export default {
             allDepartments: "នាយកដ្ឋានទាំងអស់",
             allPositions: "មុខតំណែងទាំងអស់",
             allLines: "ខ្សែផលិតកម្មទាំងអស់",
-            allEmployeeTypes: "ប្រភេទបុគ្គលិកទាំងអស់",
+            allEmployeeTypes: "ប្រភេទបុគ្គលិកទាំងអស់"
         },
         sections: {
             generalData: "ទិន្នន័យទូទៅ",
@@ -214,62 +206,89 @@ export default {
             whiteCollarMovement: "ចលនាបុគ្គលិកការិយាល័យ",
             attendanceDashboard: "ផ្ទាំងវត្តមាន",
             attendanceByLine: "វត្តមានតាម Line",
+            manpower: "កម្លាំងពលកម្ម",
+            recruitmentChannels: "ប្រភពជ្រើសរើសបុគ្គលិក",
+            movement: "ចលនាបុគ្គលិក"
         },
-
         general: {
             totalEmployees: "បុគ្គលិកសរុប",
             sewerEmployees: "បុគ្គលិកផ្នែកដេរ",
-            averageAge: "អាយុមធ្យម",
+            averageAge: "អាយុជាមធ្យម",
             sewerAverageAge: "អាយុមធ្យមផ្នែកដេរ",
-            averageService: "អាយុកាលការងារមធ្យម",
+            averageService: "អតីតភាពការងារ",
             sewerAverageService: "អាយុកាលការងារមធ្យមផ្នែកដេរ",
-            directIndirectRatio: "សមាមាត្រផ្ទាល់ / មិនផ្ទាល់",
+            directIndirectRatio: "សមាមាត្រ Indirect / Direct",
+            indirectDirectRatio: "សមាមាត្រ Indirect / Direct",
+            total: "សរុប",
+            selected: "បានជ្រើស",
+            actual: "ជាក់ស្តែង",
+            budget: "ផែនការ"
         },
         manpower: {
-            item: "មុខទិន្នន័យ",
-            budget: "ថវិកា",
-            roadmap: "ផែនការ",
+            item: "ធាតុ",
+            budget: "ថវិកាគោលដៅ",
+            roadmap: "ផែនទីផ្លូវ",
             actual: "ជាក់ស្តែង",
             fillRate: "អត្រាបំពេញ",
-            chartAria: "ក្រាហ្វផែនការ និងកម្លាំងពលកម្មជាក់ស្តែងប្រចាំខែ",
+            chartAria: "ក្រាហ្វថវិកាគោលដៅ ផែនទីផ្លូវ ចំនួនជាក់ស្តែង និងគម្លាតប្រចាំខែ",
+            title: "កម្លាំងពលកម្ម",
+            subtitle: "ថវិកាគោលដៅ ផែនទីផ្លូវ ចំនួនជាក់ស្តែង លើស/ខ្វះគោលដៅ លើស/ខ្វះផែនទីផ្លូវ និងអត្រាបំពេញ។",
+            empty: "មិនមានទិន្នន័យកម្លាំងពលកម្មត្រូវនឹងតម្រងនេះទេ។",
+            noData: "មិនមានទិន្នន័យកម្លាំងពលកម្ម",
+            chartTitle: "ក្រាហ្វកម្លាំងពលកម្ម",
+            chartSubtitle: "ប្រៀបធៀបថវិកាគោលដៅ ផែនទីផ្លូវ ចំនួនជាក់ស្តែង និងតម្លៃលើស/ខ្វះ សម្រាប់តម្រងដែលបានជ្រើស។",
+            tableTitle: "សង្ខេបកម្លាំងពលកម្ម",
+            tableSubtitle: "ការប្រៀបធៀបគោលដៅ និងចំនួនជាក់ស្តែងនៃកម្លាំងពលកម្ម។",
+            category: "ប្រភេទ",
+            total: "សរុប",
+            selected: "បានជ្រើស",
+            overLessTarget: "លើស / ខ្វះ គោលដៅ",
+            overLessRoadmap: "លើស / ខ្វះ ផែនទីផ្លូវ",
+            percent: "ភាគរយ",
+            employeeCount: "ចំនួនបុគ្គលិក",
+            targetGap: "គម្លាតគោលដៅ",
+            roadmapGap: "គម្លាតផែនទីផ្លូវ",
+            over: "លើស",
+            less: "ខ្វះ",
+            balanced: "ស្មើគ្នា"
         },
         movement: {
             item: "ចលនា",
             in: "ចូល",
             out: "ចេញ",
             balance: "សមតុល្យ",
-            chartAria: "ក្រាហ្វចលនាបុគ្គលិកប្រចាំខែ",
+            chartAria: "ក្រាហ្វចលនាបុគ្គលិកប្រចាំខែ"
         },
         units: {
-            years: "ឆ្នាំ",
+            years: "ឆ្នាំ"
         },
         months: {
-            1: "មករា",
-            2: "កុម្ភៈ",
-            3: "មីនា",
-            4: "មេសា",
-            5: "ឧសភា",
-            6: "មិថុនា",
-            7: "កក្កដា",
-            8: "សីហា",
-            9: "កញ្ញា",
-            10: "តុលា",
-            11: "វិច្ឆិកា",
-            12: "ធ្នូ",
+            "1": "មករា",
+            "2": "កុម្ភៈ",
+            "3": "មីនា",
+            "4": "មេសា",
+            "5": "ឧសភា",
+            "6": "មិថុនា",
+            "7": "កក្កដា",
+            "8": "សីហា",
+            "9": "កញ្ញា",
+            "10": "តុលា",
+            "11": "វិច្ឆិកា",
+            "12": "ធ្នូ"
         },
         monthsShort: {
-            1: "មករា",
-            2: "កុម្ភៈ",
-            3: "មីនា",
-            4: "មេសា",
-            5: "ឧសភា",
-            6: "មិថុនា",
-            7: "កក្កដា",
-            8: "សីហា",
-            9: "កញ្ញា",
-            10: "តុលា",
-            11: "វិច្ឆិកា",
-            12: "ធ្នូ",
+            "1": "មករា",
+            "2": "កុម្ភៈ",
+            "3": "មីនា",
+            "4": "មេសា",
+            "5": "ឧសភា",
+            "6": "មិថុនា",
+            "7": "កក្កដា",
+            "8": "សីហា",
+            "9": "កញ្ញា",
+            "10": "តុលា",
+            "11": "វិច្ឆិកា",
+            "12": "ធ្នូ"
         },
         attendance: {
             item: "វត្តមាន",
@@ -285,37 +304,39 @@ export default {
             attendanceRate: "អត្រាវត្តមាន",
             line: "ខ្សែផលិតកម្ម",
             noLineData: "មិនមានទិន្នន័យវត្តមានតាមខ្សែផលិតកម្មសម្រាប់រយៈពេលដែលបានជ្រើស។",
-            chartAria: "ក្រាហ្វវត្តមានប្រចាំខែ មានវត្តមាន អវត្តមាន និងមកយឺត",
+            chartAria: "ក្រាហ្វវត្តមានប្រចាំខែ មានវត្តមាន អវត្តមាន និងមកយឺត"
         },
+        noData: "មិនមានទិន្នន័យ Dashboard ត្រូវនឹងតម្រងនេះទេ។",
+        recruitment: {
+            channels: "ប្រភព",
+            previousAveragePerMonth: "មធ្យម / ខែ",
+            targetPerMonth: "គោលដៅ / ខែ",
+            averagePerMonth: "មធ្យម / ខែ",
+            total: "សរុប",
+            noData: "គ្មានទិន្នន័យ",
+            previousYearChart: "សមាមាត្រប្រភពជ្រើសរើស – {year}",
+            currentYearChart: "សមាមាត្រប្រភពជ្រើសរើស – {year}"
+        }
     },
-
     auth: {
         systemAccess: "ការចូលប្រើប្រព័ន្ធប្រកបដោយសុវត្ថិភាព",
-        welcomeTitle:
-            "មូលដ្ឋានសុវត្ថិភាពតែមួយសម្រាប់ធនធានមនុស្សរបស់អ្នក។",
-        welcomeDescription:
-            "ចូលដោយប្រើគណនី HRMS ដែលបានអនុញ្ញាត ដើម្បីប្រើប្រាស់មុខងារតាមតួនាទី សិទ្ធិ ក្រុមហ៊ុន និងសាខារបស់អ្នក។",
-        securityPoint:
-            "សុវត្ថិភាពពី Backend និងការចូលប្រើដែលអាចត្រួតពិនិត្យបាន",
-        permissionPoint:
-            "តួនាទី និងសិទ្ធិអាចបត់បែនបានគ្រប់មុខងារ",
-        globalDesignPoint:
-            "Theme, របៀបងងឹត និងភាសាគ្រប់គ្រងជាសកល",
+        welcomeTitle: "មូលដ្ឋានសុវត្ថិភាពតែមួយសម្រាប់ធនធានមនុស្សរបស់អ្នក។",
+        welcomeDescription: "ចូលដោយប្រើគណនី HRMS ដែលបានអនុញ្ញាត ដើម្បីប្រើប្រាស់មុខងារតាមតួនាទី សិទ្ធិ ក្រុមហ៊ុន និងសាខារបស់អ្នក។",
+        securityPoint: "សុវត្ថិភាពពី Backend និងការចូលប្រើដែលអាចត្រួតពិនិត្យបាន",
+        permissionPoint: "តួនាទី និងសិទ្ធិអាចបត់បែនបានគ្រប់មុខងារ",
+        globalDesignPoint: "Theme, របៀបងងឹត និងភាសាគ្រប់គ្រងជាសកល",
         signIn: "ចូលប្រើប្រាស់",
-        signInDescription:
-            "ប្រើគណនី Super Admin ដែលបាន Seed នៅក្នុង Backend។",
+        signInDescription: "ប្រើគណនី Super Admin ដែលបាន Seed នៅក្នុង Backend។",
         loginId: "លេខសម្គាល់ចូល",
         loginIdPlaceholder: "បញ្ចូលលេខសម្គាល់ចូល",
         password: "ពាក្យសម្ងាត់",
         passwordPlaceholder: "បញ្ចូលពាក្យសម្ងាត់",
-        rootAdministrator: "អ្នកគ្រប់គ្រងប្រព័ន្ធកម្រិតខ្ពស់",
+        rootAdministrator: "អ្នកគ្រប់គ្រងប្រព័ន្ធកម្រិតខ្ពស់"
     },
-
     workspace: {
         eyebrow: "កន្លែងធ្វើការសុវត្ថិភាព",
         welcome: "សូមស្វាគមន៍មកវិញ, {name}",
-        description:
-            "Session របស់អ្នកត្រូវបានផ្ទៀងផ្ទាត់ដោយ Backend។ ទំព័រនេះបង្ហាញតែសិទ្ធិដែល Backend បានអនុញ្ញាតប៉ុណ្ណោះ។",
+        description: "Session របស់អ្នកត្រូវបានផ្ទៀងផ្ទាត់ដោយ Backend។ ទំព័រនេះបង្ហាញតែសិទ្ធិដែល Backend បានអនុញ្ញាតប៉ុណ្ណោះ។",
         authorizedUser: "អ្នកប្រើប្រាស់ដែលបានអនុញ្ញាត",
         backendConnection: "Backend API",
         apiConnected: "បានភ្ជាប់ API",
@@ -327,23 +348,18 @@ export default {
         role: "តួនាទី",
         accessControl: "ការគ្រប់គ្រងសិទ្ធិ",
         effectivePermissions: "សិទ្ធិដែលមានប្រសិទ្ធភាព",
-        permissionDescription:
-            "សិទ្ធិត្រូវបានកំណត់ដោយ Backend ពីតួនាទីសកម្មរបស់អ្នក។",
+        permissionDescription: "សិទ្ធិត្រូវបានកំណត់ដោយ Backend ពីតួនាទីសកម្មរបស់អ្នក។",
         nextModule: "មុខងារសុវត្ថិភាពបន្ទាប់",
         organizationTitle: "ការគ្រប់គ្រងក្រុមហ៊ុន និងសាខា",
-        organizationDescription:
-            "Root Admin អាចបង្កើត និងគ្រប់គ្រងក្រុមហ៊ុនតាម API ដែលមានសុវត្ថិភាព និងផ្ទាំងនេះ។",
+        organizationDescription: "Root Admin អាចបង្កើត និងគ្រប់គ្រងក្រុមហ៊ុនតាម API ដែលមានសុវត្ថិភាព និងផ្ទាំងនេះ។",
         permissionPreview: "ទិដ្ឋភាពសិទ្ធិ",
-        permissionPreviewDescription:
-            "ទាំងនេះជាកូដសិទ្ធិដែល Backend ផ្តល់ឱ្យអ្នកប្រើប្រាស់ដែលបានចូល។",
-        morePermissions: "+ សិទ្ធិបន្ថែម {count}",
+        permissionPreviewDescription: "ទាំងនេះជាកូដសិទ្ធិដែល Backend ផ្តល់ឱ្យអ្នកប្រើប្រាស់ដែលបានចូល។",
+        morePermissions: "+ សិទ្ធិបន្ថែម {count}"
     },
-
     foundation: {
         eyebrow: "មូលដ្ឋានប្រព័ន្ធ",
         title: "HRMS Enterprise រួចរាល់សម្រាប់ការអភិវឌ្ឍមុខងារប្រកបដោយសុវត្ថិភាព។",
-        description:
-            "Theme, ភាសា, ការភ្ជាប់ API និងច្បាប់សកល ត្រូវបានរៀបចំរួចរាល់។",
+        description: "Theme, ភាសា, ការភ្ជាប់ API និងច្បាប់សកល ត្រូវបានរៀបចំរួចរាល់។",
         apiConnection: "Backend API",
         databaseConnection: "MongoDB Atlas",
         language: "ភាសា",
@@ -354,23 +370,19 @@ export default {
         databasePending: "Database នឹងត្រូវភ្ជាប់នៅជំហានបន្ទាប់",
         databaseConnected: "បានភ្ជាប់ Database",
         lastChecked: "ពេលពិនិត្យចុងក្រោយ",
-        noCheckYet: "មិនទាន់បានពិនិត្យ",
+        noCheckYet: "មិនទាន់បានពិនិត្យ"
     },
-
     organization: {
         company: {
             eyebrow: "ការរៀបចំអង្គភាព",
             title: "ក្រុមហ៊ុន",
-            description:
-                "បង្កើត និងគ្រប់គ្រងក្រុមហ៊ុនតាមផ្ទាំង HRMS។ រាល់សកម្មភាពត្រូវបានផ្ទៀងផ្ទាត់ គ្រប់គ្រងដោយសិទ្ធិ និង Validate ពី Backend។",
+            description: "បង្កើត និងគ្រប់គ្រងក្រុមហ៊ុនតាមផ្ទាំង HRMS។ រាល់សកម្មភាពត្រូវបានផ្ទៀងផ្ទាត់ គ្រប់គ្រងដោយសិទ្ធិ និង Validate ពី Backend។",
             newCompany: "បង្កើតក្រុមហ៊ុន",
             createTitle: "បង្កើតក្រុមហ៊ុន",
             editTitle: "កែប្រែក្រុមហ៊ុន",
             archiveTitle: "ដាក់ក្រុមហ៊ុនក្នុងបណ្ណសារ",
-            archiveMessage:
-                "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ? ក្រុមហ៊ុនដែលបានដាក់ក្នុងបណ្ណសារនឹងរក្សាទុកសម្រាប់ប្រវត្តិ និងមិនលុបចោលទាំងស្រុងទេ។",
-            searchPlaceholder:
-                "ស្វែងរក Code, ឈ្មោះ, លេខចុះបញ្ជី, ពន្ធ...",
+            archiveMessage: "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ? ក្រុមហ៊ុនដែលបានដាក់ក្នុងបណ្ណសារនឹងរក្សាទុកសម្រាប់ប្រវត្តិ និងមិនលុបចោលទាំងស្រុងទេ។",
+            searchPlaceholder: "ស្វែងរក Code, ឈ្មោះ, លេខចុះបញ្ជី, ពន្ធ...",
             empty: "រកមិនឃើញក្រុមហ៊ុន។",
             loadFailed: "មិនអាចទាញយកក្រុមហ៊ុនបានទេ",
             saveFailed: "មិនអាចរក្សាទុកក្រុមហ៊ុនបានទេ",
@@ -412,22 +424,18 @@ export default {
             city: "ទីក្រុង",
             stateProvince: "ខេត្ត / រាជធានី",
             postalCode: "លេខប្រៃសណីយ៍",
-            countryCode: "កូដប្រទេស",
+            countryCode: "កូដប្រទេស"
         },
-
         branch: {
             eyebrow: "ការរៀបចំអង្គភាព",
             title: "សាខា",
-            description:
-                "បង្កើត និងគ្រប់គ្រងសាខា រោងចក្រ ការិយាល័យ និងទីតាំងប្រតិបត្តិការ។ សាខានីមួយៗត្រូវភ្ជាប់ជាមួយក្រុមហ៊ុនមួយ ហើយត្រូវបានគ្រប់គ្រងដោយសិទ្ធិពី Backend។",
+            description: "បង្កើត និងគ្រប់គ្រងសាខា រោងចក្រ ការិយាល័យ និងទីតាំងប្រតិបត្តិការ។ សាខានីមួយៗត្រូវភ្ជាប់ជាមួយក្រុមហ៊ុនមួយ ហើយត្រូវបានគ្រប់គ្រងដោយសិទ្ធិពី Backend។",
             newBranch: "បង្កើតសាខា",
             createTitle: "បង្កើតសាខា",
             editTitle: "កែប្រែសាខា",
             archiveTitle: "ដាក់សាខាក្នុងបណ្ណសារ",
-            archiveMessage:
-                "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ? សាខាដែលបានដាក់ក្នុងបណ្ណសារនឹងរក្សាទុកសម្រាប់ប្រវត្តិ និងមិនលុបចោលទាំងស្រុងទេ។",
-            searchPlaceholder:
-                "ស្វែងរក Code, ឈ្មោះ, លេខទូរស័ព្ទ, អ៊ីមែល, ទីក្រុង...",
+            archiveMessage: "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ? សាខាដែលបានដាក់ក្នុងបណ្ណសារនឹងរក្សាទុកសម្រាប់ប្រវត្តិ និងមិនលុបចោលទាំងស្រុងទេ។",
+            searchPlaceholder: "ស្វែងរក Code, ឈ្មោះ, លេខទូរស័ព្ទ, អ៊ីមែល, ទីក្រុង...",
             empty: "រកមិនឃើញសាខា។",
             loadFailed: "មិនអាចទាញយកសាខាបានទេ",
             companyLoadFailed: "មិនអាចទាញយកក្រុមហ៊ុនបានទេ",
@@ -468,22 +476,18 @@ export default {
             city: "ទីក្រុង",
             stateProvince: "ខេត្ត / រាជធានី",
             postalCode: "លេខប្រៃសណីយ៍",
-            countryCode: "កូដប្រទេស",
+            countryCode: "កូដប្រទេស"
         },
-
         department: {
             eyebrow: "ការរៀបចំអង្គភាព",
             title: "នាយកដ្ឋាន",
-            description:
-                "បង្កើត Import Export និងគ្រប់គ្រងនាយកដ្ឋានក្រោមសាខាក្រុមហ៊ុននីមួយៗ។ នាយកដ្ឋានជាមូលដ្ឋានសម្រាប់តួនាទី បុគ្គលិក វេន ការចូលធ្វើការ ប្រាក់ខែ និងរបាយការណ៍ Dashboard។",
+            description: "បង្កើត Import Export និងគ្រប់គ្រងនាយកដ្ឋានក្រោមសាខាក្រុមហ៊ុននីមួយៗ។ នាយកដ្ឋានជាមូលដ្ឋានសម្រាប់តួនាទី បុគ្គលិក វេន ការចូលធ្វើការ ប្រាក់ខែ និងរបាយការណ៍ Dashboard។",
             newDepartment: "បង្កើតនាយកដ្ឋាន",
             createTitle: "បង្កើតនាយកដ្ឋាន",
             editTitle: "កែប្រែនាយកដ្ឋាន",
             archiveTitle: "ដាក់នាយកដ្ឋានក្នុងបណ្ណសារ",
-            archiveMessage:
-                "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ? នាយកដ្ឋានដែលបានដាក់ក្នុងបណ្ណសារនឹងរក្សាទុកសម្រាប់ប្រវត្តិ និងមិនលុបចោលទាំងស្រុងទេ។",
-            searchPlaceholder:
-                "ស្វែងរក Code, ឈ្មោះ, ឈ្មោះខ្លី, ពិពណ៌នា...",
+            archiveMessage: "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ? នាយកដ្ឋានដែលបានដាក់ក្នុងបណ្ណសារនឹងរក្សាទុកសម្រាប់ប្រវត្តិ និងមិនលុបចោលទាំងស្រុងទេ។",
+            searchPlaceholder: "ស្វែងរក Code, ឈ្មោះ, ឈ្មោះខ្លី, ពិពណ៌នា...",
             empty: "រកមិនឃើញនាយកដ្ឋាន។",
             loadFailed: "មិនអាចទាញយកនាយកដ្ឋានបានទេ",
             companyLoadFailed: "មិនអាចទាញយកក្រុមហ៊ុនបានទេ",
@@ -522,8 +526,7 @@ export default {
             importExcel: "Import Excel",
             exportExcel: "Export Excel",
             importTitle: "Import នាយកដ្ឋាន",
-            importDescription:
-                "Upload ឯកសារ Excel ដោយប្រើ Column ដូច Sample Template។ Department Code ដែលមានរួចក្នុងសាខាដូចគ្នា នឹងត្រូវ Update ហើយ Code ថ្មីនឹងត្រូវ Create។",
+            importDescription: "Upload ឯកសារ Excel ដោយប្រើ Column ដូច Sample Template។ Department Code ដែលមានរួចក្នុងសាខាដូចគ្នា នឹងត្រូវ Update ហើយ Code ថ្មីនឹងត្រូវ Create។",
             importFileMissing: "មិនទាន់បានជ្រើសឯកសារ",
             importCompleted: "Import រួចរាល់",
             importCompletedDetail: "Import នាយកដ្ឋានបានជោគជ័យ។",
@@ -539,33 +542,28 @@ export default {
             errorMessage: "សារ",
             importClean: "មិនមានកំហុស Validate ទេ។",
             templateDownloaded: "បានទាញយក Sample",
-            templateDownloadedDetail:
-                "ប្រើ Excel Template នេះសម្រាប់រៀបចំ Department Import។",
+            templateDownloadedDetail: "ប្រើ Excel Template នេះសម្រាប់រៀបចំ Department Import។",
             templateDownloadFailed: "មិនអាចទាញយក Sample បានទេ",
             exportStarted: "បានទាញយក Export",
             exportStartedDetail: "ឯកសារ Department Export ត្រូវបានទាញយក។",
-            exportFailed: "មិនអាច Export នាយកដ្ឋានបានទេ",
+            exportFailed: "មិនអាច Export នាយកដ្ឋានបានទេ"
         },
         position: {
             eyebrow: "ការរៀបចំអង្គភាព",
             title: "តួនាទីការងារ",
-            description:
-                "បង្កើត និងគ្រប់គ្រងតួនាទីការងារក្រោមនាយកដ្ឋាននីមួយៗ។ រចនាសម្ព័ន្ធតួនាទីនឹងប្រើសម្រាប់បុគ្គលិក ខ្សែអ្នកគ្រប់គ្រង ការអនុម័ត Dashboard និងសិទ្ធិចូលប្រើ។",
+            description: "បង្កើត និងគ្រប់គ្រងតួនាទីការងារក្រោមនាយកដ្ឋាននីមួយៗ។ រចនាសម្ព័ន្ធតួនាទីនឹងប្រើសម្រាប់បុគ្គលិក ខ្សែអ្នកគ្រប់គ្រង ការអនុម័ត Dashboard និងសិទ្ធិចូលប្រើ។",
             newPosition: "បង្កើតតួនាទី",
             createTitle: "បង្កើតតួនាទីការងារ",
             editTitle: "កែប្រែតួនាទីការងារ",
             archiveTitle: "ដាក់តួនាទីក្នុងបណ្ណសារ",
-            archiveMessage:
-                "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ? តួនាទីដែលបានដាក់ក្នុងបណ្ណសារនឹងរក្សាទុកសម្រាប់ប្រវត្តិ និងមិនលុបចោលទាំងស្រុងទេ។",
-            searchPlaceholder:
-                "ស្វែងរក Code, ឈ្មោះតួនាទី, ឈ្មោះខ្លី, ពិពណ៌នា...",
+            archiveMessage: "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ? តួនាទីដែលបានដាក់ក្នុងបណ្ណសារនឹងរក្សាទុកសម្រាប់ប្រវត្តិ និងមិនលុបចោលទាំងស្រុងទេ។",
+            searchPlaceholder: "ស្វែងរក Code, ឈ្មោះតួនាទី, ឈ្មោះខ្លី, ពិពណ៌នា...",
             empty: "រកមិនឃើញតួនាទីការងារ។",
             loadFailed: "មិនអាចទាញយកតួនាទីការងារបានទេ",
             companyLoadFailed: "មិនអាចទាញយកក្រុមហ៊ុនបានទេ",
             branchLoadFailed: "មិនអាចទាញយកសាខាបានទេ",
             departmentLoadFailed: "មិនអាចទាញយកនាយកដ្ឋានបានទេ",
-            reportsToLoadFailed:
-                "មិនអាចទាញយកតួនាទីរាយការណ៍ទៅបានទេ",
+            reportsToLoadFailed: "មិនអាចទាញយកតួនាទីរាយការណ៍ទៅបានទេ",
             saveFailed: "មិនអាចរក្សាទុកតួនាទីការងារបានទេ",
             archiveFailed: "មិនអាចដាក់តួនាទីក្នុងបណ្ណសារបានទេ",
             created: "បានបង្កើតតួនាទី",
@@ -573,8 +571,7 @@ export default {
             updated: "បានកែប្រែតួនាទី",
             updatedDetail: "តួនាទីការងារត្រូវបានកែប្រែដោយជោគជ័យ។",
             archived: "បានដាក់តួនាទីក្នុងបណ្ណសារ",
-            archivedDetail:
-                "តួនាទីការងារត្រូវបានដាក់ក្នុងបណ្ណសារដោយជោគជ័យ។",
+            archivedDetail: "តួនាទីការងារត្រូវបានដាក់ក្នុងបណ្ណសារដោយជោគជ័យ។",
             readOnly: "បានដាក់បណ្ណសារ",
             basicInfo: "ព័ត៌មានមូលដ្ឋាន",
             allCompanies: "ក្រុមហ៊ុនទាំងអស់",
@@ -602,29 +599,23 @@ export default {
             statusInactive: "មិនសកម្ម",
             statusArchived: "បណ្ណសារ",
             updatedAt: "បានកែចុងក្រោយ",
-
             downloadSample: "ទាញយក Sample",
             importExcel: "Import Excel",
             exportExcel: "Export Excel",
             sampleDownloaded: "បានទាញយក Sample",
-            sampleDownloadedDetail:
-                "Sample សម្រាប់ Import តួនាទីត្រូវបានទាញយក។",
+            sampleDownloadedDetail: "Sample សម្រាប់ Import តួនាទីត្រូវបានទាញយក។",
             sampleDownloadFailed: "មិនអាចទាញយក Sample បានទេ",
             exported: "បាន Export",
             exportedDetail: "ឯកសារ Export តួនាទីត្រូវបានទាញយក។",
             exportFailed: "មិនអាច Export តួនាទីបានទេ",
             importTitle: "Import តួនាទីការងារ",
-            importDescription:
-                "Upload Excel template ដែលបានបំពេញ។ សូមរក្សា Columns ដូច Sample ដែលបានទាញយក។",
+            importDescription: "Upload Excel template ដែលបានបំពេញ។ សូមរក្សា Columns ដូច Sample ដែលបានទាញយក។",
             importFileRequired: "ត្រូវការ Excel file",
-            importFileRequiredDetail:
-                "សូមជ្រើសរើស Excel file មុនពេល Import។",
+            importFileRequiredDetail: "សូមជ្រើសរើស Excel file មុនពេល Import។",
             importProgress: "កំពុងដំណើរការ... {percent}%",
             importFinished: "Import បានបញ្ចប់",
-            importFinishedSuccess:
-                "តួនាទីការងារត្រូវបាន Import ដោយជោគជ័យ។",
-            importFinishedWithErrors:
-                "Import បានបញ្ចប់ ប៉ុន្តែមានកំហុស Validate។ សូមពិនិត្យលទ្ធផល។",
+            importFinishedSuccess: "តួនាទីការងារត្រូវបាន Import ដោយជោគជ័យ។",
+            importFinishedWithErrors: "Import បានបញ្ចប់ ប៉ុន្តែមានកំហុស Validate។ សូមពិនិត្យលទ្ធផល។",
             importFailed: "មិនអាច Import តួនាទីបានទេ",
             importResultTitle: "លទ្ធផល Import តួនាទី",
             totalRows: "ជួរសរុប",
@@ -634,19 +625,17 @@ export default {
             validationErrors: "កំហុស Validate",
             rowNumber: "ជួរ",
             field: "Field",
-            issue: "បញ្ហា",
+            issue: "បញ្ហា"
         },
         line: {
             eyebrow: "ការរៀបចំអង្គភាព",
             title: "ខ្សែសង្វាក់ការងារ",
-            description:
-                "បង្កើត និងគ្រប់គ្រងខ្សែសង្វាក់ការងារក្រោមនាយកដ្ឋាននីមួយៗ។ ខ្សែសង្វាក់ការងារនឹងភ្ជាប់តួនាទីទៅបុគ្គលិក និងប្រើសម្រាប់ approval, attendance, OT និងរបាយការណ៍ manpower។",
+            description: "បង្កើត និងគ្រប់គ្រងខ្សែសង្វាក់ការងារក្រោមនាយកដ្ឋាននីមួយៗ។ ខ្សែសង្វាក់ការងារនឹងភ្ជាប់តួនាទីទៅបុគ្គលិក និងប្រើសម្រាប់ approval, attendance, OT និងរបាយការណ៍ manpower។",
             newLine: "បង្កើត Line ថ្មី",
             createTitle: "បង្កើត Line",
             editTitle: "កែប្រែ Line",
             archiveTitle: "រក្សាទុក Line",
-            archiveMessage:
-                "តើអ្នកប្រាកដថាចង់រក្សាទុក {name} មែនទេ? Line ដែលបានរក្សាទុកនឹងរក្សាសម្រាប់ប្រវត្តិ ហើយមិនអាចលុបចោលបានទេ។",
+            archiveMessage: "តើអ្នកប្រាកដថាចង់រក្សាទុក {name} មែនទេ? Line ដែលបានរក្សាទុកនឹងរក្សាសម្រាប់ប្រវត្តិ ហើយមិនអាចលុបចោលបានទេ។",
             searchPlaceholder: "ស្វែងរកកូដ ឈ្មោះ ឈ្មោះខ្លី ការពិពណ៌នា...",
             empty: "រកមិនឃើញ Line ទេ។",
             loadFailed: "មិនអាចទាញយក Line បានទេ",
@@ -680,8 +669,7 @@ export default {
             lineName: "Line",
             shortName: "ឈ្មោះខ្លី",
             allowedPositions: "តួនាទីដែលអនុញ្ញាត",
-            allowedPositionsHelp:
-                "ទុកឱ្យទទេ ប្រសិនបើ Line នេះអាចប្រើតួនាទី active ទាំងអស់ក្នុងនាយកដ្ឋានដែលបានជ្រើស។",
+            allowedPositionsHelp: "ទុកឱ្យទទេ ប្រសិនបើ Line នេះអាចប្រើតួនាទី active ទាំងអស់ក្នុងនាយកដ្ឋានដែលបានជ្រើស។",
             allDepartmentPositions: "តួនាទីទាំងអស់ក្នុងនាយកដ្ឋាន",
             leaderPosition: "តួនាទីអ្នកដឹកនាំ",
             noLeaderPosition: "មិនមានតួនាទីអ្នកដឹកនាំ",
@@ -692,7 +680,6 @@ export default {
             statusInactive: "មិនសកម្ម",
             statusArchived: "បានរក្សាទុក",
             updatedAt: "បានកែប្រែ",
-
             downloadSample: "ទាញយកគំរូ",
             importExcel: "នាំចូល Excel",
             exportExcel: "នាំចេញ Excel",
@@ -703,16 +690,13 @@ export default {
             exportedDetail: "ឯកសារ Line export ត្រូវបានទាញយក។",
             exportFailed: "មិនអាចនាំចេញ Line បានទេ",
             importTitle: "នាំចូល Line",
-            importDescription:
-                "Upload Excel template ដែលបានបំពេញ។ សូមរក្សា column ដូចគំរូដែលបានទាញយក។",
+            importDescription: "Upload Excel template ដែលបានបំពេញ។ សូមរក្សា column ដូចគំរូដែលបានទាញយក។",
             importFileRequired: "ត្រូវការឯកសារ Excel",
-            importFileRequiredDetail:
-                "សូមជ្រើសរើសឯកសារ Excel មុនពេលនាំចូល។",
+            importFileRequiredDetail: "សូមជ្រើសរើសឯកសារ Excel មុនពេលនាំចូល។",
             importProgress: "កំពុងដំណើរការ... {percent}%",
             importFinished: "ការនាំចូលបានបញ្ចប់",
             importFinishedSuccess: "Line ត្រូវបាននាំចូលដោយជោគជ័យ។",
-            importFinishedWithErrors:
-                "ការនាំចូលបានបញ្ចប់ ប៉ុន្តែមានកំហុស validation។ សូមពិនិត្យលទ្ធផល។",
+            importFinishedWithErrors: "ការនាំចូលបានបញ្ចប់ ប៉ុន្តែមានកំហុស validation។ សូមពិនិត្យលទ្ធផល។",
             importFailed: "មិនអាចនាំចូល Line បានទេ",
             importResultTitle: "លទ្ធផលនាំចូល Line",
             totalRows: "ជួរដេកសរុប",
@@ -722,19 +706,17 @@ export default {
             validationErrors: "កំហុស Validation",
             rowNumber: "ជួរដេក",
             field: "Field",
-            issue: "បញ្ហា",
+            issue: "បញ្ហា"
         },
         shift: {
             eyebrow: "ការរៀបចំអង្គភាព",
             title: "វេនការងារ",
-            description:
-                "បង្កើត និងគ្រប់គ្រងវេនការងារតាមសាខា។ វេនការងារនឹងប្រើសម្រាប់បុគ្គលិក attendance, OT, ការគណនាមកយឺត/ចេញមុន និង payroll។",
+            description: "បង្កើត និងគ្រប់គ្រងវេនការងារតាមសាខា។ វេនការងារនឹងប្រើសម្រាប់បុគ្គលិក attendance, OT, ការគណនាមកយឺត/ចេញមុន និង payroll។",
             newShift: "បង្កើតវេនថ្មី",
             createTitle: "បង្កើតវេនការងារ",
             editTitle: "កែប្រែវេនការងារ",
             archiveTitle: "រក្សាទុកវេនការងារ",
-            archiveMessage:
-                "តើអ្នកប្រាកដថាចង់រក្សាទុក {name} មែនទេ? វេនដែលបានរក្សាទុកនឹងរក្សាសម្រាប់ប្រវត្តិ ហើយមិនអាចលុបចោលបានទេ។",
+            archiveMessage: "តើអ្នកប្រាកដថាចង់រក្សាទុក {name} មែនទេ? វេនដែលបានរក្សាទុកនឹងរក្សាសម្រាប់ប្រវត្តិ ហើយមិនអាចលុបចោលបានទេ។",
             searchPlaceholder: "ស្វែងរកកូដ ឈ្មោះ ឈ្មោះខ្លី ការពិពណ៌នា...",
             empty: "រកមិនឃើញវេនការងារទេ។",
             loadFailed: "មិនអាចទាញយកវេនការងារបានទេ",
@@ -749,7 +731,6 @@ export default {
             archived: "បានរក្សាទុកវេនការងារ",
             archivedDetail: "វេនការងារត្រូវបានរក្សាទុកដោយជោគជ័យ។",
             readOnly: "បានរក្សាទុក",
-
             basicInfo: "ព័ត៌មានមូលដ្ឋាន",
             timeInfo: "ព័ត៌មានម៉ោង",
             allCompanies: "ក្រុមហ៊ុនទាំងអស់",
@@ -783,7 +764,6 @@ export default {
             statusInactive: "មិនសកម្ម",
             statusArchived: "បានរក្សាទុក",
             updatedAt: "បានកែប្រែ",
-
             downloadSample: "ទាញយកគំរូ",
             importExcel: "នាំចូល Excel",
             exportExcel: "នាំចេញ Excel",
@@ -794,16 +774,13 @@ export default {
             exportedDetail: "ឯកសារ Shift export ត្រូវបានទាញយក។",
             exportFailed: "មិនអាចនាំចេញវេនការងារបានទេ",
             importTitle: "នាំចូលវេនការងារ",
-            importDescription:
-                "Upload Excel template ដែលបានបំពេញ។ សូមរក្សា column ដូចគំរូដែលបានទាញយក។",
+            importDescription: "Upload Excel template ដែលបានបំពេញ។ សូមរក្សា column ដូចគំរូដែលបានទាញយក។",
             importFileRequired: "ត្រូវការឯកសារ Excel",
-            importFileRequiredDetail:
-                "សូមជ្រើសរើសឯកសារ Excel មុនពេលនាំចូល។",
+            importFileRequiredDetail: "សូមជ្រើសរើសឯកសារ Excel មុនពេលនាំចូល។",
             importProgress: "កំពុងដំណើរការ... {percent}%",
             importFinished: "ការនាំចូលបានបញ្ចប់",
             importFinishedSuccess: "វេនការងារត្រូវបាននាំចូលដោយជោគជ័យ។",
-            importFinishedWithErrors:
-                "ការនាំចូលបានបញ្ចប់ ប៉ុន្តែមានកំហុស validation។ សូមពិនិត្យលទ្ធផល។",
+            importFinishedWithErrors: "ការនាំចូលបានបញ្ចប់ ប៉ុន្តែមានកំហុស validation។ សូមពិនិត្យលទ្ធផល។",
             importFailed: "មិនអាចនាំចូលវេនការងារបានទេ",
             importResultTitle: "លទ្ធផលនាំចូលវេនការងារ",
             totalRows: "ជួរដេកសរុប",
@@ -813,13 +790,12 @@ export default {
             validationErrors: "កំហុស Validation",
             rowNumber: "ជួរដេក",
             field: "Field",
-            issue: "បញ្ហា",
+            issue: "បញ្ហា"
         },
         employeeType: {
             eyebrow: "ការរៀបចំអង្គភាព",
             title: "ប្រភេទបុគ្គលិក",
-            description:
-                "បង្កើតប្រភេទបុគ្គលិក ដូចជា Blue Collar និង White Collar។ ប្រភេទមួយអាចភ្ជាប់មុខតំណែងដោយផ្ទាល់ ឬមានក្រុមរង ដូចជា Direct និង Indirect។",
+            description: "បង្កើតប្រភេទបុគ្គលិក ដូចជា Blue Collar និង White Collar។ ប្រភេទមួយអាចភ្ជាប់មុខតំណែងដោយផ្ទាល់ ឬមានក្រុមរង ដូចជា Direct និង Indirect។",
             newEmployeeType: "ប្រភេទបុគ្គលិកថ្មី",
             createTitle: "បង្កើតប្រភេទបុគ្គលិក",
             editTitle: "កែប្រែប្រភេទបុគ្គលិក",
@@ -858,15 +834,13 @@ export default {
             assignmentMode: "ការភ្ជាប់មុខតំណែង",
             directPositions: "ភ្ជាប់មុខតំណែងផ្ទាល់",
             childGroups: "ប្រើក្រុមរង",
-            directPositionsHelp:
-                "ប្រើពេលប្រភេទបុគ្គលិកភ្ជាប់មុខតំណែងដោយផ្ទាល់ ឧទាហរណ៍ White Collar → HR Manager។",
+            directPositionsHelp: "ប្រើពេលប្រភេទបុគ្គលិកភ្ជាប់មុខតំណែងដោយផ្ទាល់ ឧទាហរណ៍ White Collar → HR Manager។",
             children: "ក្រុមរង",
             child: "ក្រុមរង",
             childName: "ឈ្មោះក្រុមរង",
             addChild: "បន្ថែមក្រុមរង",
             removeChild: "លុបក្រុមរង",
-            childrenHelp:
-                "ប្រើពេលប្រភេទមានក្រុមរង ឧទាហរណ៍ Blue Collar → Direct → Sewer និង Blue Collar → Indirect → Cutter។",
+            childrenHelp: "ប្រើពេលប្រភេទមានក្រុមរង ឧទាហរណ៍ Blue Collar → Direct → Sewer និង Blue Collar → Indirect → Cutter។",
             descriptionLabel: "ការពិពណ៌នា",
             status: "ស្ថានភាព",
             statusAll: "ស្ថានភាពទាំងអស់",
@@ -874,7 +848,6 @@ export default {
             statusInactive: "អសកម្ម",
             statusArchived: "បណ្ណសារ",
             updatedAt: "បានកែប្រែ",
-
             downloadSample: "ទាញយកគំរូ",
             importExcel: "នាំចូល Excel",
             exportExcel: "នាំចេញ Excel",
@@ -885,8 +858,7 @@ export default {
             exportedDetail: "បានទាញយកឯកសារនាំចេញប្រភេទបុគ្គលិក។",
             exportFailed: "មិនអាចនាំចេញប្រភេទបុគ្គលិកបានទេ",
             importTitle: "នាំចូលប្រភេទបុគ្គលិក",
-            importDescription:
-                "បញ្ចូល Excel template។ ទុក childName ទទេ សម្រាប់មុខតំណែងផ្ទាល់។ បំពេញ childName សម្រាប់ក្រុមរង ដូចជា Direct ឬ Indirect។",
+            importDescription: "បញ្ចូល Excel template។ ទុក childName ទទេ សម្រាប់មុខតំណែងផ្ទាល់។ បំពេញ childName សម្រាប់ក្រុមរង ដូចជា Direct ឬ Indirect។",
             importFileRequired: "ត្រូវការឯកសារ Excel",
             importFileRequiredDetail: "សូមជ្រើសរើសឯកសារ Excel មុនពេលនាំចូល។",
             importProgress: "កំពុងដំណើរការ... {percent}%",
@@ -902,27 +874,24 @@ export default {
             validationErrors: "កំហុស Validation",
             rowNumber: "ជួរ",
             field: "Field",
-            issue: "បញ្ហា",
+            issue: "បញ្ហា"
         },
-
         location: {
             eyebrow: "Organization Setup",
             title: "Location Master",
-            description:
-                "Create and manage reusable address masters for employee place of birth, current address, permanent address, and family address.",
+            description: "Create and manage reusable address masters for employee place of birth, current address, permanent address, and family address.",
             tabs: {
                 countries: "Countries",
                 provinces: "Provinces",
                 districts: "Districts",
                 communes: "Communes",
-                villages: "Villages",
+                villages: "Villages"
             },
             newLocation: "New {entity}",
             createTitle: "Create {entity}",
             editTitle: "Edit {entity}",
             archiveTitle: "Archive Location",
-            archiveMessage:
-                "Are you sure you want to archive {name}? Archived locations are kept for history and cannot be hard deleted.",
+            archiveMessage: "Are you sure you want to archive {name}? Archived locations are kept for history and cannot be hard deleted.",
             searchPlaceholder: "Search code, name, short name, nationality...",
             empty: "No {entity} found.",
             loadFailed: "Unable to load locations",
@@ -968,8 +937,7 @@ export default {
             importExcel: "Import Excel",
             exportExcel: "Export Excel",
             importTitle: "Import {entity}",
-            importDescription:
-                "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
+            importDescription: "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
             importFileRequired: "Excel file required",
             importFileRequiredDetail: "Please choose an Excel file before importing.",
             importResultTitle: "Location Import Result",
@@ -977,244 +945,320 @@ export default {
             importCreated: "Created",
             importFailedCount: "Failed",
             importErrors: "Validation Errors",
-            pagination: "Page {page} of {totalPages} · {total} records",
+            pagination: "Page {page} of {totalPages} · {total} records"
         },
-
-    },
-
-    calendar: {
-        scope: { ALL: "វិសាលភាពទាំងអស់", GLOBAL: "សកល", COMPANY: "ក្រុមហ៊ុន", BRANCH: "សាខា", DEFAULT: "លំនាំដើម" },
-        status: { ALL: "ស្ថានភាពទាំងអស់", ACTIVE: "សកម្ម", INACTIVE: "មិនសកម្ម", ARCHIVED: "បណ្ណសារ" },
-        dayTypes: { ALL: "ប្រភេទថ្ងៃទាំងអស់", WORKING_DAY: "ថ្ងៃធ្វើការ", WEEKEND: "ចុងសប្តាហ៍", HOLIDAY: "ថ្ងៃឈប់សម្រាក", SPECIAL_WORKING_DAY: "ថ្ងៃធ្វើការពិសេស", COMPANY_EVENT: "ព្រឹត្តិការណ៍ក្រុមហ៊ុន", CLOSED_DAY: "ថ្ងៃបិទ" },
-        day: {
-            eyebrow: "ប្រតិទិនផ្ទៃក្នុង", title: "ប្រតិទិន និងថ្ងៃឈប់សម្រាក",
-            description: "បង្កើតថ្ងៃឈប់សម្រាករបស់ក្រុមហ៊ុន ឬសាខា ការកែប្រែថ្ងៃចុងសប្តាហ៍ និងថ្ងៃធ្វើការពិសេស។ ការចូលធ្វើការ OT ប្រាក់ខែ និងការទូទាត់ត្រូវយោងតាមប្រតិទិននេះ។",
-            newDay: "បង្កើតថ្ងៃថ្មី", createTitle: "បង្កើតថ្ងៃក្នុងប្រតិទិន", editTitle: "កែប្រែថ្ងៃក្នុងប្រតិទិន", archiveTitle: "ដាក់ថ្ងៃក្នុងបណ្ណសារ", archiveMessage: "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ?",
-            searchPlaceholder: "ស្វែងរកថ្ងៃឈប់សម្រាក ប្រភេទ ឬសេចក្តីពិពណ៌នា...", empty: "រកមិនឃើញទិន្នន័យប្រតិទិន។",
-            loadFailed: "មិនអាចទាញយកប្រតិទិនបានទេ", saveFailed: "មិនអាចរក្សាទុកថ្ងៃក្នុងប្រតិទិនបានទេ", archiveFailed: "មិនអាចដាក់ថ្ងៃក្នុងបណ្ណសារបានទេ",
-            created: "បានបង្កើតថ្ងៃក្នុងប្រតិទិន", updated: "បានកែប្រែថ្ងៃក្នុងប្រតិទិន", archived: "បានដាក់ថ្ងៃក្នុងបណ្ណសារ", readOnly: "បណ្ណសារ",
-            allCompanies: "ក្រុមហ៊ុនទាំងអស់", allBranches: "សាខាទាំងអស់", company: "ក្រុមហ៊ុន", branch: "សាខា", scope: "វិសាលភាព", date: "កាលបរិច្ឆេទ", selectDate: "ជ្រើសរើសកាលបរិច្ឆេទ", resolving: "កំពុងពិនិត្យកាលបរិច្ឆេទ...", name: "ឈ្មោះ", category: "ប្រភេទ", dayType: "ប្រភេទថ្ងៃ", paidHoliday: "ថ្ងៃឈប់មានប្រាក់ឈ្នួល", status: "ស្ថានភាព", updatedAt: "បានកែចុងក្រោយ", descriptionLabel: "សេចក្តីពិពណ៌នា",
-            downloadSample: "ទាញយកគំរូ", importExcel: "នាំចូល Excel", exportExcel: "នាំចេញ Excel", sampleDownloaded: "បានទាញយកគំរូ", sampleDownloadFailed: "មិនអាចទាញយកគំរូបានទេ", exported: "បានរៀបចំឯកសារនាំចេញ", exportFailed: "មិនអាចនាំចេញប្រតិទិនបានទេ",
-            importTitle: "នាំចូលថ្ងៃក្នុងប្រតិទិន", importDescription: "បញ្ចូលឯកសារ Excel ដែលបានបំពេញ ដោយរក្សា Column ដូចគំរូ។", importFileRequired: "ត្រូវការឯកសារ Excel", importProgress: "កំពុងដំណើរការ... {percent}%", importFailed: "មិនអាចនាំចូលប្រតិទិនបានទេ", importResultTitle: "លទ្ធផលនាំចូលប្រតិទិន", totalRows: "ជួរសរុប", createdRows: "បានបង្កើត", updatedRows: "បានកែប្រែ", skippedRows: "បានរំលង", validationErrors: "កំហុសផ្ទៀងផ្ទាត់", rowNumber: "ជួរ", field: "Field", issue: "បញ្ហា"
+        recruitmentChannel: {
+            title: "ប្រភពជ្រើសរើសបុគ្គលិក",
+            create: "បង្កើតប្រភពថ្មី",
+            createTitle: "បង្កើតប្រភពជ្រើសរើសបុគ្គលិក",
+            editTitle: "កែប្រែប្រភពជ្រើសរើសបុគ្គលិក",
+            archiveTitle: "ទុកក្នុងប័ណ្ណសារ ប្រភពជ្រើសរើសបុគ្គលិក",
+            archiveConfirm: "តើចង់ទុកក្នុងប័ណ្ណសារប្រភពនេះមែនទេ?",
+            searchPlaceholder: "ស្វែងរកកូដ ឈ្មោះ ឬឈ្មោះខ្លី...",
+            allCompanies: "ក្រុមហ៊ុនទាំងអស់",
+            allBranches: "សាខាទាំងអស់",
+            global: "ទូទៅ",
+            globalCompany: "ទូទៅ / គ្រប់ក្រុមហ៊ុន",
+            globalBranch: "គ្រប់សាខា",
+            company: "ក្រុមហ៊ុន",
+            branch: "សាខា",
+            scope: "វិសាលភាព",
+            code: "កូដ",
+            name: "ឈ្មោះ",
+            shortName: "ឈ្មោះខ្លី",
+            targetMonthly: "គោលដៅ / ខែ",
+            sortOrder: "លំដាប់",
+            status: "ស្ថានភាព",
+            description: "ការពិពណ៌នា",
+            statusAll: "គ្រប់ស្ថានភាព",
+            statusActive: "សកម្ម",
+            statusInactive: "អសកម្ម",
+            statusArchived: "បានទុកក្នុងប័ណ្ណសារ",
+            saved: "បានរក្សាទុកប្រភពជ្រើសរើសបុគ្គលិក។",
+            archived: "បានទុកប្រភពជ្រើសរើសបុគ្គលិកក្នុងប័ណ្ណសារ។",
+            saveFailed: "មិនអាចរក្សាទុកប្រភពជ្រើសរើសបុគ្គលិកបានទេ។",
+            archiveFailed: "មិនអាចទុកប្រភពជ្រើសរើសបុគ្គលិកក្នុងប័ណ្ណសារបានទេ។",
+            lookupLoadFailed: "មិនអាចផ្ទុកជម្រើសក្រុមហ៊ុន ឬសាខាបានទេ។"
+        },
+        employee: {
+            recruitmentChannel: "ប្រភពជ្រើសរើសបុគ្គលិក",
+            selectRecruitmentChannel: "ជ្រើសរើសប្រភពជ្រើសរើសបុគ្គលិក",
+            sourceOfHiring: "ប្រភពការជ្រើសរើស",
+            profile: {
+                recruitmentChannelInvalidId: "លេខសម្គាល់ប្រភពជ្រើសរើសបុគ្គលិកមិនត្រឹមត្រូវ។",
+                recruitmentChannelNotFound: "រកមិនឃើញប្រភពជ្រើសរើសបុគ្គលិក ឬវាត្រូវបានទុកក្នុងប័ណ្ណសារ។",
+                recruitmentChannelCompanyMismatch: "ប្រភពជ្រើសរើសបុគ្គលិកមិនមែនជារបស់ក្រុមហ៊ុនដែលបានជ្រើស។",
+                recruitmentChannelBranchMismatch: "ប្រភពជ្រើសរើសបុគ្គលិកមិនមែនជារបស់សាខាដែលបានជ្រើស។"
+            }
         }
     },
-
-    manpowerPlan: {
-        title: "ផែនការកម្លាំងពលកម្ម", description: "គោលដៅថវិកា និងផែនទីផ្លូវប្រចាំខែ សម្រាប់ប្រៀបធៀបក្នុង Dashboard។",
-        sample: "គំរូ", import: "នាំចូល", export: "នាំចេញ", new: "បង្កើតថ្មី", search: "ស្វែងរក", company: "ក្រុមហ៊ុន", branch: "សាខា", year: "ឆ្នាំ", month: "ខែ", employeeType: "ប្រភេទបុគ្គលិក", status: "ស្ថានភាព", apply: "អនុវត្ត", department: "នាយកដ្ឋាន", position: "តួនាទី", line: "Line", shift: "វេន", type: "ប្រភេទ", budget: "ថវិកា", roadmap: "ផែនទីផ្លូវ", action: "សកម្មភាព", childGroup: "ក្រុមរង", targetBudget: "គោលដៅថវិកា", targetRoadmap: "គោលដៅផែនទីផ្លូវ", remark: "កំណត់សម្គាល់",
-        createTitle: "បង្កើតផែនការកម្លាំងពលកម្ម", editTitle: "កែប្រែផែនការកម្លាំងពលកម្ម", archiveTitle: "ដាក់ផែនការកម្លាំងពលកម្មក្នុងបណ្ណសារ", archiveMessage: "តើអ្នកចង់ដាក់ផែនការនេះក្នុងបណ្ណសារឬទេ?", archive: "ដាក់បណ្ណសារ", importTitle: "នាំចូលផែនការកម្លាំងពលកម្ម", importResultTitle: "លទ្ធផលនាំចូល", chooseFile: "ជ្រើសរើសឯកសារ Excel", all: "ទាំងអស់", active: "សកម្ម", inactive: "មិនសកម្ម", archived: "បណ្ណសារ", allMonths: "ខែទាំងអស់",
-        loadFailed: "មិនអាចទាញយកផែនការកម្លាំងពលកម្មបានទេ", saveFailed: "មិនអាចរក្សាទុកផែនការកម្លាំងពលកម្មបានទេ", archiveFailed: "មិនអាចដាក់ផែនការក្នុងបណ្ណសារបានទេ", importFailed: "មិនអាចនាំចូលផែនការកម្លាំងពលកម្មបានទេ", created: "បានបង្កើតផែនការកម្លាំងពលកម្ម", updated: "បានកែប្រែផែនការកម្លាំងពលកម្ម", archivedMessage: "បានដាក់ផែនការក្នុងបណ្ណសារ"
+    calendar: {
+        scope: {
+            ALL: "វិសាលភាពទាំងអស់",
+            GLOBAL: "សកល",
+            COMPANY: "ក្រុមហ៊ុន",
+            BRANCH: "សាខា",
+            DEFAULT: "លំនាំដើម"
+        },
+        status: {
+            ALL: "ស្ថានភាពទាំងអស់",
+            ACTIVE: "សកម្ម",
+            INACTIVE: "មិនសកម្ម",
+            ARCHIVED: "បណ្ណសារ"
+        },
+        dayTypes: {
+            ALL: "ប្រភេទថ្ងៃទាំងអស់",
+            WORKING_DAY: "ថ្ងៃធ្វើការ",
+            WEEKEND: "ចុងសប្តាហ៍",
+            HOLIDAY: "ថ្ងៃឈប់សម្រាក",
+            SPECIAL_WORKING_DAY: "ថ្ងៃធ្វើការពិសេស",
+            COMPANY_EVENT: "ព្រឹត្តិការណ៍ក្រុមហ៊ុន",
+            CLOSED_DAY: "ថ្ងៃបិទ"
+        },
+        day: {
+            eyebrow: "ប្រតិទិនផ្ទៃក្នុង",
+            title: "ប្រតិទិន និងថ្ងៃឈប់សម្រាក",
+            description: "បង្កើតថ្ងៃឈប់សម្រាករបស់ក្រុមហ៊ុន ឬសាខា ការកែប្រែថ្ងៃចុងសប្តាហ៍ និងថ្ងៃធ្វើការពិសេស។ ការចូលធ្វើការ OT ប្រាក់ខែ និងការទូទាត់ត្រូវយោងតាមប្រតិទិននេះ។",
+            newDay: "បង្កើតថ្ងៃថ្មី",
+            createTitle: "បង្កើតថ្ងៃក្នុងប្រតិទិន",
+            editTitle: "កែប្រែថ្ងៃក្នុងប្រតិទិន",
+            archiveTitle: "ដាក់ថ្ងៃក្នុងបណ្ណសារ",
+            archiveMessage: "តើអ្នកប្រាកដថាចង់ដាក់ {name} ក្នុងបណ្ណសារឬទេ?",
+            searchPlaceholder: "ស្វែងរកថ្ងៃឈប់សម្រាក ប្រភេទ ឬសេចក្តីពិពណ៌នា...",
+            empty: "រកមិនឃើញទិន្នន័យប្រតិទិន។",
+            loadFailed: "មិនអាចទាញយកប្រតិទិនបានទេ",
+            saveFailed: "មិនអាចរក្សាទុកថ្ងៃក្នុងប្រតិទិនបានទេ",
+            archiveFailed: "មិនអាចដាក់ថ្ងៃក្នុងបណ្ណសារបានទេ",
+            created: "បានបង្កើតថ្ងៃក្នុងប្រតិទិន",
+            updated: "បានកែប្រែថ្ងៃក្នុងប្រតិទិន",
+            archived: "បានដាក់ថ្ងៃក្នុងបណ្ណសារ",
+            readOnly: "បណ្ណសារ",
+            allCompanies: "ក្រុមហ៊ុនទាំងអស់",
+            allBranches: "សាខាទាំងអស់",
+            company: "ក្រុមហ៊ុន",
+            branch: "សាខា",
+            scope: "វិសាលភាព",
+            date: "កាលបរិច្ឆេទ",
+            selectDate: "ជ្រើសរើសកាលបរិច្ឆេទ",
+            resolving: "កំពុងពិនិត្យកាលបរិច្ឆេទ...",
+            name: "ឈ្មោះ",
+            category: "ប្រភេទ",
+            dayType: "ប្រភេទថ្ងៃ",
+            paidHoliday: "ថ្ងៃឈប់មានប្រាក់ឈ្នួល",
+            status: "ស្ថានភាព",
+            updatedAt: "បានកែចុងក្រោយ",
+            descriptionLabel: "សេចក្តីពិពណ៌នា",
+            downloadSample: "ទាញយកគំរូ",
+            importExcel: "នាំចូល Excel",
+            exportExcel: "នាំចេញ Excel",
+            sampleDownloaded: "បានទាញយកគំរូ",
+            sampleDownloadFailed: "មិនអាចទាញយកគំរូបានទេ",
+            exported: "បានរៀបចំឯកសារនាំចេញ",
+            exportFailed: "មិនអាចនាំចេញប្រតិទិនបានទេ",
+            importTitle: "នាំចូលថ្ងៃក្នុងប្រតិទិន",
+            importDescription: "បញ្ចូលឯកសារ Excel ដែលបានបំពេញ ដោយរក្សា Column ដូចគំរូ។",
+            importFileRequired: "ត្រូវការឯកសារ Excel",
+            importProgress: "កំពុងដំណើរការ... {percent}%",
+            importFailed: "មិនអាចនាំចូលប្រតិទិនបានទេ",
+            importResultTitle: "លទ្ធផលនាំចូលប្រតិទិន",
+            totalRows: "ជួរសរុប",
+            createdRows: "បានបង្កើត",
+            updatedRows: "បានកែប្រែ",
+            skippedRows: "បានរំលង",
+            validationErrors: "កំហុសផ្ទៀងផ្ទាត់",
+            rowNumber: "ជួរ",
+            field: "Field",
+            issue: "បញ្ហា"
+        }
     },
-
+    manpowerPlan: {
+        title: "ផែនការកម្លាំងពលកម្ម",
+        description: "គោលដៅថវិកា និងផែនទីផ្លូវប្រចាំខែ សម្រាប់ប្រៀបធៀបក្នុង Dashboard។",
+        sample: "គំរូ",
+        import: "នាំចូល",
+        export: "នាំចេញ",
+        new: "បង្កើតថ្មី",
+        search: "ស្វែងរក",
+        company: "ក្រុមហ៊ុន",
+        branch: "សាខា",
+        year: "ឆ្នាំ",
+        month: "ខែ",
+        employeeType: "ប្រភេទបុគ្គលិក",
+        status: "ស្ថានភាព",
+        apply: "អនុវត្ត",
+        department: "នាយកដ្ឋាន",
+        position: "តួនាទី",
+        line: "Line",
+        shift: "វេន",
+        type: "ប្រភេទ",
+        budget: "ថវិកា",
+        roadmap: "ផែនទីផ្លូវ",
+        action: "សកម្មភាព",
+        childGroup: "ក្រុមរង",
+        targetBudget: "គោលដៅថវិកា",
+        targetRoadmap: "គោលដៅផែនទីផ្លូវ",
+        remark: "កំណត់សម្គាល់",
+        createTitle: "បង្កើតផែនការកម្លាំងពលកម្ម",
+        editTitle: "កែប្រែផែនការកម្លាំងពលកម្ម",
+        archiveTitle: "ដាក់ផែនការកម្លាំងពលកម្មក្នុងបណ្ណសារ",
+        archiveMessage: "តើអ្នកចង់ដាក់ផែនការនេះក្នុងបណ្ណសារឬទេ?",
+        archive: "ដាក់បណ្ណសារ",
+        importTitle: "នាំចូលផែនការកម្លាំងពលកម្ម",
+        importResultTitle: "លទ្ធផលនាំចូល",
+        chooseFile: "ជ្រើសរើសឯកសារ Excel",
+        all: "ទាំងអស់",
+        active: "សកម្ម",
+        inactive: "មិនសកម្ម",
+        archived: "បណ្ណសារ",
+        allMonths: "ខែទាំងអស់",
+        loadFailed: "មិនអាចទាញយកផែនការកម្លាំងពលកម្មបានទេ",
+        saveFailed: "មិនអាចរក្សាទុកផែនការកម្លាំងពលកម្មបានទេ",
+        archiveFailed: "មិនអាចដាក់ផែនការក្នុងបណ្ណសារបានទេ",
+        importFailed: "មិនអាចនាំចូលផែនការកម្លាំងពលកម្មបានទេ",
+        created: "បានបង្កើតផែនការកម្លាំងពលកម្ម",
+        updated: "បានកែប្រែផែនការកម្លាំងពលកម្ម",
+        archivedMessage: "បានដាក់ផែនការក្នុងបណ្ណសារ"
+    },
     errors: {
         internal: "មានបញ្ហាមិនរំពឹងទុកក្នុងប្រព័ន្ធ។",
         routeNotFound: "រកមិនឃើញផ្លូវដែលបានស្នើ។",
-        corsOriginDenied:
-            "Website នេះមិនត្រូវបានអនុញ្ញាតឱ្យប្រើ API ទេ។",
+        corsOriginDenied: "Website នេះមិនត្រូវបានអនុញ្ញាតឱ្យប្រើ API ទេ។",
         validationFailed: "សូមពិនិត្យព័ត៌មានដែលបានបញ្ចូល។",
-        authInvalidCredentials:
-            "លេខសម្គាល់ចូល ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ។",
-        authTokenRequired:
-            "Session របស់អ្នកបានផុតកំណត់។ សូមចូលប្រើប្រាស់ម្តងទៀត។",
-        authTokenInvalid:
-            "Session របស់អ្នកមិនត្រឹមត្រូវ។ សូមចូលប្រើប្រាស់ម្តងទៀត។",
-        authTokenRevoked:
-            "Session របស់អ្នកមិនអាចប្រើបានទៀតទេ។ សូមចូលប្រើប្រាស់ម្តងទៀត។",
-        authAccountUnavailable:
-            "គណនីនេះមិនអាចប្រើបានទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រងប្រព័ន្ធ។",
+        authInvalidCredentials: "លេខសម្គាល់ចូល ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ។",
+        authTokenRequired: "Session របស់អ្នកបានផុតកំណត់។ សូមចូលប្រើប្រាស់ម្តងទៀត។",
+        authTokenInvalid: "Session របស់អ្នកមិនត្រឹមត្រូវ។ សូមចូលប្រើប្រាស់ម្តងទៀត។",
+        authTokenRevoked: "Session របស់អ្នកមិនអាចប្រើបានទៀតទេ។ សូមចូលប្រើប្រាស់ម្តងទៀត។",
+        authAccountUnavailable: "គណនីនេះមិនអាចប្រើបានទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រងប្រព័ន្ធ។",
         permissionDenied: "អ្នកមិនមានសិទ្ធិធ្វើសកម្មភាពនេះទេ។",
-
         organization: {
             company: {
                 invalidId: "Company ID មិនត្រឹមត្រូវ។",
                 notFound: "រកមិនឃើញក្រុមហ៊ុន។",
-                archived:
-                    "ក្រុមហ៊ុននេះត្រូវបានដាក់ក្នុងបណ្ណសារ ហើយមិនអាចប្រើបានទេ។",
+                archived: "ក្រុមហ៊ុននេះត្រូវបានដាក់ក្នុងបណ្ណសារ ហើយមិនអាចប្រើបានទេ។",
                 codeExists: "Company Code នេះមានរួចហើយ។",
-                duplicate: "ក្រុមហ៊ុននេះមានរួចហើយ។",
+                duplicate: "ក្រុមហ៊ុននេះមានរួចហើយ។"
             },
-
             branch: {
                 invalidId: "Branch ID មិនត្រឹមត្រូវ។",
                 notFound: "រកមិនឃើញសាខា។",
-                archived:
-                    "សាខានេះត្រូវបានដាក់ក្នុងបណ្ណសារ ហើយមិនអាចប្រើបានទេ។",
-                codeExists:
-                    "Branch Code នេះមានរួចហើយក្នុងក្រុមហ៊ុនដែលបានជ្រើសរើស។",
-                headOfficeExists:
-                    "ក្រុមហ៊ុននេះមានការិយាល័យកណ្ដាលរួចហើយ។",
-                duplicate: "សាខានេះមានរួចហើយ។",
+                archived: "សាខានេះត្រូវបានដាក់ក្នុងបណ្ណសារ ហើយមិនអាចប្រើបានទេ។",
+                codeExists: "Branch Code នេះមានរួចហើយក្នុងក្រុមហ៊ុនដែលបានជ្រើសរើស។",
+                headOfficeExists: "ក្រុមហ៊ុននេះមានការិយាល័យកណ្ដាលរួចហើយ។",
+                duplicate: "សាខានេះមានរួចហើយ។"
             },
-
             department: {
                 invalidId: "Department ID មិនត្រឹមត្រូវ។",
                 notFound: "រកមិនឃើញនាយកដ្ឋាន។",
-                parentNotFound:
-                    "រកមិនឃើញនាយកដ្ឋានមេក្នុងសាខាដែលបានជ្រើសរើស។",
-                parentSelf:
-                    "នាយកដ្ឋានមិនអាចជាមេរបស់ខ្លួនឯងបានទេ។",
-                hasChildren:
-                    "នាយកដ្ឋាននេះមាននាយកដ្ឋានកូនសកម្ម ដូច្នេះមិនអាចដាក់ក្នុងបណ្ណសារបានទេ។",
-                codeExists:
-                    "Department Code នេះមានរួចហើយក្នុងសាខាដែលបានជ្រើសរើស។",
-                duplicate: "នាយកដ្ឋាននេះមានរួចហើយ។",
+                parentNotFound: "រកមិនឃើញនាយកដ្ឋានមេក្នុងសាខាដែលបានជ្រើសរើស។",
+                parentSelf: "នាយកដ្ឋានមិនអាចជាមេរបស់ខ្លួនឯងបានទេ។",
+                hasChildren: "នាយកដ្ឋាននេះមាននាយកដ្ឋានកូនសកម្ម ដូច្នេះមិនអាចដាក់ក្នុងបណ្ណសារបានទេ។",
+                codeExists: "Department Code នេះមានរួចហើយក្នុងសាខាដែលបានជ្រើសរើស។",
+                duplicate: "នាយកដ្ឋាននេះមានរួចហើយ។"
             },
-
             departmentImport: {
                 fileRequired: "សូមជ្រើសរើសឯកសារ Excel ដើម្បី Import។",
-                invalidTemplate:
-                    "Template Excel មិនត្រឹមត្រូវ។ សូមទាញយក Sample ហើយប្រើ Column ដូចគ្នា។",
+                invalidTemplate: "Template Excel មិនត្រឹមត្រូវ។ សូមទាញយក Sample ហើយប្រើ Column ដូចគ្នា។",
                 emptyFile: "ឯកសារ Excel ទទេ។",
-                noDataRows:
-                    "ឯកសារ Excel មិនមានជួរនាយកដ្ឋានសម្រាប់ Import។",
-                hasErrors:
-                    "ការ Import បានបញ្ចប់ដោយមានកំហុស Validate។ សូមពិនិត្យលទ្ធផល។",
+                noDataRows: "ឯកសារ Excel មិនមានជួរនាយកដ្ឋានសម្រាប់ Import។",
+                hasErrors: "ការ Import បានបញ្ចប់ដោយមានកំហុស Validate។ សូមពិនិត្យលទ្ធផល។",
                 companyCodeRequired: "ត្រូវបញ្ចូល Company Code។",
                 branchCodeRequired: "ត្រូវបញ្ចូល Branch Code។",
                 departmentCodeRequired: "ត្រូវបញ្ចូល Department Code។",
-                departmentCodeInvalid:
-                    "Department Code ត្រូវមាន 2-30 តួអក្សរ និងប្រើអក្សរ លេខ dash ឬ underscore ប៉ុណ្ណោះ។",
+                departmentCodeInvalid: "Department Code ត្រូវមាន 2-30 តួអក្សរ និងប្រើអក្សរ លេខ dash ឬ underscore ប៉ុណ្ណោះ។",
                 departmentNameRequired: "ត្រូវបញ្ចូលឈ្មោះនាយកដ្ឋាន។",
                 statusInvalid: "Status ត្រូវតែជា ACTIVE ឬ INACTIVE។",
-                companyNotFound:
-                    "រកមិនឃើញ Company Code ឬក្រុមហ៊ុនត្រូវបានដាក់បណ្ណសារ។",
-                branchNotFound:
-                    "រកមិនឃើញ Branch Code ក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានដាក់បណ្ណសារ។",
-                duplicateInFile:
-                    "មាន Department Code ស្ទួនក្នុងឯកសារ Excel សម្រាប់សាខាដូចគ្នា។",
+                companyNotFound: "រកមិនឃើញ Company Code ឬក្រុមហ៊ុនត្រូវបានដាក់បណ្ណសារ។",
+                branchNotFound: "រកមិនឃើញ Branch Code ក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានដាក់បណ្ណសារ។",
+                duplicateInFile: "មាន Department Code ស្ទួនក្នុងឯកសារ Excel សម្រាប់សាខាដូចគ្នា។"
             },
             position: {
                 invalidId: "Position ID មិនត្រឹមត្រូវ។",
                 notFound: "រកមិនឃើញតួនាទីការងារ។",
-                reportsToNotFound:
-                    "រកមិនឃើញតួនាទីដែលត្រូវរាយការណ៍ទៅក្នុងសាខាដែលបានជ្រើសរើស។",
-                reportsToSelf:
-                    "តួនាទីការងារមិនអាចរាយការណ៍ទៅខ្លួនឯងបានទេ។",
-                hasReportingPositions:
-                    "តួនាទីនេះមានតួនាទីកូនដែលកំពុងរាយការណ៍ទៅ ដូច្នេះមិនអាចដាក់ក្នុងបណ្ណសារបានទេ។",
-                codeExists:
-                    "Position Code នេះមានរួចហើយក្នុងនាយកដ្ឋានដែលបានជ្រើសរើស។",
-                duplicate: "តួនាទីការងារនេះមានរួចហើយ។",
+                reportsToNotFound: "រកមិនឃើញតួនាទីដែលត្រូវរាយការណ៍ទៅក្នុងសាខាដែលបានជ្រើសរើស។",
+                reportsToSelf: "តួនាទីការងារមិនអាចរាយការណ៍ទៅខ្លួនឯងបានទេ។",
+                hasReportingPositions: "តួនាទីនេះមានតួនាទីកូនដែលកំពុងរាយការណ៍ទៅ ដូច្នេះមិនអាចដាក់ក្នុងបណ្ណសារបានទេ។",
+                codeExists: "Position Code នេះមានរួចហើយក្នុងនាយកដ្ឋានដែលបានជ្រើសរើស។",
+                duplicate: "តួនាទីការងារនេះមានរួចហើយ។"
             },
-
             positionImport: {
                 fileRequired: "សូមជ្រើសរើសឯកសារ Excel ដើម្បី Import។",
-                invalidTemplate:
-                    "Template Excel មិនត្រឹមត្រូវ។ សូមទាញយក Sample ហើយប្រើ Column ដូចគ្នា។",
+                invalidTemplate: "Template Excel មិនត្រឹមត្រូវ។ សូមទាញយក Sample ហើយប្រើ Column ដូចគ្នា។",
                 emptyFile: "ឯកសារ Excel ទទេ។",
-                noDataRows:
-                    "ឯកសារ Excel មិនមានជួរតួនាទីសម្រាប់ Import។",
-                hasErrors:
-                    "ការ Import បានបញ្ចប់ដោយមានកំហុស Validate។ សូមពិនិត្យលទ្ធផល។",
+                noDataRows: "ឯកសារ Excel មិនមានជួរតួនាទីសម្រាប់ Import។",
+                hasErrors: "ការ Import បានបញ្ចប់ដោយមានកំហុស Validate។ សូមពិនិត្យលទ្ធផល។",
                 companyCodeRequired: "ត្រូវបញ្ចូល Company Code។",
                 branchCodeRequired: "ត្រូវបញ្ចូល Branch Code។",
                 departmentCodeRequired: "ត្រូវបញ្ចូល Department Code។",
                 positionCodeRequired: "ត្រូវបញ្ចូល Position Code។",
-                positionCodeInvalid:
-                    "Position Code ត្រូវមាន 2-30 តួអក្សរ និងប្រើអក្សរ លេខ dash ឬ underscore ប៉ុណ្ណោះ។",
+                positionCodeInvalid: "Position Code ត្រូវមាន 2-30 តួអក្សរ និងប្រើអក្សរ លេខ dash ឬ underscore ប៉ុណ្ណោះ។",
                 positionTitleRequired: "ត្រូវបញ្ចូលឈ្មោះតួនាទី។",
                 levelInvalid: "Level ត្រូវជាលេខគត់ពី 0 ដល់ 99។",
-                isManagerInvalid:
-                    "Is Manager ត្រូវតែជា YES, NO, TRUE, FALSE, 1 ឬ 0។",
+                isManagerInvalid: "Is Manager ត្រូវតែជា YES, NO, TRUE, FALSE, 1 ឬ 0។",
                 statusInvalid: "Status ត្រូវតែជា ACTIVE ឬ INACTIVE។",
-                companyNotFound:
-                    "រកមិនឃើញ Company Code ឬក្រុមហ៊ុនត្រូវបានដាក់បណ្ណសារ។",
-                branchNotFound:
-                    "រកមិនឃើញ Branch Code ក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានដាក់បណ្ណសារ។",
-                departmentNotFound:
-                    "រកមិនឃើញ Department Code ក្នុងសាខាដែលបានជ្រើស ឬនាយកដ្ឋានត្រូវបានដាក់បណ្ណសារ។",
-                duplicateInFile:
-                    "មាន Position Code ស្ទួនក្នុងឯកសារ Excel សម្រាប់នាយកដ្ឋានដូចគ្នា។",
+                companyNotFound: "រកមិនឃើញ Company Code ឬក្រុមហ៊ុនត្រូវបានដាក់បណ្ណសារ។",
+                branchNotFound: "រកមិនឃើញ Branch Code ក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានដាក់បណ្ណសារ។",
+                departmentNotFound: "រកមិនឃើញ Department Code ក្នុងសាខាដែលបានជ្រើស ឬនាយកដ្ឋានត្រូវបានដាក់បណ្ណសារ។",
+                duplicateInFile: "មាន Position Code ស្ទួនក្នុងឯកសារ Excel សម្រាប់នាយកដ្ឋានដូចគ្នា។"
             },
             line: {
                 invalidId: "Line ID មិនត្រឹមត្រូវ។",
                 notFound: "រកមិនឃើញ Line ទេ។",
                 archived: "Line នេះត្រូវបានរក្សាទុក ហើយមិនអាចកែប្រែបានទេ។",
-                codeExists:
-                    "កូដ Line នេះមានរួចហើយក្នុងនាយកដ្ឋានដែលបានជ្រើស។",
+                codeExists: "កូដ Line នេះមានរួចហើយក្នុងនាយកដ្ឋានដែលបានជ្រើស។",
                 duplicate: "Line នេះមានរួចហើយ។",
-                positionNotFound:
-                    "តួនាទីមួយចំនួនដែលបានជ្រើស មិនមានក្នុងនាយកដ្ឋាននេះទេ។",
-                leaderPositionNotFound:
-                    "រកមិនឃើញតួនាទីអ្នកដឹកនាំក្នុងនាយកដ្ឋាននេះទេ។",
-                leaderPositionNotAllowed:
-                    "តួនាទីអ្នកដឹកនាំត្រូវតែស្ថិតក្នុងតួនាទីដែលអនុញ្ញាត។",
+                positionNotFound: "តួនាទីមួយចំនួនដែលបានជ្រើស មិនមានក្នុងនាយកដ្ឋាននេះទេ។",
+                leaderPositionNotFound: "រកមិនឃើញតួនាទីអ្នកដឹកនាំក្នុងនាយកដ្ឋាននេះទេ។",
+                leaderPositionNotAllowed: "តួនាទីអ្នកដឹកនាំត្រូវតែស្ថិតក្នុងតួនាទីដែលអនុញ្ញាត។"
             },
-
             lineImport: {
                 fileRequired: "សូមជ្រើសរើសឯកសារ Excel ដើម្បីនាំចូល។",
-                invalidTemplate:
-                    "Excel template មិនត្រឹមត្រូវ។ សូមទាញយកគំរូ ហើយប្រើ column ដូចគ្នា។",
+                invalidTemplate: "Excel template មិនត្រឹមត្រូវ។ សូមទាញយកគំរូ ហើយប្រើ column ដូចគ្នា។",
                 emptyFile: "ឯកសារ Excel ដែលបាន upload គឺទទេ។",
                 noDataRows: "ឯកសារ Excel មិនមានជួរដេក Line សម្រាប់នាំចូលទេ។",
-                hasErrors:
-                    "ការនាំចូលបានបញ្ចប់ ប៉ុន្តែមានកំហុស validation។ សូមពិនិត្យលទ្ធផល។",
+                hasErrors: "ការនាំចូលបានបញ្ចប់ ប៉ុន្តែមានកំហុស validation។ សូមពិនិត្យលទ្ធផល។",
                 companyCodeRequired: "ត្រូវការកូដក្រុមហ៊ុន។",
                 branchCodeRequired: "ត្រូវការកូដសាខា។",
                 departmentCodeRequired: "ត្រូវការកូដនាយកដ្ឋាន។",
                 lineCodeRequired: "ត្រូវការកូដ Line។",
-                lineCodeInvalid:
-                    "កូដ Line ត្រូវមាន 2-30 តួអក្សរ ហើយប្រើអក្សរ លេខ dash ឬ underscore ប៉ុណ្ណោះ។",
+                lineCodeInvalid: "កូដ Line ត្រូវមាន 2-30 តួអក្សរ ហើយប្រើអក្សរ លេខ dash ឬ underscore ប៉ុណ្ណោះ។",
                 lineNameRequired: "ត្រូវការឈ្មោះ Line។",
                 statusInvalid: "ស្ថានភាពត្រូវតែជា ACTIVE ឬ INACTIVE។",
-                companyNotFound:
-                    "រកមិនឃើញកូដក្រុមហ៊ុន ឬក្រុមហ៊ុនត្រូវបានរក្សាទុក។",
-                branchNotFound:
-                    "រកមិនឃើញកូដសាខាក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានរក្សាទុក។",
-                departmentNotFound:
-                    "រកមិនឃើញកូដនាយកដ្ឋានក្នុងសាខាដែលបានជ្រើស ឬនាយកដ្ឋានត្រូវបានរក្សាទុក។",
-                positionNotFound:
-                    "រកមិនឃើញកូដតួនាទីមួយចំនួនក្នុងនាយកដ្ឋានដែលបានជ្រើស។",
-                leaderPositionNotFound:
-                    "រកមិនឃើញកូដតួនាទីអ្នកដឹកនាំក្នុងនាយកដ្ឋានដែលបានជ្រើស។",
-                leaderPositionNotAllowed:
-                    "កូដតួនាទីអ្នកដឹកនាំត្រូវតែមានក្នុង allowedPositionCodes។",
-                duplicateInFile:
-                    "មានកូដ Line ស្ទួនក្នុង Excel file សម្រាប់នាយកដ្ឋានដូចគ្នា។",
+                companyNotFound: "រកមិនឃើញកូដក្រុមហ៊ុន ឬក្រុមហ៊ុនត្រូវបានរក្សាទុក។",
+                branchNotFound: "រកមិនឃើញកូដសាខាក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានរក្សាទុក។",
+                departmentNotFound: "រកមិនឃើញកូដនាយកដ្ឋានក្នុងសាខាដែលបានជ្រើស ឬនាយកដ្ឋានត្រូវបានរក្សាទុក។",
+                positionNotFound: "រកមិនឃើញកូដតួនាទីមួយចំនួនក្នុងនាយកដ្ឋានដែលបានជ្រើស។",
+                leaderPositionNotFound: "រកមិនឃើញកូដតួនាទីអ្នកដឹកនាំក្នុងនាយកដ្ឋានដែលបានជ្រើស។",
+                leaderPositionNotAllowed: "កូដតួនាទីអ្នកដឹកនាំត្រូវតែមានក្នុង allowedPositionCodes។",
+                duplicateInFile: "មានកូដ Line ស្ទួនក្នុង Excel file សម្រាប់នាយកដ្ឋានដូចគ្នា។"
             },
             shift: {
                 invalidId: "Shift ID មិនត្រឹមត្រូវ។",
                 notFound: "រកមិនឃើញវេនការងារទេ។",
-                archived:
-                    "វេនការងារនេះត្រូវបានរក្សាទុក ហើយមិនអាចកែប្រែបានទេ។",
-                codeExists:
-                    "កូដវេនការងារនេះមានរួចហើយក្នុងសាខាដែលបានជ្រើស។",
-                invalidTimeRange:
-                    "ចន្លោះម៉ោងវេនមិនត្រឹមត្រូវ។ សូមពិនិត្យម៉ោងចាប់ផ្តើម និងម៉ោងបញ្ចប់។",
-                invalidBreakRange:
-                    "ម៉ោងសម្រាកត្រូវតែស្ថិតក្នុងចន្លោះម៉ោងវេន ហើយត្រូវតែខ្លីជាងម៉ោងសរុប។",
-                invalidWorkingMinutes:
-                    "ម៉ោងធ្វើការត្រូវតែច្រើនជាងសូន្យ។",
+                archived: "វេនការងារនេះត្រូវបានរក្សាទុក ហើយមិនអាចកែប្រែបានទេ។",
+                codeExists: "កូដវេនការងារនេះមានរួចហើយក្នុងសាខាដែលបានជ្រើស។",
+                invalidTimeRange: "ចន្លោះម៉ោងវេនមិនត្រឹមត្រូវ។ សូមពិនិត្យម៉ោងចាប់ផ្តើម និងម៉ោងបញ្ចប់។",
+                invalidBreakRange: "ម៉ោងសម្រាកត្រូវតែស្ថិតក្នុងចន្លោះម៉ោងវេន ហើយត្រូវតែខ្លីជាងម៉ោងសរុប។",
+                invalidWorkingMinutes: "ម៉ោងធ្វើការត្រូវតែច្រើនជាងសូន្យ។"
             },
-
             shiftImport: {
                 fileRequired: "សូមជ្រើសរើសឯកសារ Excel ដើម្បីនាំចូល។",
-                invalidTemplate:
-                    "Excel template មិនត្រឹមត្រូវ។ សូមទាញយកគំរូ ហើយប្រើ column ដូចគ្នា។",
+                invalidTemplate: "Excel template មិនត្រឹមត្រូវ។ សូមទាញយកគំរូ ហើយប្រើ column ដូចគ្នា។",
                 emptyFile: "ឯកសារ Excel ដែលបាន upload គឺទទេ។",
-                noDataRows:
-                    "ឯកសារ Excel មិនមានជួរដេកវេនការងារសម្រាប់នាំចូលទេ។",
-                hasErrors:
-                    "ការនាំចូលបានបញ្ចប់ ប៉ុន្តែមានកំហុស validation។ សូមពិនិត្យលទ្ធផល។",
+                noDataRows: "ឯកសារ Excel មិនមានជួរដេកវេនការងារសម្រាប់នាំចូលទេ។",
+                hasErrors: "ការនាំចូលបានបញ្ចប់ ប៉ុន្តែមានកំហុស validation។ សូមពិនិត្យលទ្ធផល។",
                 companyCodeRequired: "ត្រូវការកូដក្រុមហ៊ុន។",
                 branchCodeRequired: "ត្រូវការកូដសាខា។",
                 shiftCodeRequired: "ត្រូវការកូដវេន។",
                 shiftNameRequired: "ត្រូវការឈ្មោះវេន។",
                 startTimeInvalid: "ម៉ោងចាប់ផ្តើមត្រូវប្រើទម្រង់ HH:mm។",
                 endTimeInvalid: "ម៉ោងបញ្ចប់ត្រូវប្រើទម្រង់ HH:mm។",
-                breakTimePairRequired:
-                    "ម៉ោងចាប់ផ្តើមសម្រាក និងម៉ោងបញ្ចប់សម្រាកត្រូវបំពេញជាមួយគ្នា។",
-                graceMinutesInvalid:
-                    "Grace minutes ត្រូវតែជាចំនួនគត់ចន្លោះពី 0 ដល់ 240។",
+                breakTimePairRequired: "ម៉ោងចាប់ផ្តើមសម្រាក និងម៉ោងបញ្ចប់សម្រាកត្រូវបំពេញជាមួយគ្នា។",
+                graceMinutesInvalid: "Grace minutes ត្រូវតែជាចំនួនគត់ចន្លោះពី 0 ដល់ 240។",
                 statusInvalid: "ស្ថានភាពត្រូវតែជា ACTIVE ឬ INACTIVE។",
-                invalidTimeRange:
-                    "ម៉ោងវេន ឬម៉ោងសម្រាកមិនត្រឹមត្រូវ។ សូមពិនិត្យម្តងទៀត។",
-                companyNotFound:
-                    "រកមិនឃើញកូដក្រុមហ៊ុន ឬក្រុមហ៊ុនត្រូវបានរក្សាទុក។",
-                branchNotFound:
-                    "រកមិនឃើញកូដសាខាក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានរក្សាទុក។",
-                duplicateInFile:
-                    "មានកូដវេនស្ទួនក្នុង Excel file សម្រាប់សាខាដូចគ្នា។",
+                invalidTimeRange: "ម៉ោងវេន ឬម៉ោងសម្រាកមិនត្រឹមត្រូវ។ សូមពិនិត្យម្តងទៀត។",
+                companyNotFound: "រកមិនឃើញកូដក្រុមហ៊ុន ឬក្រុមហ៊ុនត្រូវបានរក្សាទុក។",
+                branchNotFound: "រកមិនឃើញកូដសាខាក្នុងក្រុមហ៊ុនដែលបានជ្រើស ឬសាខាត្រូវបានរក្សាទុក។",
+                duplicateInFile: "មានកូដវេនស្ទួនក្នុង Excel file សម្រាប់សាខាដូចគ្នា។"
             },
             employeeType: {
                 invalidId: "ID ប្រភេទបុគ្គលិកមិនត្រឹមត្រូវ។",
@@ -1223,9 +1267,8 @@ export default {
                 codeExists: "កូដប្រភេទបុគ្គលិកនេះមានរួចហើយក្នុងក្រុមហ៊ុនដែលបានជ្រើស។",
                 duplicate: "ប្រភេទបុគ្គលិកនេះមានរួចហើយ។",
                 positionNotFound: "មុខតំណែងមួយចំនួនរកមិនឃើញក្នុងក្រុមហ៊ុនដែលបានជ្រើស។",
-                positionAlreadyMapped: "មុខតំណែងមួយចំនួនត្រូវបានភ្ជាប់ទៅប្រភេទបុគ្គលិកផ្សេងរួចហើយ។",
+                positionAlreadyMapped: "មុខតំណែងមួយចំនួនត្រូវបានភ្ជាប់ទៅប្រភេទបុគ្គលិកផ្សេងរួចហើយ។"
             },
-
             employeeTypeImport: {
                 fileRequired: "សូមជ្រើសរើសឯកសារ Excel ដើម្បីនាំចូល។",
                 invalidTemplate: "Excel template មិនត្រឹមត្រូវ។ សូមទាញយកគំរូថ្មី។",
@@ -1242,9 +1285,27 @@ export default {
                 positionNotFound: "រកមិនឃើញកូដមុខតំណែងមួយចំនួនក្នុងក្រុមហ៊ុន។",
                 positionAlreadyMapped: "កូដមុខតំណែងមួយចំនួនត្រូវបានភ្ជាប់ទៅប្រភេទផ្សេងរួចហើយ។",
                 mixedDirectAndChild: "កុំលាយមុខតំណែងផ្ទាល់ និងក្រុមរង សម្រាប់ប្រភេទបុគ្គលិកតែមួយ។",
-                duplicatePositionInFile: "មានកូដមុខតំណែងស្ទួនក្នុង Excel សម្រាប់ប្រភេទបុគ្គលិកតែមួយ។",
+                duplicatePositionInFile: "មានកូដមុខតំណែងស្ទួនក្នុង Excel សម្រាប់ប្រភេទបុគ្គលិកតែមួយ។"
             },
-
+            recruitmentChannel: {
+                notFound: "រកមិនឃើញប្រភពជ្រើសរើសបុគ្គលិក។",
+                codeExists: "កូដប្រភពជ្រើសរើសបុគ្គលិកមានរួចហើយក្នុងវិសាលភាពនេះ។"
+            }
         },
+        employee: {
+            profile: {
+                recruitmentChannelInvalidId: "លេខសម្គាល់ប្រភពជ្រើសរើសបុគ្គលិកមិនត្រឹមត្រូវ។",
+                recruitmentChannelNotFound: "រកមិនឃើញប្រភពជ្រើសរើសបុគ្គលិក ឬវាត្រូវបានទុកក្នុងប័ណ្ណសារ។",
+                recruitmentChannelCompanyMismatch: "ប្រភពជ្រើសរើសបុគ្គលិកមិនមែនជារបស់ក្រុមហ៊ុនដែលបានជ្រើស។",
+                recruitmentChannelBranchMismatch: "ប្រភពជ្រើសរើសបុគ្គលិកមិនមែនជារបស់សាខាដែលបានជ្រើស។"
+            }
+        }
     },
+    employee: {
+        profile: {
+            recruitmentChannel: "ប្រភពជ្រើសរើសបុគ្គលិក",
+            selectRecruitmentChannel: "ជ្រើសរើសប្រភពជ្រើសរើសបុគ្គលិក",
+            sourceOfHiring: "ប្រភពការជ្រើសរើស"
+        }
+    }
 }

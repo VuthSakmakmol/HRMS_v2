@@ -45,7 +45,32 @@ const branchOptions = computed(() =>
     ),
 )
 
-const departmentOptions = computed(() =>
+const employeeTypeOptions = computed(() =>
+    (props.lookups.employeeTypes || []).filter((item) =>
+        !props.modelValue.companyId ||
+        item.companyId === props.modelValue.companyId,
+    ),
+)
+
+const selectedEmployeeTypeOption = computed(() => {
+    if (!props.modelValue.employeeTypeFilterKey) return null
+
+    return employeeTypeOptions.value.find(
+        (item) => item.key === props.modelValue.employeeTypeFilterKey,
+    ) || null
+})
+
+const selectedEmployeeTypeAllowedPositionIds = computed(() =>
+    new Set(selectedEmployeeTypeOption.value?.positionIds || []),
+)
+
+const selectedEmployeeTypeUsesAllPositions = computed(() => {
+    if (!selectedEmployeeTypeOption.value) return true
+
+    return selectedEmployeeTypeOption.value.positionAssignmentMode === "ALL_POSITIONS"
+})
+
+const rawDepartmentOptions = computed(() =>
     (props.lookups.departments || []).filter((item) =>
         (!props.modelValue.companyId ||
             item.companyId === props.modelValue.companyId) &&
@@ -54,14 +79,59 @@ const departmentOptions = computed(() =>
     ),
 )
 
-const positionOptions = computed(() =>
+const rawPositionOptions = computed(() =>
     (props.lookups.positions || []).filter((item) =>
         (!props.modelValue.companyId ||
             item.companyId === props.modelValue.companyId) &&
         (!props.modelValue.branchId ||
-            item.branchId === props.modelValue.branchId) &&
+            item.branchId === props.modelValue.branchId),
+    ),
+)
+
+function positionAllowedByEmployeeType(position) {
+    if (!selectedEmployeeTypeOption.value) return true
+    if (selectedEmployeeTypeUsesAllPositions.value) return true
+
+    return selectedEmployeeTypeAllowedPositionIds.value.has(position.id)
+}
+
+function departmentAllowedByEmployeeType(department) {
+    if (!selectedEmployeeTypeOption.value) return true
+    if (selectedEmployeeTypeUsesAllPositions.value) return true
+
+    return rawPositionOptions.value.some((position) =>
+        position.departmentId === department.id &&
+        positionAllowedByEmployeeType(position),
+    )
+}
+
+function lineAllowedByEmployeeType(line) {
+    if (!selectedEmployeeTypeOption.value) return true
+    if (selectedEmployeeTypeUsesAllPositions.value) return true
+
+    const linePositionIds = line.positionIds || []
+
+    if (linePositionIds.length > 0) {
+        return linePositionIds.some((positionId) =>
+            selectedEmployeeTypeAllowedPositionIds.value.has(positionId),
+        )
+    }
+
+    return rawPositionOptions.value.some((position) =>
+        position.departmentId === line.departmentId &&
+        positionAllowedByEmployeeType(position),
+    )
+}
+
+const departmentOptions = computed(() =>
+    rawDepartmentOptions.value.filter(departmentAllowedByEmployeeType),
+)
+
+const positionOptions = computed(() =>
+    rawPositionOptions.value.filter((item) =>
         (!props.modelValue.departmentId ||
-            item.departmentId === props.modelValue.departmentId),
+            item.departmentId === props.modelValue.departmentId) &&
+        positionAllowedByEmployeeType(item),
     ),
 )
 
@@ -72,21 +142,13 @@ const lineOptions = computed(() =>
         (!props.modelValue.branchId ||
             item.branchId === props.modelValue.branchId) &&
         (!props.modelValue.departmentId ||
-            item.departmentId === props.modelValue.departmentId),
-    ),
-)
-
-const employeeTypeOptions = computed(() =>
-    (props.lookups.employeeTypes || []).filter((item) =>
-        !props.modelValue.companyId ||
-        item.companyId === props.modelValue.companyId,
+            item.departmentId === props.modelValue.departmentId) &&
+        lineAllowedByEmployeeType(item),
     ),
 )
 
 function optionLabel(item) {
-    return item.code
-        ? `${item.code} - ${item.name}`
-        : item.name
+    return item.label || (item.code ? `${item.code} - ${item.name}` : item.name)
 }
 
 function updateField(field, value, dependentFields = []) {
@@ -162,10 +224,10 @@ function updateField(field, value, dependentFields = []) {
                     $event,
                     [
                         'branchId',
+                        'employeeTypeFilterKey',
                         'departmentId',
                         'positionId',
                         'lineId',
-                        'employeeTypeId',
                     ],
                 )"
             />
@@ -183,11 +245,24 @@ function updateField(field, value, dependentFields = []) {
                 @update:model-value="updateField(
                     'branchId',
                     $event,
-                    [
-                        'departmentId',
-                        'positionId',
-                        'lineId',
-                    ],
+                    ['departmentId', 'positionId', 'lineId'],
+                )"
+            />
+
+            <Select
+                class="dashboard-filter-field dashboard-filter-field--employee-type"
+                :model-value="modelValue.employeeTypeFilterKey"
+                :options="employeeTypeOptions"
+                :option-label="optionLabel"
+                option-value="key"
+                :placeholder="t('hrDashboard.filters.allEmployeeTypes')"
+                show-clear
+                filter
+                :loading="lookupLoading"
+                @update:model-value="updateField(
+                    'employeeTypeFilterKey',
+                    $event,
+                    ['departmentId', 'positionId', 'lineId'],
                 )"
             />
 
@@ -233,19 +308,6 @@ function updateField(field, value, dependentFields = []) {
                 :loading="lookupLoading"
                 @update:model-value="updateField('lineId', $event)"
             />
-
-            <Select
-                class="dashboard-filter-field"
-                :model-value="modelValue.employeeTypeId"
-                :options="employeeTypeOptions"
-                :option-label="optionLabel"
-                option-value="id"
-                :placeholder="t('hrDashboard.filters.allEmployeeTypes')"
-                show-clear
-                filter
-                :loading="lookupLoading"
-                @update:model-value="updateField('employeeTypeId', $event)"
-            />
         </div>
 
         <div class="dashboard-filter-bar__actions">
@@ -279,18 +341,18 @@ function updateField(field, value, dependentFields = []) {
 
 <style scoped>
 .dashboard-filter-bar {
+    position: relative;
+    z-index: 12000;
     display: flex;
     align-items: center;
     gap: 0.45rem;
     width: 100%;
     min-width: 0;
     margin: 0;
-    position: relative;
-    z-index: 12000;
-    pointer-events: auto;
     padding: 0.5rem 0.875rem;
     background: var(--hrms-surface);
     border-top: 0;
+    pointer-events: auto;
 }
 
 .dashboard-filter-bar__fields {
@@ -321,6 +383,11 @@ function updateField(field, value, dependentFields = []) {
     flex: 0 1 12rem;
     min-width: 10rem;
     max-width: 12rem;
+}
+
+.dashboard-filter-field--employee-type {
+    flex-basis: 13rem;
+    max-width: 18rem;
 }
 
 :deep(.dashboard-filter-field),
@@ -379,7 +446,8 @@ function updateField(field, value, dependentFields = []) {
     }
 
     .dashboard-filter-field,
-    .dashboard-filter-field--date {
+    .dashboard-filter-field--date,
+    .dashboard-filter-field--employee-type {
         flex: 1 1 10rem;
         max-width: none;
     }
@@ -393,7 +461,8 @@ function updateField(field, value, dependentFields = []) {
     }
 
     .dashboard-filter-field,
-    .dashboard-filter-field--date {
+    .dashboard-filter-field--date,
+    .dashboard-filter-field--employee-type {
         width: 100%;
         min-width: 0;
     }

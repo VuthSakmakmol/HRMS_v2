@@ -4,7 +4,6 @@ import { useI18n } from "vue-i18n"
 import { useToast } from "primevue/usetoast"
 
 import Button from "primevue/button"
-import Card from "primevue/card"
 import Column from "primevue/column"
 import DataTable from "primevue/datatable"
 import Dialog from "primevue/dialog"
@@ -17,7 +16,6 @@ import Textarea from "primevue/textarea"
 import { useUiStore } from "@/app/stores/ui.store.js"
 import { useModulePermissions } from "@/shared/auth/useModulePermissions.js"
 import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
-import AppModuleToolbar from "@/shared/components/page/AppModuleToolbar.vue"
 import AppTableActions from "@/shared/components/table/AppTableActions.vue"
 import { fetchBranches } from "../services/branch.api.js"
 import { fetchCompanies } from "../services/company.api.js"
@@ -883,45 +881,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="department-page hrms-compact">
-        <AppModuleToolbar>
-            <Button
-                v-if="permissions.canImport"
-                severity="secondary"
-                outlined
-                icon="pi pi-download"
-                :loading="departmentStore.downloadingTemplate"
-                :label="t('organization.department.downloadSample')"
-                @click="downloadTemplate"
-            />
-
-            <Button
-                v-if="permissions.canImport"
-                severity="secondary"
-                outlined
-                icon="pi pi-upload"
-                :label="t('organization.department.importExcel')"
-                @click="openImportDialog"
-            />
-
-            <Button
-                v-if="permissions.canExport"
-                severity="secondary"
-                outlined
-                icon="pi pi-file-export"
-                :loading="departmentStore.exporting"
-                :label="t('organization.department.exportExcel')"
-                @click="exportDepartmentExcel"
-            />
-
-            <Button
-                v-if="permissions.canCreate"
-                icon="pi pi-plus"
-                :label="t('organization.department.newDepartment')"
-                @click="openCreateDialog"
-            />
-        </AppModuleToolbar>
-
+    <section class="hrms-list-page hrms-compact">
         <AppFilterBar :loading="departmentStore.loading">
             <span class="app-filter-field app-filter-field--search department-search">
                 <i class="pi pi-search" />
@@ -995,14 +955,52 @@ onMounted(async () => {
                     :loading="departmentStore.loading"
                     @click="loadDepartments"
                 />
+
+                <Button
+                    v-if="permissions.canImport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-download"
+                    :loading="departmentStore.downloadingTemplate"
+                    :aria-label="t('organization.department.downloadSample')"
+                    v-tooltip.top="t('organization.department.downloadSample')"
+                    @click="downloadTemplate"
+                />
+
+                <Button
+                    v-if="permissions.canImport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-upload"
+                    :aria-label="t('organization.department.importExcel')"
+                    v-tooltip.top="t('organization.department.importExcel')"
+                    @click="openImportDialog"
+                />
+
+                <Button
+                    v-if="permissions.canExport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-file-export"
+                    :loading="departmentStore.exporting"
+                    :aria-label="t('organization.department.exportExcel')"
+                    v-tooltip.top="t('organization.department.exportExcel')"
+                    @click="exportDepartmentExcel"
+                />
+
+                <Button
+                    v-if="permissions.canCreate"
+                    icon="pi pi-plus"
+                    :label="t('organization.department.newDepartment')"
+                    @click="openCreateDialog"
+                />
             </template>
         </AppFilterBar>
 
-        <Card class="department-card hrms-card">
-            <template #content>
-                <div class="department-table-wrap">
+        <div class="hrms-list-card">
+            <div class="hrms-table-wrap">
                     <DataTable
-                        class="department-table"
+                        class="hrms-standard-table hrms-standard-table--horizontal"
                         lazy
                         paginator
                         striped-rows
@@ -1031,7 +1029,7 @@ onMounted(async () => {
                             style="min-width: 8rem"
                         >
                             <template #body="{ data }">
-                                <strong class="department-code">
+                                <strong class="hrms-cell-primary hrms-cell-primary--accent">
                                     {{ data.code }}
                                 </strong>
                             </template>
@@ -1044,10 +1042,9 @@ onMounted(async () => {
                             style="min-width: 14rem"
                         >
                             <template #body="{ data }">
-                                <div class="department-name-cell">
-                                    <strong>{{ data.name }}</strong>
-                                    <span>{{ data.shortName || "-" }}</span>
-                                </div>
+                                <strong class="hrms-cell-primary">
+                                    {{ data.name || "-" }}
+                                </strong>
                             </template>
                         </Column>
 
@@ -1056,16 +1053,9 @@ onMounted(async () => {
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <div class="department-muted-cell">
-                                    <strong>
-                                        {{
-                                            data.company?.displayName || "-"
-                                        }}
-                                    </strong>
-                                    <span>
-                                        {{ data.company?.code || "-" }}
-                                    </span>
-                                </div>
+                                <strong class="hrms-cell-primary">
+                                    {{ data.company?.displayName || "-" }}
+                                </strong>
                             </template>
                         </Column>
 
@@ -1074,14 +1064,9 @@ onMounted(async () => {
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <div class="department-muted-cell">
-                                    <strong>
-                                        {{ data.branch?.name || "-" }}
-                                    </strong>
-                                    <span>
-                                        {{ data.branch?.code || "-" }}
-                                    </span>
-                                </div>
+                                <strong class="hrms-cell-primary">
+                                    {{ data.branch?.name || "-" }}
+                                </strong>
                             </template>
                         </Column>
 
@@ -1090,19 +1075,14 @@ onMounted(async () => {
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <div
+                                <strong
                                     v-if="data.parentDepartment"
-                                    class="department-muted-cell"
+                                    class="hrms-cell-primary"
                                 >
-                                    <strong>
-                                        {{ data.parentDepartment.name }}
-                                    </strong>
-                                    <span>
-                                        {{ data.parentDepartment.code }}
-                                    </span>
-                                </div>
+                                    {{ data.parentDepartment.name }}
+                                </strong>
 
-                                <span v-else class="department-muted-text">
+                                <span v-else class="hrms-cell-muted">
                                     {{ t("organization.department.noParent") }}
                                 </span>
                             </template>
@@ -1131,7 +1111,7 @@ onMounted(async () => {
                             style="min-width: 11rem"
                         >
                             <template #body="{ data }">
-                                <span class="department-date">
+                                <span class="hrms-cell-muted">
                                     {{ formatDateTime(data.updatedAt) }}
                                 </span>
                             </template>
@@ -1164,23 +1144,22 @@ onMounted(async () => {
                             </template>
                         </Column>
                     </DataTable>
-                </div>
-            </template>
-        </Card>
+            </div>
+        </div>
 
         <Dialog
             v-model:visible="dialogVisible"
             modal
-            class="department-dialog"
+            class="hrms-standard-dialog"
             :header="dialogTitle"
             :draggable="false"
         >
-            <div class="department-form">
-                <div class="department-form__section">
+            <div class="hrms-dialog-form">
+                <div class="hrms-form-section">
                     <h3>{{ t("organization.department.basicInfo") }}</h3>
 
-                    <div class="department-form__grid">
-                        <label class="department-field">
+                    <div class="hrms-form-grid">
+                        <label class="hrms-form-field">
                             <span>
                                 {{ t("organization.department.company") }}
                             </span>
@@ -1208,7 +1187,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="department-field">
+                        <label class="hrms-form-field">
                             <span>
                                 {{ t("organization.department.branch") }}
                             </span>
@@ -1238,7 +1217,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="department-field">
+                        <label class="hrms-form-field">
                             <span>{{ t("organization.department.code") }}</span>
 
                             <InputText
@@ -1254,7 +1233,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="department-field">
+                        <label class="hrms-form-field">
                             <span>
                                 {{ t("organization.department.shortName") }}
                             </span>
@@ -1266,7 +1245,7 @@ onMounted(async () => {
                             />
                         </label>
 
-                        <label class="department-field department-field--wide">
+                        <label class="hrms-form-field hrms-form-field--wide">
                             <span>{{ t("organization.department.name") }}</span>
 
                             <InputText
@@ -1282,7 +1261,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="department-field">
+                        <label class="hrms-form-field">
                             <span>
                                 {{ t("organization.department.parent") }}
                             </span>
@@ -1306,7 +1285,7 @@ onMounted(async () => {
                             </small>
                         </label>
 
-                        <label class="department-field">
+                        <label class="hrms-form-field">
                             <span>
                                 {{ t("organization.department.status") }}
                             </span>
@@ -1319,7 +1298,7 @@ onMounted(async () => {
                             />
                         </label>
 
-                        <label class="department-field department-field--wide">
+                        <label class="hrms-form-field hrms-form-field--wide">
                             <span>
                                 {{
                                     t(
@@ -1358,7 +1337,7 @@ onMounted(async () => {
         <Dialog
             v-model:visible="archiveDialogVisible"
             modal
-            class="department-archive-dialog"
+            class="hrms-standard-dialog--small"
             :header="t('organization.department.archiveTitle')"
             :draggable="false"
         >
@@ -1391,7 +1370,7 @@ onMounted(async () => {
         <Dialog
             v-model:visible="importDialogVisible"
             modal
-            class="department-import-dialog"
+            class="hrms-standard-dialog--small"
             :header="t('organization.department.importTitle')"
             :draggable="false"
         >
@@ -1519,292 +1498,59 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.department-page {
-    width: 100%;
-    display: grid;
-    gap: 1rem;
-}
-
-.department-page__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.department-page__eyebrow {
-    color: var(--hrms-primary);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.department-page h2 {
-    margin: 0.35rem 0;
-    color: var(--hrms-text);
-    font-size: 1.45rem;
-    line-height: 1.2;
-}
-
-.department-page p {
-    max-width: 54rem;
-    margin: 0;
-    color: var(--hrms-text-muted);
-    font-size: 0.78rem;
-    line-height: 1.6;
-}
-
-.department-header-actions {
-    display: flex;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.department-card {
-    width: 100%;
-    min-width: 0;
-    border: 1px solid var(--hrms-border);
-    box-shadow: var(--hrms-shadow-sm);
-}
-
-.department-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.department-toolbar__filters,
-.department-toolbar__actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.department-toolbar__filters {
-    min-width: 0;
-    flex: 1 1 auto;
-}
-
-.department-toolbar__actions {
-    flex: 0 0 auto;
-}
-
 .department-search {
-    width: min(100%, 21rem);
-    position: relative;
-    display: block;
-}
-
-.department-search i {
-    position: absolute;
-    top: 50%;
-    left: 0.75rem;
-    transform: translateY(-50%);
-    color: var(--hrms-text-muted);
-    font-size: 0.78rem;
+    width: min(100%, 20rem);
 }
 
 .department-search__input {
     width: 100%;
-    padding-left: 2.1rem;
 }
 
-.department-company-filter,
-.department-branch-filter {
-    width: 14rem;
+.department-filter-select {
+    width: 12rem;
 }
 
-.department-status-filter {
-    width: 11rem;
-}
-
-.department-table-wrap {
-    width: 100%;
-    min-width: 0;
-    overflow-x: auto;
-}
-
-
-
-.department-table :deep(.p-datatable-thead > tr > th),
-.department-table :deep(.p-datatable-tbody > tr > td) {
-    text-align: center;
-    vertical-align: middle;
-}
-
-.department-table :deep(.p-datatable-column-header-content) {
-    justify-content: center;
-}
-
-.department-table :deep(.p-datatable-tbody > tr > td > *) {
-    margin-inline: auto;
-}
-
-.department-table .department-name-cell,
-.department-table .department-muted-cell {
-    justify-items: center;
-    text-align: center;
-}
-
-.department-table .department-code,
-.department-table .department-date,
-.department-table .department-muted-text {
-    display: block;
-    width: 100%;
-    text-align: center;
-}
-
-.department-table :deep(.p-tag) {
-    margin-inline: auto;
-}
-
-.department-table :deep(.department-action-column .p-datatable-column-header-content),
-.department-table :deep(.department-action-column) {
-    text-align: center;
-}
-
-.department-code {
-    color: var(--hrms-primary);
-    font-size: 0.78rem;
-}
-
-.department-name-cell,
-.department-muted-cell {
-    display: grid;
-    gap: 0.15rem;
-    min-width: 0;
-}
-
-.department-name-cell strong,
-.department-muted-cell strong,
-.department-muted-cell span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.department-name-cell strong,
-.department-muted-cell strong {
-    color: var(--hrms-text);
-    font-size: 0.78rem;
-}
-
-.department-name-cell span,
-.department-muted-cell span,
-.department-date,
-.department-muted-text,
-.department-archived-text {
-    color: var(--hrms-text-muted);
-    font-size: 0.72rem;
-}
-
-.department-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-}
-
-.department-dialog {
-    width: min(58rem, calc(100vw - 2rem));
-}
-
-.department-archive-dialog,
-.department-import-dialog {
-    width: min(31rem, calc(100vw - 2rem));
+.department-status-field .department-filter-select {
+    width: 10rem;
 }
 
 .department-import-result-dialog {
     width: min(52rem, calc(100vw - 2rem));
 }
 
-.department-form {
-    display: grid;
-    gap: 1rem;
-}
-
-.department-form__section {
-    display: grid;
-    gap: 0.75rem;
-    padding: 0.9rem;
-    background: var(--hrms-surface-muted);
-    border: 1px solid var(--hrms-border);
-    border-radius: var(--hrms-radius-md);
-}
-
-.department-form__section h3 {
-    margin: 0;
-    color: var(--hrms-text);
-    font-size: 0.82rem;
-}
-
-.department-form__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-}
-
-.department-field {
-    display: grid;
-    gap: 0.35rem;
-}
-
-.department-field--wide {
-    grid-column: 1 / -1;
-}
-
-.department-field span {
-    color: var(--hrms-text-muted);
-    font-size: 0.72rem;
-    font-weight: 700;
-}
-
-.department-field small {
-    color: var(--hrms-danger);
-    font-size: 0.68rem;
-}
-
 .department-archive-text {
     margin: 0;
     color: var(--hrms-text);
-    font-size: 0.82rem;
+    font-size: var(--hrms-font-size-md);
     line-height: 1.6;
 }
 
-.department-import-box {
+.department-import-box,
+.department-import-result {
     display: grid;
-    gap: 0.85rem;
+    gap: 0.75rem;
 }
 
 .department-file-input {
     width: 100%;
     color: var(--hrms-text);
-    font-size: 0.78rem;
+    font-size: var(--hrms-font-size-md);
 }
 
-.department-selected-file {
-    display: flex;
-    align-items: center;
+.department-selected-file,
+.department-import-progress {
+    display: grid;
     gap: 0.5rem;
-    padding: 0.65rem;
+    padding: 0.75rem;
     color: var(--hrms-text);
     background: var(--hrms-surface-muted);
     border: 1px solid var(--hrms-border);
     border-radius: var(--hrms-radius-md);
-    font-size: 0.78rem;
 }
 
-.department-import-progress {
-    display: grid;
-    gap: 0.45rem;
-    padding: 0.75rem;
-    background: var(--hrms-surface-muted);
-    border: 1px solid var(--hrms-border);
-    border-radius: var(--hrms-radius-md);
+.department-selected-file {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
 }
 
 .department-import-progress__label {
@@ -1813,457 +1559,48 @@ onMounted(async () => {
     justify-content: space-between;
     gap: 0.75rem;
     color: var(--hrms-text-muted);
-    font-size: 0.72rem;
+    font-size: var(--hrms-font-size-sm);
     font-weight: 800;
-}
-
-.department-import-progress__label strong {
-    color: var(--hrms-primary);
-    font-size: 0.82rem;
-}
-
-.department-import-result {
-    display: grid;
-    gap: 1rem;
 }
 
 .department-import-summary-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.75rem;
+    gap: 0.65rem;
 }
 
-.department-import-summary-grid div {
+.department-import-summary-grid > div {
     display: grid;
-    gap: 0.25rem;
-    padding: 0.85rem;
-    background: var(--hrms-surface-muted);
-    border: 1px solid var(--hrms-border);
-    border-radius: var(--hrms-radius-md);
-}
-
-.department-import-summary-grid span {
-    color: var(--hrms-text-muted);
-    font-size: 0.68rem;
-    font-weight: 800;
-    text-transform: uppercase;
-}
-
-.department-import-summary-grid strong {
-    color: var(--hrms-text);
-    font-size: 1.2rem;
-}
-
-.department-import-clean {
-    color: var(--hrms-success);
-    font-weight: 700;
-}
-
-:deep(.p-card-body),
-:deep(.p-card-content) {
-    padding: 0;
-}
-
-:deep(.p-card-content) {
-    padding: 1rem;
-}
-
-:deep(.p-datatable) {
-    font-size: 0.74rem;
-}
-
-:deep(.p-datatable-thead > tr > th) {
-    color: var(--hrms-text);
-    background: var(--hrms-surface-muted);
-    font-size: 0.7rem;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-:deep(.p-datatable-tbody > tr > td),
-:deep(.p-datatable-thead > tr > th) {
-    text-align: center;
-    vertical-align: middle;
-}
-
-:deep(.p-datatable-tbody > tr > td) {
-    border-color: var(--hrms-border);
-}
-
-:deep(.p-dialog-header),
-:deep(.p-dialog-footer) {
-    padding: 1rem;
-}
-
-:deep(.p-dialog-content) {
-    padding: 0 1rem 1rem;
-}
-
-@media (max-width: 1180px) {
-    .department-toolbar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .department-toolbar__filters,
-    .department-toolbar__actions {
-        width: 100%;
-        flex-wrap: wrap;
-    }
-
-    .department-search,
-    .department-company-filter,
-    .department-branch-filter,
-    .department-status-filter {
-        width: 100%;
-    }
-}
-
-@media (max-width: 900px) {
-    .department-page__header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .department-header-actions {
-        justify-content: flex-start;
-    }
-}
-
-@media (max-width: 650px) {
-    .department-form__grid,
-    .department-import-summary-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .department-page h2 {
-        font-size: 1.2rem;
-    }
-}
-
-
-/* Step 3: compact reusable department layout */
-.department-page {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 100%;
-}
-
-.department-card {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-}
-
-.department-card :deep(.p-card-body),
-.department-card :deep(.p-card-content) {
-    height: 100%;
-    min-height: 0;
-}
-
-.department-card :deep(.p-card-body) {
-    padding: 0;
-}
-
-.department-card :deep(.p-card-content) {
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-}
-
-.department-table-wrap {
-    flex: 1 1 auto;
-    min-height: 20rem;
-    overflow: hidden;
-}
-
-.department-search {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.department-search > i {
-    position: absolute;
-    left: 0.625rem;
-    z-index: 1;
-    color: var(--hrms-text-muted);
-    font-size: 0.76rem;
-    pointer-events: none;
-}
-
-.department-search__input {
-    width: 100%;
-    padding-left: 1.85rem !important;
-}
-
-.department-status-field {
-    flex-basis: 9rem !important;
-    min-width: 8rem !important;
-}
-
-.department-table-wrap :deep(.p-datatable-table) {
-    font-size: var(--hrms-table-font-size);
-}
-
-.department-table-wrap :deep(.p-datatable-thead > tr > th) {
-    height: var(--hrms-table-header-height);
-    padding: 0.4rem 0.55rem;
-    white-space: nowrap;
-}
-
-.department-table-wrap :deep(.p-datatable-tbody > tr > td) {
-    height: var(--hrms-table-row-height);
-    padding: 0.35rem 0.55rem;
-}
-
-.department-table-wrap :deep(.p-tag) {
-    padding: 0.15rem 0.4rem;
-    font-size: 0.66rem;
-    font-weight: 700;
-}
-
-.department-name-cell,
-.department-muted-cell {
-    gap: 0.05rem;
-}
-
-.department-name-cell strong,
-.department-muted-cell strong {
-    font-size: 0.75rem;
-    line-height: 1.15;
-}
-
-.department-name-cell span,
-.department-muted-cell span,
-.department-muted-text,
-.department-date {
-    font-size: 0.67rem;
-    line-height: 1.15;
-}
-
-.department-action-column {
-    text-align: center !important;
-}
-
-.department-dialog :deep(.p-dialog-content) {
-    padding: 0.75rem 0.875rem;
-}
-
-.department-dialog :deep(.p-dialog-header),
-.department-import-dialog :deep(.p-dialog-header),
-.department-result-dialog :deep(.p-dialog-header) {
-    padding: 0.7rem 0.875rem;
-}
-
-.department-form {
-    gap: 0.75rem;
-}
-
-.department-form__section {
+    gap: 0.2rem;
     padding: 0.75rem;
-}
-
-.department-form__section h3 {
-    margin-bottom: 0.6rem;
-    font-size: 0.78rem;
-}
-
-.department-field {
-    gap: 0.25rem;
-}
-
-.department-field > span {
-    font-size: 0.69rem;
-}
-
-.department-field textarea {
-    min-height: 4.5rem;
-}
-
-:deep(.department-filter-select) {
-    width: 100%;
-}
-
-:deep(.department-filter-select .p-select-label) {
-    display: flex;
-    align-items: center;
-    height: 100%;
-    min-height: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    line-height: 1.2;
-}
-
-:deep(.department-filter-select .p-select-dropdown) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-@media (max-width: 640px) {
-    .department-table-wrap {
-        min-height: 24rem;
-    }
-
-    .department-dialog {
-        width: calc(100vw - 1rem) !important;
-        max-width: none !important;
-    }
-}
-
-/* Location-style compact filter and table alignment */
-.department-page {
-    gap: 0.85rem;
-}
-
-.department-page :deep(.app-filter-bar) {
-    align-items: center;
-    gap: 0.55rem;
-    padding: 0.75rem 0.9rem;
-    margin-bottom: 0;
-    border: 1px solid var(--hrms-border);
-    border-radius: var(--hrms-radius-md);
-    box-shadow: var(--hrms-shadow-sm);
-}
-
-.department-page :deep(.app-filter-bar__fields) {
-    gap: 0.55rem;
-    align-items: center;
-}
-
-.department-page :deep(.app-filter-bar__actions) {
-    gap: 0.4rem;
-}
-
-.department-page :deep(.app-filter-field) {
-    flex: 0 1 13rem;
-    min-width: 10.5rem;
-}
-
-.department-page :deep(.app-filter-field--search) {
-    flex: 1 1 22rem;
-    min-width: 18rem;
-    max-width: 31rem;
-}
-
-.department-search {
-    min-height: 2.55rem;
-    padding: 0 0.75rem;
-    background: var(--hrms-app-background);
+    text-align: center;
+    background: var(--hrms-surface-muted);
     border: 1px solid var(--hrms-border);
     border-radius: var(--hrms-radius-md);
 }
 
-.department-search > i {
-    position: static;
-    flex: 0 0 auto;
-    transform: none;
-    font-size: 0.78rem;
-}
-
-.department-search__input {
+.department-import-errors {
     min-width: 0;
-    min-height: 2.4rem;
-    padding: 0 !important;
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-}
-
-.department-search:focus-within {
-    border-color: var(--hrms-primary);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--hrms-primary) 28%, transparent);
-}
-
-.department-filter-select {
-    min-height: 2.55rem;
-}
-
-.department-status-field {
-    flex: 0 1 11rem !important;
-    min-width: 9.5rem !important;
-}
-
-.department-page :deep(.app-filter-bar .p-button) {
-    min-height: 2.55rem;
-    padding-inline: 0.8rem;
-}
-
-.department-card {
-    border-radius: var(--hrms-radius-md);
-}
-
-.department-table-wrap {
-    padding: 0 0.9rem 0.9rem;
-}
-
-.department-table-wrap :deep(.p-datatable-thead > tr > th) {
-    padding: 0.55rem 0.5rem;
-    background: var(--hrms-surface);
-    font-size: 0.72rem;
-}
-
-.department-table-wrap :deep(.p-datatable-tbody > tr > td) {
-    padding: 0.5rem;
-}
-
-.department-table-wrap :deep(.p-paginator) {
-    padding: 0.65rem 0 0;
-    border-top: 1px solid var(--hrms-border);
 }
 
 @media (max-width: 1100px) {
-    .department-page :deep(.app-filter-field--search) {
-        flex-basis: 100%;
-        max-width: none;
-    }
-
-    .department-page :deep(.app-filter-field) {
-        flex: 1 1 calc(33.333% - 0.4rem);
-    }
-}
-
-@media (max-width: 760px) {
-    .department-page :deep(.app-filter-bar) {
-        align-items: stretch;
-    }
-
-    .department-page :deep(.app-filter-field),
-    .department-page :deep(.app-filter-field--search),
-    .department-status-field {
-        flex: 1 1 calc(50% - 0.3rem) !important;
-        min-width: 0 !important;
-        max-width: none;
-    }
-
-    .department-page :deep(.app-filter-bar__actions) {
+    .department-search {
         width: 100%;
-        justify-content: flex-end;
-    }
-}
-
-@media (max-width: 520px) {
-    .department-page :deep(.app-filter-bar) {
-        padding: 0.7rem;
     }
 
-    .department-page :deep(.app-filter-field),
-    .department-page :deep(.app-filter-field--search),
-    .department-status-field {
-        width: 100%;
-        flex-basis: 100% !important;
-    }
-
-    .department-page :deep(.app-filter-bar__actions) {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-    }
-
-    .department-page :deep(.app-filter-bar__actions .p-button) {
+    .department-filter-select,
+    .department-status-field .department-filter-select {
         width: 100%;
     }
 }
 
+@media (max-width: 640px) {
+    .department-import-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .department-import-result-dialog {
+        width: calc(100vw - 1rem);
+    }
+}
 </style>

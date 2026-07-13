@@ -215,6 +215,15 @@ const navGroups = computed(() => {
                     },
                     permissionCode: "REPORT.HR_ANALYTICS.VIEW",
                 },
+                
+                {
+                    labelKey: "nav.recruitmentChannels",
+                    icon: "pi pi-megaphone",
+                    to: {
+                        name: "organization-recruitment-channels",
+                    },
+                    permissionCode: "ORGANIZATION.RECRUITMENT_CHANNEL.VIEW",
+                },
 
             ],
         },

@@ -138,6 +138,11 @@ const employeeSchema = new Schema(
         documents: { type: documentSchema, default: () => ({}) },
 
         sourceOfHiring: { type: String, trim: true, maxlength: 160, set: normalizeText, default: "" },
+        recruitmentChannelId: {
+            type: Schema.Types.ObjectId,
+            ref: "RecruitmentChannel",
+            default: null,
+        },
         introducerEmployeeId: { type: Schema.Types.ObjectId, ref: "Employee", default: null },
         employeeTypeId: {
             type: Schema.Types.ObjectId,
@@ -192,6 +197,10 @@ employeeSchema.index({ employeeTypeId: 1, recordStatus: 1 }, { name: "idx_employ
 employeeSchema.index({ employeeTypeId: 1, employeeTypeChildId: 1, recordStatus: 1 }, { name: "idx_employee_type_child_status" })
 employeeSchema.index({ joinDate: 1, resignDate: 1, employmentStatus: 1, recordStatus: 1 }, { name: "idx_employee_report_active_dates" })
 employeeSchema.index({ englishFirstName: "text", englishLastName: "text", khmerFirstName: "text", khmerLastName: "text", employeeCode: "text", phoneNumber: "text" }, { name: "idx_employee_search_text" })
+employeeSchema.index(
+    { recruitmentChannelId: 1, joinDate: 1, recordStatus: 1 },
+    { name: "idx_employee_recruitment_channel_join_status" },
+)
 
 employeeSchema.set("toJSON", {
     virtuals: true,

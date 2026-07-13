@@ -38,7 +38,7 @@ const canImport = computed(() => authStore.hasPermission(PERMISSIONS.IMPORT))
 const canExport = computed(() => authStore.hasPermission(PERMISSIONS.EXPORT))
 
 const options = reactive({
-    companies: [], branches: [], departments: [], positions: [], lines: [], shifts: [], employeeTypes: [],
+    companies: [], branches: [], departments: [], positions: [], lines: [], shifts: [], employeeTypes: [], recruitmentChannels: [],
     provinces: [], districts: [], communes: [], villages: [],
 })
 
@@ -118,7 +118,7 @@ function createEmptyForm() {
         companyId: "", branchId: "", departmentId: "", positionId: "", lineId: "", shiftId: "",
         joinDate: "", employmentStatus: "WORKING", resignDate: "", resignReason: "", remark: "",
         documents: { idCardNo: "", idCardExpireDate: "", nssfNo: "", passportNo: "", passportExpireDate: "", visaExpireDate: "", medicalCheckNo: "", medicalCheckDate: "", workingBookNo: "" },
-        sourceOfHiring: "", introducerEmployeeId: "", employeeTypeId: "",
+        sourceOfHiring: "", recruitmentChannelId: "", introducerEmployeeId: "", employeeTypeId: "",
         machineSkills: { singleNeedle: 0, overlock: 0, coverstitch: 0, totalMachines: 0 },
         recordStatus: "ACTIVE",
     }
@@ -151,6 +151,22 @@ const positionOptions = computed(() => mapOptions(options.positions.filter((item
 const lineOptions = computed(() => mapOptions(options.lines.filter((item) => (!form.departmentId || item.departmentId === form.departmentId)), "name"))
 const shiftOptions = computed(() => mapOptions(options.shifts.filter((item) => (!form.branchId || item.branchId === form.branchId)), "name"))
 const employeeTypeOptions = computed(() => mapOptions(options.employeeTypes, "name"))
+const recruitmentChannelOptions = computed(() =>
+    mapOptions(
+        options.recruitmentChannels.filter((item) => {
+            if (item.companyId && form.companyId && item.companyId !== form.companyId) {
+                return false
+            }
+
+            if (item.branchId && form.branchId && item.branchId !== form.branchId) {
+                return false
+            }
+
+            return true
+        }),
+        "name",
+    ),
+)
 const provinceOptions = computed(() => mapOptions(options.provinces, "name"))
 const districtOptions = computed(() => mapOptions(options.districts, "name"))
 const communeOptions = computed(() => mapOptions(options.communes, "name"))
@@ -182,6 +198,7 @@ function buildPayload() {
         },
         introducerEmployeeId: form.introducerEmployeeId || null,
         employeeTypeId: form.employeeTypeId || null,
+        recruitmentChannelId: form.recruitmentChannelId || null,
     }
 }
 
@@ -291,7 +308,7 @@ async function fetchOptionalList(endpoints, params = {}) {
 async function loadOptions() {
     loadingOptions.value = true
     try {
-        const [companies, branches, departments, positions, lines, shifts, employeeTypes, provinces, districts, communes, villages] = await Promise.all([
+        const [companies, branches, departments, positions, lines, shifts, employeeTypes, recruitmentChannels, provinces, districts, communes, villages] = await Promise.all([
             fetchList("/organization/companies"),
             fetchList("/organization/branches"),
             fetchList("/organization/departments"),
@@ -303,12 +320,17 @@ async function loadOptions() {
                 "/employee-types",
                 "/setup/employee-types",
             ]),
+            fetchOptionalList([
+                "/organization/recruitment-channels",
+                "/recruitment-channels",
+                "/setup/recruitment-channels",
+            ]),
             fetchList("/organization/locations/provinces"),
             fetchList("/organization/locations/districts"),
             fetchList("/organization/locations/communes"),
             fetchList("/organization/locations/villages"),
         ])
-        Object.assign(options, { companies, branches, departments, positions, lines, shifts, employeeTypes, provinces, districts, communes, villages })
+        Object.assign(options, { companies, branches, departments, positions, lines, shifts, employeeTypes, recruitmentChannels, provinces, districts, communes, villages })
     } catch (error) {
         toast.add({ severity: "warn", summary: "Some dropdowns failed", detail: getErrorMessage(error), life: 5000 })
     } finally {
@@ -394,7 +416,23 @@ async function confirmArchive() {
     }
 }
 
+function resetRecruitmentChannelIfInvalid() {
+    const selected = options.recruitmentChannels.find((item) => item.id === form.recruitmentChannelId)
+
+    if (!selected) return
+
+    if (selected.companyId && form.companyId && selected.companyId !== form.companyId) {
+        form.recruitmentChannelId = ""
+        return
+    }
+
+    if (selected.branchId && form.branchId && selected.branchId !== form.branchId) {
+        form.recruitmentChannelId = ""
+    }
+}
+
 async function previewApproval() {
+    resetRecruitmentChannelIfInvalid()
     if (!form.companyId || !form.branchId) return
     try {
         await employeeStore.loadApprovalPreview({ moduleKey: "EMPLOYEE_CHANGE", companyId: form.companyId, branchId: form.branchId, departmentId: form.departmentId || undefined, positionId: form.positionId || undefined, lineId: form.lineId || undefined })
@@ -474,6 +512,7 @@ onMounted(async () => {
                         <Column header="Line" style="min-width: 10rem"><template #body="{ data }">{{ data.line?.name || '-' }}</template></Column>
                         <Column header="Shift" style="min-width: 10rem"><template #body="{ data }">{{ data.shift?.name || '-' }}</template></Column>
                         <Column header="Employee Type" style="min-width: 11rem"><template #body="{ data }">{{ data.employeeType?.name || data.employeeType?.code || '-' }}</template></Column>
+                        <Column header="Recruitment Channel" style="min-width: 13rem"><template #body="{ data }">{{ data.recruitmentChannel?.name || data.sourceOfHiring || '-' }}</template></Column>
                         <Column header="Phone" style="min-width: 10rem"><template #body="{ data }">{{ data.phoneNumber || '-' }}</template></Column>
                         <Column header="Employment" style="min-width: 10rem"><template #body="{ data }"><Tag :severity="statusSeverity(data.employmentStatus)" :value="data.employmentStatus" /></template></Column>
                         <Column header="Record" style="min-width: 9rem"><template #body="{ data }"><Tag :severity="statusSeverity(data.recordStatus)" :value="data.recordStatus" /></template></Column>
@@ -553,7 +592,7 @@ onMounted(async () => {
                 <div class="form-section"><h3>6. Employment Exit, Documents, Hiring & Skills</h3><div class="grid">
                     <label><span>Resign Date</span><InternalCalendarDatePicker v-model="form.resignDate" :company-id="form.companyId" :branch-id="form.branchId" compact /></label>
                     <label><span>Resign Reason</span><InputText v-model="form.resignReason" /></label>
-                    <label><span>Source of Hiring</span><InputText v-model="form.sourceOfHiring" /></label>
+                    <label><span>Recruitment Channel</span><Select v-model="form.recruitmentChannelId" :options="recruitmentChannelOptions" option-label="label" option-value="value" placeholder="Select recruitment channel" show-clear /></label>
                     <label><span>Employee Type</span><Select v-model="form.employeeTypeId" :options="employeeTypeOptions" option-label="label" option-value="value" placeholder="Select employee type" show-clear /></label>
                     <label><span>ID Card</span><InputText v-model="form.documents.idCardNo" /></label>
                     <label><span>ID Expire</span><InternalCalendarDatePicker v-model="form.documents.idCardExpireDate" :show-status="false" compact /></label>

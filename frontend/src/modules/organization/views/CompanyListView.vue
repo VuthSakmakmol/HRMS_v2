@@ -4,7 +4,6 @@ import { useI18n } from "vue-i18n"
 import { useToast } from "primevue/usetoast"
 
 import Button from "primevue/button"
-import Card from "primevue/card"
 import Column from "primevue/column"
 import DataTable from "primevue/datatable"
 import Dialog from "primevue/dialog"
@@ -15,6 +14,8 @@ import Textarea from "primevue/textarea"
 
 import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
+import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
+import AppTableActions from "@/shared/components/table/AppTableActions.vue"
 import { useCompanyStore } from "../stores/company.store.js"
 
 const { t } = useI18n()
@@ -490,234 +491,201 @@ onMounted(() => {
 </script>
 
 <template>
-    <section class="company-page">
-        <div class="company-page__header">
-            <div>
-                <span class="company-page__eyebrow">
-                    {{ t("organization.company.eyebrow") }}
-                </span>
+    <section class="company-page hrms-list-page">
+        <AppFilterBar :loading="companyStore.loading">
+            <span class="app-filter-field app-filter-field--search company-search">
+                <i class="pi pi-search" />
 
-                <h2>{{ t("organization.company.title") }}</h2>
+                <InputText
+                    v-model="filters.search"
+                    :placeholder="t('organization.company.searchPlaceholder')"
+                    @keyup.enter="applyFilters"
+                />
+            </span>
 
-                <p>
-                    {{ t("organization.company.description") }}
-                </p>
-            </div>
-
-            <Button
-                v-if="canCreate"
-                icon="pi pi-plus"
-                :label="t('organization.company.newCompany')"
-                @click="openCreateDialog"
+            <Select
+                v-model="filters.status"
+                class="app-filter-field company-status-filter"
+                :options="statusOptions"
+                option-label="label"
+                option-value="value"
+                @change="applyFilters"
             />
-        </div>
 
-        <Card class="company-card">
-            <template #content>
-                <div class="company-toolbar">
-                    <div class="company-toolbar__filters">
-                        <span class="company-search">
-                            <i class="pi pi-search" />
+            <template #actions>
+                <Button
+                    icon="pi pi-filter"
+                    :label="t('common.apply')"
+                    :loading="companyStore.loading"
+                    @click="applyFilters"
+                />
 
-                            <InputText
-                                v-model="filters.search"
-                                class="company-search__input"
-                                :placeholder="
-                                    t('organization.company.searchPlaceholder')
-                                "
-                                @keyup.enter="applyFilters"
-                            />
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-times"
+                    :label="t('common.clear')"
+                    :disabled="companyStore.loading"
+                    @click="clearFilters"
+                />
+
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-refresh"
+                    :aria-label="t('common.refresh')"
+                    :loading="companyStore.loading"
+                    @click="loadCompanies"
+                />
+
+                <Button
+                    v-if="canCreate"
+                    icon="pi pi-plus"
+                    :label="t('organization.company.newCompany')"
+                    :disabled="companyStore.loading"
+                    @click="openCreateDialog"
+                />
+            </template>
+        </AppFilterBar>
+
+        <div class="company-table-shell hrms-list-card">
+            <div class="hrms-table-wrap">
+            <DataTable
+                class="hrms-standard-table hrms-standard-table--horizontal"
+                lazy
+                paginator
+                striped-rows
+                data-key="id"
+                size="small"
+                scrollable
+                scroll-height="flex"
+                :value="companyStore.items"
+                :loading="companyStore.loading"
+                :rows="companyStore.pagination.limit"
+                :first="
+                    (companyStore.pagination.page - 1) *
+                    companyStore.pagination.limit
+                "
+                :total-records="companyStore.pagination.total"
+                :rows-per-page-options="[10, 20, 50, 100]"
+                :empty-message="t('organization.company.empty')"
+                @page="onPage"
+            >
+                <Column
+                    field="code"
+                    :header="t('organization.company.code')"
+                    frozen
+                    style="min-width: 7rem"
+                >
+                    <template #body="{ data }">
+                        <strong class="company-code">
+                            {{ data.code }}
+                        </strong>
+                    </template>
+                </Column>
+
+                <Column
+                    field="displayName"
+                    :header="t('organization.company.displayName')"
+                    style="min-width: 13rem"
+                >
+                    <template #body="{ data }">
+                        <strong class="hrms-cell-primary">
+                            {{ data.displayName || "-" }}
+                        </strong>
+                    </template>
+                </Column>
+
+                <Column
+                    field="status"
+                    :header="t('organization.company.status')"
+                    style="min-width: 8rem"
+                >
+                    <template #body="{ data }">
+                        <Tag
+                            class="company-status-tag"
+                            :severity="getStatusSeverity(data.status)"
+                            :value="getStatusLabel(data.status)"
+                        />
+                    </template>
+                </Column>
+
+                <Column
+                    :header="t('organization.company.contact')"
+                    style="min-width: 13rem"
+                >
+                    <template #body="{ data }">
+                        <div class="company-stacked-cell company-stacked-cell--muted">
+                            <span>{{ data.contact?.email || "-" }}</span>
+                            <span>{{ data.contact?.phone || "-" }}</span>
+                        </div>
+                    </template>
+                </Column>
+
+                <Column
+                    :header="t('organization.company.location')"
+                    style="min-width: 10rem"
+                >
+                    <template #body="{ data }">
+                        <div class="company-stacked-cell company-stacked-cell--muted">
+                            <span>{{ data.address?.city || "-" }}</span>
+                            <span>{{ data.address?.countryCode || "-" }}</span>
+                        </div>
+                    </template>
+                </Column>
+
+                <Column
+                    field="updatedAt"
+                    :header="t('organization.company.updatedAt')"
+                    style="min-width: 11rem"
+                >
+                    <template #body="{ data }">
+                        <span class="company-date">
+                            {{ formatDateTime(data.updatedAt) }}
                         </span>
+                    </template>
+                </Column>
 
-                        <Select
-                            v-model="filters.status"
-                            class="company-status-filter"
-                            :options="statusOptions"
-                            option-label="label"
-                            option-value="value"
-                            @change="applyFilters"
-                        />
-                    </div>
-
-                    <div class="company-toolbar__actions">
-                        <Button
-                            size="small"
-                            icon="pi pi-filter"
-                            :label="t('common.apply')"
-                            @click="applyFilters"
-                        />
-
-                        <Button
-                            size="small"
-                            severity="secondary"
-                            outlined
-                            icon="pi pi-times"
-                            :label="t('common.clear')"
-                            @click="clearFilters"
-                        />
-
-                        <Button
-                            size="small"
-                            severity="secondary"
-                            outlined
-                            icon="pi pi-refresh"
-                            :label="t('common.refresh')"
-                            @click="loadCompanies"
-                        />
-                    </div>
-                </div>
-
-                <div class="company-table-wrap">
-                    <DataTable
-                        lazy
-                        paginator
-                        striped-rows
-                        data-key="id"
-                        size="small"
-                        scrollable
-                        scroll-height="flex"
-                        :value="companyStore.items"
-                        :loading="companyStore.loading"
-                        :rows="companyStore.pagination.limit"
-                        :first="
-                            (companyStore.pagination.page - 1) *
-                            companyStore.pagination.limit
-                        "
-                        :total-records="companyStore.pagination.total"
-                        :rows-per-page-options="[10, 20, 50, 100]"
-                        :empty-message="t('organization.company.empty')"
-                        @page="onPage"
-                    >
-                        <Column
-                            field="code"
-                            :header="t('organization.company.code')"
-                            frozen
-                            style="min-width: 8rem"
+                <Column
+                    v-if="canUpdate || canArchive"
+                    :header="t('common.actions')"
+                    align-frozen="right"
+                    frozen
+                    style="min-width: 6.5rem"
+                >
+                    <template #body="{ data }">
+                        <AppTableActions
+                            :can-edit="canUpdate && data.status !== 'ARCHIVED'"
+                            :can-archive="
+                                canArchive && data.status !== 'ARCHIVED'
+                            "
+                            :edit-label="t('common.edit')"
+                            :archive-label="t('common.archive')"
+                            :disabled="
+                                companyStore.saving || companyStore.archiving
+                            "
+                            @edit="openEditDialog(data)"
+                            @archive="openArchiveDialog(data)"
                         >
-                            <template #body="{ data }">
-                                <strong class="company-code">
-                                    {{ data.code }}
-                                </strong>
-                            </template>
-                        </Column>
-
-                        <Column
-                            field="displayName"
-                            :header="t('organization.company.displayName')"
-                            style="min-width: 13rem"
-                        >
-                            <template #body="{ data }">
-                                <div class="company-name-cell">
-                                    <strong>{{ data.displayName }}</strong>
-                                    <span>{{ data.legalName }}</span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column
-                            field="status"
-                            :header="t('organization.company.status')"
-                            style="min-width: 9rem"
-                        >
-                            <template #body="{ data }">
-                                <Tag
-                                    :severity="getStatusSeverity(data.status)"
-                                    :value="getStatusLabel(data.status)"
-                                />
-                            </template>
-                        </Column>
-
-                        <Column
-                            :header="t('organization.company.contact')"
-                            style="min-width: 14rem"
-                        >
-                            <template #body="{ data }">
-                                <div class="company-muted-cell">
-                                    <span>{{ data.contact?.email || "-" }}</span>
-                                    <span>{{ data.contact?.phone || "-" }}</span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column
-                            :header="t('organization.company.location')"
-                            style="min-width: 14rem"
-                        >
-                            <template #body="{ data }">
-                                <div class="company-muted-cell">
-                                    <span>{{ data.address?.city || "-" }}</span>
-                                    <span>
-                                        {{ data.address?.countryCode || "-" }}
-                                    </span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column
-                            field="updatedAt"
-                            :header="t('organization.company.updatedAt')"
-                            style="min-width: 11rem"
-                        >
-                            <template #body="{ data }">
-                                <span class="company-date">
-                                    {{ formatDateTime(data.updatedAt) }}
+                            <template
+                                v-if="data.status === 'ARCHIVED'"
+                                #after
+                            >
+                                <span class="company-read-only">
+                                    {{ t("organization.company.readOnly") }}
                                 </span>
                             </template>
-                        </Column>
-
-                        <Column
-                            :header="t('common.actions')"
-                            align-frozen="right"
-                            frozen
-                            style="min-width: 10rem"
-                        >
-                            <template #body="{ data }">
-                                <div class="company-actions">
-                                    <Button
-                                        v-if="
-                                            canUpdate &&
-                                            data.status !== 'ARCHIVED'
-                                        "
-                                        size="small"
-                                        text
-                                        rounded
-                                        icon="pi pi-pencil"
-                                        :aria-label="t('common.edit')"
-                                        @click="openEditDialog(data)"
-                                    />
-
-                                    <Button
-                                        v-if="
-                                            canArchive &&
-                                            data.status !== 'ARCHIVED'
-                                        "
-                                        size="small"
-                                        text
-                                        rounded
-                                        severity="danger"
-                                        icon="pi pi-archive"
-                                        :aria-label="t('common.archive')"
-                                        @click="openArchiveDialog(data)"
-                                    />
-
-                                    <span
-                                        v-if="data.status === 'ARCHIVED'"
-                                        class="company-archived-text"
-                                    >
-                                        {{ t("organization.company.readOnly") }}
-                                    </span>
-                                </div>
-                            </template>
-                        </Column>
-                    </DataTable>
-                </div>
-            </template>
-        </Card>
+                        </AppTableActions>
+                    </template>
+                </Column>
+            </DataTable>
+            </div>
+        </div>
 
         <Dialog
             v-model:visible="dialogVisible"
             modal
-            class="company-dialog"
+            class="company-dialog hrms-standard-dialog"
             :header="dialogTitle"
             :draggable="false"
         >
@@ -988,7 +956,7 @@ onMounted(() => {
         <Dialog
             v-model:visible="archiveDialogVisible"
             modal
-            class="company-archive-dialog"
+            class="company-archive-dialog hrms-standard-dialog--small"
             :header="t('organization.company.archiveTitle')"
             :draggable="false"
         >
@@ -1022,158 +990,122 @@ onMounted(() => {
 
 <style scoped>
 .company-page {
-    width: 100%;
-    display: grid;
-    gap: 1rem;
-}
-
-.company-page__header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.company-page__eyebrow {
-    color: var(--hrms-primary);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.company-page h2 {
-    margin: 0.35rem 0;
-    color: var(--hrms-text);
-    font-size: 1.45rem;
-    line-height: 1.2;
-}
-
-.company-page p {
-    max-width: 54rem;
-    margin: 0;
-    color: var(--hrms-text-muted);
-    font-size: 0.78rem;
-    line-height: 1.6;
-}
-
-.company-card {
-    width: 100%;
-    min-width: 0;
-    border: 1px solid var(--hrms-border);
-    box-shadow: var(--hrms-shadow-sm);
-}
-
-.company-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.company-toolbar__filters,
-.company-toolbar__actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.company-toolbar__filters {
-    min-width: 0;
     flex: 1 1 auto;
-}
-
-.company-toolbar__actions {
-    flex: 0 0 auto;
+    flex-direction: column;
+    gap: var(--hrms-page-gap);
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
 }
 
 .company-search {
-    width: min(100%, 24rem);
     position: relative;
-    display: block;
+    flex: 1 1 14rem;
+    min-width: 11rem;
+    max-width: 22rem;
 }
 
-.company-search i {
+.company-search > i {
     position: absolute;
     top: 50%;
-    left: 0.75rem;
+    left: 0.7rem;
+    z-index: 1;
     transform: translateY(-50%);
     color: var(--hrms-text-muted);
-    font-size: 0.78rem;
+    font-size: 0.72rem;
+    pointer-events: none;
 }
 
-.company-search__input {
+.company-search :deep(.p-inputtext) {
     width: 100%;
-    padding-left: 2.1rem;
+    padding-left: 2rem;
+    border: 1px solid var(--hrms-border);
 }
 
 .company-status-filter {
-    width: 12rem;
+    flex: 0 1 10rem;
+    min-width: 8.5rem;
+    max-width: 11rem;
 }
 
-.company-table-wrap {
+.company-table-shell {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
     width: 100%;
     min-width: 0;
-    overflow-x: auto;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--hrms-surface);
 }
 
 .company-code {
     color: var(--hrms-primary);
-    font-size: 0.78rem;
+    font-size: 0.74rem;
+    font-weight: 800;
 }
 
-.company-name-cell,
-.company-muted-cell {
+.company-stacked-cell {
     display: grid;
-    gap: 0.15rem;
+    justify-items: center;
+    gap: 0.1rem;
     min-width: 0;
+    line-height: 1.25;
 }
 
-.company-name-cell strong,
-.company-muted-cell span {
+.company-stacked-cell strong,
+.company-stacked-cell span {
+    display: block;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.company-name-cell strong {
+.company-stacked-cell strong {
     color: var(--hrms-text);
-    font-size: 0.78rem;
+    font-size: 0.74rem;
+    font-weight: 700;
 }
 
-.company-name-cell span,
-.company-muted-cell span,
+.company-stacked-cell span,
 .company-date,
-.company-archived-text {
+.company-read-only {
     color: var(--hrms-text-muted);
-    font-size: 0.72rem;
+    font-size: 0.68rem;
 }
 
-.company-actions {
-    display: flex;
-    align-items: center;
+.company-stacked-cell--muted span:first-child {
+    color: var(--hrms-text);
+}
+
+.company-status-tag {
+    min-width: 4.7rem;
     justify-content: center;
-    gap: 0.25rem;
+}
+
+.company-read-only {
+    white-space: nowrap;
 }
 
 .company-dialog {
-    width: min(62rem, calc(100vw - 2rem));
+    width: min(58rem, calc(100vw - 1.25rem));
 }
 
 .company-archive-dialog {
-    width: min(31rem, calc(100vw - 2rem));
+    width: min(29rem, calc(100vw - 1.25rem));
 }
 
 .company-form {
     display: grid;
-    gap: 1rem;
+    gap: 0.65rem;
 }
 
 .company-form__section {
     display: grid;
-    gap: 0.75rem;
-    padding: 0.9rem;
+    gap: 0.55rem;
+    padding: 0.7rem;
     background: var(--hrms-surface-muted);
     border: 1px solid var(--hrms-border);
     border-radius: var(--hrms-radius-md);
@@ -1182,111 +1114,157 @@ onMounted(() => {
 .company-form__section h3 {
     margin: 0;
     color: var(--hrms-text);
-    font-size: 0.82rem;
+    font-size: 0.76rem;
+    font-weight: 800;
 }
 
 .company-form__grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
 }
 
 .company-field {
     display: grid;
-    gap: 0.35rem;
+    align-content: start;
+    gap: 0.25rem;
+    min-width: 0;
 }
 
 .company-field--wide {
-    grid-column: 1 / -1;
+    grid-column: span 2;
 }
 
-.company-field span {
+.company-field > span {
     color: var(--hrms-text-muted);
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 700;
 }
 
 .company-field small {
     color: var(--hrms-danger);
-    font-size: 0.68rem;
+    font-size: 0.65rem;
+}
+
+.company-field :deep(.p-component),
+.company-field :deep(.p-inputtext),
+.company-field :deep(.p-select),
+.company-field :deep(.p-textarea) {
+    width: 100%;
 }
 
 .company-archive-text {
     margin: 0;
     color: var(--hrms-text);
-    font-size: 0.82rem;
-    line-height: 1.6;
-}
-
-:deep(.p-card-body),
-:deep(.p-card-content) {
-    padding: 0;
-}
-
-:deep(.p-card-content) {
-    padding: 1rem;
+    font-size: 0.78rem;
+    line-height: 1.55;
 }
 
 :deep(.p-datatable) {
-    font-size: 0.74rem;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    font-size: 0.72rem;
+}
+
+:deep(.p-datatable-table-container) {
+    flex: 1 1 auto;
 }
 
 :deep(.p-datatable-thead > tr > th) {
+    padding: 0.55rem 0.5rem;
     color: var(--hrms-text);
     background: var(--hrms-surface-muted);
-    font-size: 0.7rem;
+    border-color: var(--hrms-border);
+    font-size: 0.68rem;
     font-weight: 800;
+    text-align: center;
+    vertical-align: middle;
     white-space: nowrap;
 }
 
-:deep(.p-datatable-tbody > tr > td),
-:deep(.p-datatable-thead > tr > th) {
+:deep(.p-datatable-tbody > tr > td) {
+    padding: 0.45rem 0.5rem;
+    border-color: var(--hrms-border);
     text-align: center;
     vertical-align: middle;
 }
 
-:deep(.p-datatable-tbody > tr > td) {
-    border-color: var(--hrms-border);
+:deep(.p-datatable-tbody > tr:hover) {
+    background: var(--hrms-surface-hover);
 }
 
-:deep(.p-dialog-header),
-:deep(.p-dialog-footer) {
-    padding: 1rem;
+:deep(.p-paginator) {
+    min-height: 2.6rem;
+    padding: 0.35rem 0.5rem;
+    border-top: 1px solid var(--hrms-border);
+    background: var(--hrms-surface);
+}
+
+:deep(.p-tag) {
+    padding: 0.18rem 0.45rem;
+    font-size: 0.64rem;
+    font-weight: 800;
+}
+
+:deep(.p-dialog-header) {
+    padding: 0.75rem 0.9rem;
+    border-bottom: 1px solid var(--hrms-border);
+}
+
+:deep(.p-dialog-title) {
+    font-size: 0.88rem;
+    font-weight: 800;
 }
 
 :deep(.p-dialog-content) {
-    padding: 0 1rem 1rem;
+    max-height: min(72vh, 42rem);
+    padding: 0.75rem 0.9rem;
+    overflow-y: auto;
+}
+
+:deep(.p-dialog-footer) {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 0.65rem 0.9rem;
+    background: var(--hrms-surface);
+    border-top: 1px solid var(--hrms-border);
 }
 
 @media (max-width: 900px) {
-    .company-page__header,
-    .company-toolbar {
-        flex-direction: column;
-        align-items: stretch;
+    .company-form__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .company-toolbar__filters,
-    .company-toolbar__actions {
-        width: 100%;
-        flex-wrap: wrap;
-    }
-
-    .company-search {
-        width: 100%;
-    }
-
-    .company-status-filter {
-        width: 100%;
+    .company-field--wide {
+        grid-column: 1 / -1;
     }
 }
 
-@media (max-width: 650px) {
-    .company-form__grid {
-        grid-template-columns: 1fr;
+@media (max-width: 520px) {
+    .company-search,
+    .company-status-filter {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
     }
 
-    .company-page h2 {
-        font-size: 1.2rem;
+    .company-form__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .company-field--wide {
+        grid-column: auto;
+    }
+
+    :deep(.p-dialog-footer) {
+        display: flex;
+    }
+
+    :deep(.p-dialog-footer .p-button) {
+        flex: 1 1 auto;
     }
 }
 </style>

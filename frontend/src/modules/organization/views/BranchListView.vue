@@ -4,7 +4,6 @@ import { useI18n } from "vue-i18n"
 import { useToast } from "primevue/usetoast"
 
 import Button from "primevue/button"
-import Card from "primevue/card"
 import Checkbox from "primevue/checkbox"
 import Column from "primevue/column"
 import DataTable from "primevue/datatable"
@@ -13,6 +12,9 @@ import InputText from "primevue/inputtext"
 import Select from "primevue/select"
 import Tag from "primevue/tag"
 import Textarea from "primevue/textarea"
+
+import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
+import AppTableActions from "@/shared/components/table/AppTableActions.vue"
 
 import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
@@ -514,285 +516,245 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="branch-page">
-        <div class="branch-page__header">
-            <div>
-                <span class="branch-page__eyebrow">
-                    {{ t("organization.branch.eyebrow") }}
-                </span>
+    <section class="branch-page hrms-list-page hrms-compact">
+        <AppFilterBar :loading="branchStore.loading">
+            <span class="app-filter-field app-filter-field--search branch-search">
+                <i class="pi pi-search" />
 
-                <h2>{{ t("organization.branch.title") }}</h2>
+                <InputText
+                    v-model="filters.search"
+                    class="branch-search__input"
+                    :placeholder="t('organization.branch.searchPlaceholder')"
+                    @keyup.enter="applyFilters"
+                />
+            </span>
 
-                <p>
-                    {{ t("organization.branch.description") }}
-                </p>
-            </div>
-
-            <Button
-                v-if="canCreate"
-                icon="pi pi-plus"
-                :label="t('organization.branch.newBranch')"
-                @click="openCreateDialog"
+            <Select
+                v-model="filters.companyId"
+                class="app-filter-field branch-company-filter"
+                :options="companyFilterOptions"
+                option-label="label"
+                option-value="value"
+                :loading="companyLoading"
+                @change="applyFilters"
             />
-        </div>
 
-        <Card class="branch-card">
-            <template #content>
-                <div class="branch-toolbar">
-                    <div class="branch-toolbar__filters">
-                        <span class="branch-search">
-                            <i class="pi pi-search" />
+            <Select
+                v-model="filters.status"
+                class="app-filter-field branch-status-filter"
+                :options="statusOptions"
+                option-label="label"
+                option-value="value"
+                @change="applyFilters"
+            />
 
-                            <InputText
-                                v-model="filters.search"
-                                class="branch-search__input"
-                                :placeholder="
-                                    t('organization.branch.searchPlaceholder')
-                                "
-                                @keyup.enter="applyFilters"
-                            />
-                        </span>
+            <template #actions>
+                <Button
+                    icon="pi pi-filter"
+                    :label="t('common.apply')"
+                    @click="applyFilters"
+                />
 
-                        <Select
-                            v-model="filters.companyId"
-                            class="branch-company-filter"
-                            :options="companyFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="companyLoading"
-                            @change="applyFilters"
-                        />
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-times"
+                    :label="t('common.clear')"
+                    @click="clearFilters"
+                />
 
-                        <Select
-                            v-model="filters.status"
-                            class="branch-status-filter"
-                            :options="statusOptions"
-                            option-label="label"
-                            option-value="value"
-                            @change="applyFilters"
-                        />
-                    </div>
+                <Button
+                    class="hrms-icon-button"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-refresh"
+                    :aria-label="t('common.refresh')"
+                    @click="loadBranches"
+                />
 
-                    <div class="branch-toolbar__actions">
-                        <Button
-                            size="small"
-                            icon="pi pi-filter"
-                            :label="t('common.apply')"
-                            @click="applyFilters"
-                        />
-
-                        <Button
-                            size="small"
-                            severity="secondary"
-                            outlined
-                            icon="pi pi-times"
-                            :label="t('common.clear')"
-                            @click="clearFilters"
-                        />
-
-                        <Button
-                            size="small"
-                            severity="secondary"
-                            outlined
-                            icon="pi pi-refresh"
-                            :label="t('common.refresh')"
-                            @click="loadBranches"
-                        />
-                    </div>
-                </div>
-
-                <div class="branch-table-wrap">
-                    <DataTable
-                        lazy
-                        paginator
-                        striped-rows
-                        data-key="id"
-                        size="small"
-                        scrollable
-                        scroll-height="flex"
-                        :value="branchStore.items"
-                        :loading="branchStore.loading"
-                        :rows="branchStore.pagination.limit"
-                        :first="
-                            (branchStore.pagination.page - 1) *
-                            branchStore.pagination.limit
-                        "
-                        :total-records="branchStore.pagination.total"
-                        :rows-per-page-options="[10, 20, 50, 100]"
-                        :empty-message="t('organization.branch.empty')"
-                        @page="onPage"
-                    >
-                        <Column
-                            field="code"
-                            :header="t('organization.branch.code')"
-                            frozen
-                            style="min-width: 8rem"
-                        >
-                            <template #body="{ data }">
-                                <strong class="branch-code">
-                                    {{ data.code }}
-                                </strong>
-                            </template>
-                        </Column>
-
-                        <Column
-                            :header="t('organization.branch.branchName')"
-                            style="min-width: 14rem"
-                        >
-                            <template #body="{ data }">
-                                <div class="branch-name-cell">
-                                    <strong>{{ data.name }}</strong>
-                                    <span>{{ data.shortName || "-" }}</span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column
-                            :header="t('organization.branch.company')"
-                            style="min-width: 14rem"
-                        >
-                            <template #body="{ data }">
-                                <div class="branch-muted-cell">
-                                    <strong>
-                                        {{ data.company?.displayName || "-" }}
-                                    </strong>
-                                    <span>{{ data.company?.code || "-" }}</span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column
-                            field="status"
-                            :header="t('organization.branch.status')"
-                            style="min-width: 9rem"
-                        >
-                            <template #body="{ data }">
-                                <Tag
-                                    :severity="getStatusSeverity(data.status)"
-                                    :value="getStatusLabel(data.status)"
-                                />
-                            </template>
-                        </Column>
-
-                        <Column
-                            :header="t('organization.branch.type')"
-                            style="min-width: 9rem"
-                        >
-                            <template #body="{ data }">
-                                <Tag
-                                    v-if="data.isHeadOffice"
-                                    severity="info"
-                                    :value="t('organization.branch.headOffice')"
-                                />
-
-                                <span v-else class="branch-muted-text">
-                                    {{ t("organization.branch.branch") }}
-                                </span>
-                            </template>
-                        </Column>
-
-                        <Column
-                            :header="t('organization.branch.contact')"
-                            style="min-width: 13rem"
-                        >
-                            <template #body="{ data }">
-                                <div class="branch-muted-cell">
-                                    <span>{{ data.contact?.email || "-" }}</span>
-                                    <span>{{ data.contact?.phone || "-" }}</span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column
-                            :header="t('organization.branch.location')"
-                            style="min-width: 13rem"
-                        >
-                            <template #body="{ data }">
-                                <div class="branch-muted-cell">
-                                    <span>{{ data.address?.city || "-" }}</span>
-                                    <span>
-                                        {{ data.address?.countryCode || "-" }}
-                                    </span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column
-                            field="updatedAt"
-                            :header="t('organization.branch.updatedAt')"
-                            style="min-width: 11rem"
-                        >
-                            <template #body="{ data }">
-                                <span class="branch-date">
-                                    {{ formatDateTime(data.updatedAt) }}
-                                </span>
-                            </template>
-                        </Column>
-
-                        <Column
-                            :header="t('common.actions')"
-                            align-frozen="right"
-                            frozen
-                            style="min-width: 10rem"
-                        >
-                            <template #body="{ data }">
-                                <div class="branch-actions">
-                                    <Button
-                                        v-if="
-                                            canUpdate &&
-                                            data.status !== 'ARCHIVED'
-                                        "
-                                        size="small"
-                                        text
-                                        rounded
-                                        icon="pi pi-pencil"
-                                        :aria-label="t('common.edit')"
-                                        @click="openEditDialog(data)"
-                                    />
-
-                                    <Button
-                                        v-if="
-                                            canArchive &&
-                                            data.status !== 'ARCHIVED'
-                                        "
-                                        size="small"
-                                        text
-                                        rounded
-                                        severity="danger"
-                                        icon="pi pi-archive"
-                                        :aria-label="t('common.archive')"
-                                        @click="openArchiveDialog(data)"
-                                    />
-
-                                    <span
-                                        v-if="data.status === 'ARCHIVED'"
-                                        class="branch-archived-text"
-                                    >
-                                        {{ t("organization.branch.readOnly") }}
-                                    </span>
-                                </div>
-                            </template>
-                        </Column>
-                    </DataTable>
-                </div>
+                <Button
+                    v-if="canCreate"
+                    icon="pi pi-plus"
+                    :label="t('organization.branch.newBranch')"
+                    @click="openCreateDialog"
+                />
             </template>
-        </Card>
+        </AppFilterBar>
+
+        <div class="hrms-list-card">
+            <div class="hrms-table-wrap branch-table-wrap">
+                <DataTable
+                    lazy
+                    paginator
+                    striped-rows
+                    data-key="id"
+                    size="small"
+                    scrollable
+                    scroll-height="flex"
+                    class="hrms-standard-table hrms-standard-table--horizontal"
+                    :value="branchStore.items"
+                    :loading="branchStore.loading"
+                    :rows="branchStore.pagination.limit"
+                    :first="
+                        (branchStore.pagination.page - 1) *
+                        branchStore.pagination.limit
+                    "
+                    :total-records="branchStore.pagination.total"
+                    :rows-per-page-options="[10, 20, 50, 100]"
+                    :empty-message="t('organization.branch.empty')"
+                    @page="onPage"
+                >
+                    <Column
+                        field="code"
+                        :header="t('organization.branch.code')"
+                        frozen
+                        style="width: 8rem; min-width: 8rem"
+                    >
+                        <template #body="{ data }">
+                            <strong class="hrms-cell-primary hrms-cell-primary--accent">
+                                {{ data.code }}
+                            </strong>
+                        </template>
+                    </Column>
+
+                    <Column
+                        :header="t('organization.branch.branchName')"
+                        style="width: 14rem; min-width: 14rem"
+                    >
+                        <template #body="{ data }">
+                            <strong class="hrms-cell-primary">
+                                {{ data.name || "-" }}
+                            </strong>
+                        </template>
+                    </Column>
+
+                    <Column
+                        :header="t('organization.branch.company')"
+                        style="width: 14rem; min-width: 14rem"
+                    >
+                        <template #body="{ data }">
+                            <strong class="hrms-cell-primary">
+                                {{ data.company?.displayName || "-" }}
+                            </strong>
+                        </template>
+                    </Column>
+
+                    <Column
+                        field="status"
+                        :header="t('organization.branch.status')"
+                        style="width: 9rem; min-width: 9rem"
+                    >
+                        <template #body="{ data }">
+                            <Tag
+                                class="hrms-status-tag"
+                                :severity="getStatusSeverity(data.status)"
+                                :value="getStatusLabel(data.status)"
+                            />
+                        </template>
+                    </Column>
+
+                    <Column
+                        :header="t('organization.branch.type')"
+                        style="width: 9rem; min-width: 9rem"
+                    >
+                        <template #body="{ data }">
+                            <Tag
+                                v-if="data.isHeadOffice"
+                                class="hrms-status-tag"
+                                severity="info"
+                                :value="t('organization.branch.headOffice')"
+                            />
+
+                            <span v-else class="hrms-cell-muted">
+                                {{ t("organization.branch.branch") }}
+                            </span>
+                        </template>
+                    </Column>
+
+                    <Column
+                        :header="t('organization.branch.contact')"
+                        style="width: 13rem; min-width: 13rem"
+                    >
+                        <template #body="{ data }">
+                            <div class="hrms-cell-stack">
+                                <span class="hrms-cell-secondary">
+                                    {{ data.contact?.email || "-" }}
+                                </span>
+                                <span class="hrms-cell-secondary">
+                                    {{ data.contact?.phone || "-" }}
+                                </span>
+                            </div>
+                        </template>
+                    </Column>
+
+                    <Column
+                        :header="t('organization.branch.location')"
+                        style="width: 13rem; min-width: 13rem"
+                    >
+                        <template #body="{ data }">
+                            <div class="hrms-cell-stack">
+                                <span class="hrms-cell-secondary">
+                                    {{ data.address?.city || "-" }}
+                                </span>
+                                <span class="hrms-cell-secondary">
+                                    {{ data.address?.countryCode || "-" }}
+                                </span>
+                            </div>
+                        </template>
+                    </Column>
+
+                    <Column
+                        field="updatedAt"
+                        :header="t('organization.branch.updatedAt')"
+                        style="width: 11rem; min-width: 11rem"
+                    >
+                        <template #body="{ data }">
+                            <span class="hrms-cell-muted">
+                                {{ formatDateTime(data.updatedAt) }}
+                            </span>
+                        </template>
+                    </Column>
+
+                    <Column
+                        :header="t('common.actions')"
+                        align-frozen="right"
+                        frozen
+                        style="width: 8rem; min-width: 8rem"
+                    >
+                        <template #body="{ data }">
+                            <AppTableActions
+                                v-if="data.status !== 'ARCHIVED'"
+                                :can-edit="canUpdate"
+                                :can-archive="canArchive"
+                                :edit-label="t('common.edit')"
+                                :archive-label="t('common.archive')"
+                                @edit="openEditDialog(data)"
+                                @archive="openArchiveDialog(data)"
+                            />
+
+                            <span v-else class="hrms-cell-muted">
+                                {{ t("organization.branch.readOnly") }}
+                            </span>
+                        </template>
+                    </Column>
+                </DataTable>
+            </div>
+        </div>
 
         <Dialog
             v-model:visible="dialogVisible"
             modal
-            class="branch-dialog"
+            class="hrms-standard-dialog"
             :header="dialogTitle"
             :draggable="false"
         >
-            <div class="branch-form">
-                <div class="branch-form__section">
+            <div class="hrms-dialog-form">
+                <section class="hrms-form-section">
                     <h3>{{ t("organization.branch.basicInfo") }}</h3>
 
-                    <div class="branch-form__grid">
-                        <label class="branch-field branch-field--wide">
+                    <div class="hrms-form-grid">
+                        <label class="hrms-form-field hrms-form-field--wide">
                             <span>{{ t("organization.branch.company") }}</span>
-
                             <Select
                                 v-model="form.companyId"
                                 :disabled="dialogMode === 'edit'"
@@ -800,21 +762,17 @@ onMounted(async () => {
                                 :options="companyOptions"
                                 option-label="label"
                                 option-value="value"
-                                :placeholder="
-                                    t('organization.branch.selectCompany')
-                                "
+                                :placeholder="t('organization.branch.selectCompany')"
                                 :loading="companyLoading"
                                 @change="clearFieldError('companyId')"
                             />
-
                             <small v-if="getFieldError('companyId')">
                                 {{ getFieldError("companyId") }}
                             </small>
                         </label>
 
-                        <label class="branch-field">
+                        <label class="hrms-form-field">
                             <span>{{ t("organization.branch.code") }}</span>
-
                             <InputText
                                 v-model="form.code"
                                 :invalid="Boolean(getFieldError('code'))"
@@ -822,15 +780,13 @@ onMounted(async () => {
                                 placeholder="PP-HQ"
                                 @input="normalizeCodeInput"
                             />
-
                             <small v-if="getFieldError('code')">
                                 {{ getFieldError("code") }}
                             </small>
                         </label>
 
-                        <label class="branch-field">
+                        <label class="hrms-form-field">
                             <span>{{ t("organization.branch.shortName") }}</span>
-
                             <InputText
                                 v-model="form.shortName"
                                 autocomplete="off"
@@ -838,9 +794,8 @@ onMounted(async () => {
                             />
                         </label>
 
-                        <label class="branch-field branch-field--wide">
+                        <label class="hrms-form-field">
                             <span>{{ t("organization.branch.name") }}</span>
-
                             <InputText
                                 v-model="form.name"
                                 :invalid="Boolean(getFieldError('name'))"
@@ -848,15 +803,13 @@ onMounted(async () => {
                                 placeholder="Phnom Penh Head Office"
                                 @input="clearFieldError('name')"
                             />
-
                             <small v-if="getFieldError('name')">
                                 {{ getFieldError("name") }}
                             </small>
                         </label>
 
-                        <label class="branch-field">
+                        <label class="hrms-form-field">
                             <span>{{ t("organization.branch.status") }}</span>
-
                             <Select
                                 v-model="form.status"
                                 :options="editableStatusOptions"
@@ -865,76 +818,62 @@ onMounted(async () => {
                             />
                         </label>
 
-                        <label class="branch-field">
+                        <label class="hrms-form-field">
                             <span>{{ t("organization.branch.timezone") }}</span>
-
                             <InputText
                                 v-model="form.timezone"
                                 autocomplete="off"
                             />
                         </label>
 
-                        <div class="branch-field branch-field--wide">
-                            <div class="branch-checkbox-row">
+                        <div class="hrms-form-field">
+                            <span>{{ t("organization.branch.type") }}</span>
+                            <div class="hrms-dialog-checkbox">
                                 <Checkbox
                                     v-model="form.isHeadOffice"
                                     input-id="isHeadOffice"
                                     binary
                                     @change="clearFieldError('isHeadOffice')"
                                 />
-
                                 <label for="isHeadOffice">
-                                    {{
-                                        t(
-                                            "organization.branch.markAsHeadOffice",
-                                        )
-                                    }}
+                                    {{ t("organization.branch.markAsHeadOffice") }}
                                 </label>
                             </div>
-
                             <small v-if="getFieldError('isHeadOffice')">
                                 {{ getFieldError("isHeadOffice") }}
                             </small>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="branch-form__section">
+                <section class="hrms-form-section">
                     <h3>{{ t("organization.branch.contactAddress") }}</h3>
 
-                    <div class="branch-form__grid">
-                        <label class="branch-field">
+                    <div class="hrms-form-grid">
+                        <label class="hrms-form-field">
                             <span>{{ t("organization.branch.email") }}</span>
-
                             <InputText
                                 v-model="form.contact.email"
-                                :invalid="
-                                    Boolean(getFieldError('contact.email'))
-                                "
+                                :invalid="Boolean(getFieldError('contact.email'))"
                                 autocomplete="off"
                                 placeholder="branch@trax.local"
                                 @input="clearFieldError('contact.email')"
                             />
-
                             <small v-if="getFieldError('contact.email')">
                                 {{ getFieldError("contact.email") }}
                             </small>
                         </label>
 
-                        <label class="branch-field">
+                        <label class="hrms-form-field">
                             <span>{{ t("organization.branch.phone") }}</span>
-
                             <InputText
                                 v-model="form.contact.phone"
                                 autocomplete="off"
                             />
                         </label>
 
-                        <label class="branch-field branch-field--wide">
-                            <span>
-                                {{ t("organization.branch.addressLine1") }}
-                            </span>
-
+                        <label class="hrms-form-field hrms-form-field--wide">
+                            <span>{{ t("organization.branch.addressLine1") }}</span>
                             <Textarea
                                 v-model="form.address.addressLine1"
                                 rows="2"
@@ -942,42 +881,32 @@ onMounted(async () => {
                             />
                         </label>
 
-                        <label class="branch-field">
+                        <label class="hrms-form-field">
                             <span>{{ t("organization.branch.city") }}</span>
-
                             <InputText
                                 v-model="form.address.city"
                                 autocomplete="off"
                             />
                         </label>
 
-                        <label class="branch-field">
-                            <span>
-                                {{ t("organization.branch.stateProvince") }}
-                            </span>
-
+                        <label class="hrms-form-field">
+                            <span>{{ t("organization.branch.stateProvince") }}</span>
                             <InputText
                                 v-model="form.address.stateProvince"
                                 autocomplete="off"
                             />
                         </label>
 
-                        <label class="branch-field">
-                            <span>
-                                {{ t("organization.branch.postalCode") }}
-                            </span>
-
+                        <label class="hrms-form-field">
+                            <span>{{ t("organization.branch.postalCode") }}</span>
                             <InputText
                                 v-model="form.address.postalCode"
                                 autocomplete="off"
                             />
                         </label>
 
-                        <label class="branch-field">
-                            <span>
-                                {{ t("organization.branch.countryCode") }}
-                            </span>
-
+                        <label class="hrms-form-field">
+                            <span>{{ t("organization.branch.countryCode") }}</span>
                             <InputText
                                 v-model="form.address.countryCode"
                                 maxlength="2"
@@ -986,7 +915,7 @@ onMounted(async () => {
                             />
                         </label>
                     </div>
-                </div>
+                </section>
             </div>
 
             <template #footer>
@@ -996,7 +925,6 @@ onMounted(async () => {
                     :label="t('common.cancel')"
                     @click="closeDialog"
                 />
-
                 <Button
                     icon="pi pi-save"
                     :loading="branchStore.saving"
@@ -1009,7 +937,7 @@ onMounted(async () => {
         <Dialog
             v-model:visible="archiveDialogVisible"
             modal
-            class="branch-archive-dialog"
+            class="hrms-standard-dialog--small"
             :header="t('organization.branch.archiveTitle')"
             :draggable="false"
         >
@@ -1028,7 +956,6 @@ onMounted(async () => {
                     :label="t('common.cancel')"
                     @click="closeArchiveDialog"
                 />
-
                 <Button
                     severity="danger"
                     icon="pi pi-archive"
@@ -1042,291 +969,49 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.branch-page {
-    width: 100%;
-    display: grid;
-    gap: 1rem;
-}
-
-.branch-page__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.branch-page__eyebrow {
-    color: var(--hrms-primary);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.branch-page h2 {
-    margin: 0.35rem 0;
-    color: var(--hrms-text);
-    font-size: 1.45rem;
-    line-height: 1.2;
-}
-
-.branch-page p {
-    max-width: 54rem;
-    margin: 0;
-    color: var(--hrms-text-muted);
-    font-size: 0.78rem;
-    line-height: 1.6;
-}
-
-.branch-card {
-    width: 100%;
-    min-width: 0;
-    border: 1px solid var(--hrms-border);
-    box-shadow: var(--hrms-shadow-sm);
-}
-
-.branch-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.branch-toolbar__filters,
-.branch-toolbar__actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.branch-toolbar__filters {
-    min-width: 0;
-    flex: 1 1 auto;
-}
-
-.branch-toolbar__actions {
-    flex: 0 0 auto;
-}
-
 .branch-search {
-    width: min(100%, 23rem);
     position: relative;
-    display: block;
 }
 
 .branch-search i {
     position: absolute;
+    z-index: 1;
     top: 50%;
-    left: 0.75rem;
+    left: 0.7rem;
     transform: translateY(-50%);
     color: var(--hrms-text-muted);
     font-size: 0.78rem;
+    pointer-events: none;
 }
 
 .branch-search__input {
     width: 100%;
-    padding-left: 2.1rem;
+    padding-left: 2rem;
 }
 
 .branch-company-filter {
-    width: 15rem;
+    flex-basis: 15rem;
 }
 
 .branch-status-filter {
-    width: 12rem;
+    flex-basis: 11rem;
 }
 
 .branch-table-wrap {
-    width: 100%;
-    min-width: 0;
-    overflow-x: auto;
-}
-
-.branch-code {
-    color: var(--hrms-primary);
-    font-size: 0.78rem;
-}
-
-.branch-name-cell,
-.branch-muted-cell {
-    display: grid;
-    gap: 0.15rem;
-    min-width: 0;
-}
-
-.branch-name-cell strong,
-.branch-muted-cell strong,
-.branch-muted-cell span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.branch-name-cell strong,
-.branch-muted-cell strong {
-    color: var(--hrms-text);
-    font-size: 0.78rem;
-}
-
-.branch-name-cell span,
-.branch-muted-cell span,
-.branch-date,
-.branch-muted-text,
-.branch-archived-text {
-    color: var(--hrms-text-muted);
-    font-size: 0.72rem;
-}
-
-.branch-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-}
-
-.branch-dialog {
-    width: min(62rem, calc(100vw - 2rem));
-}
-
-.branch-archive-dialog {
-    width: min(31rem, calc(100vw - 2rem));
-}
-
-.branch-form {
-    display: grid;
-    gap: 1rem;
-}
-
-.branch-form__section {
-    display: grid;
-    gap: 0.75rem;
-    padding: 0.9rem;
-    background: var(--hrms-surface-muted);
-    border: 1px solid var(--hrms-border);
-    border-radius: var(--hrms-radius-md);
-}
-
-.branch-form__section h3 {
-    margin: 0;
-    color: var(--hrms-text);
-    font-size: 0.82rem;
-}
-
-.branch-form__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-}
-
-.branch-field {
-    display: grid;
-    gap: 0.35rem;
-}
-
-.branch-field--wide {
-    grid-column: 1 / -1;
-}
-
-.branch-field span,
-.branch-checkbox-row label {
-    color: var(--hrms-text-muted);
-    font-size: 0.72rem;
-    font-weight: 700;
-}
-
-.branch-field small {
-    color: var(--hrms-danger);
-    font-size: 0.68rem;
-}
-
-.branch-checkbox-row {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    min-height: 2.4rem;
+    height: calc(100vh - 13.5rem);
+    min-height: 25rem;
 }
 
 .branch-archive-text {
     margin: 0;
     color: var(--hrms-text);
-    font-size: 0.82rem;
-    line-height: 1.6;
+    font-size: var(--hrms-font-size-md);
+    line-height: 1.55;
 }
 
-:deep(.p-card-body),
-:deep(.p-card-content) {
-    padding: 0;
-}
-
-:deep(.p-card-content) {
-    padding: 1rem;
-}
-
-:deep(.p-datatable) {
-    font-size: 0.74rem;
-}
-
-:deep(.p-datatable-thead > tr > th) {
-    color: var(--hrms-text);
-    background: var(--hrms-surface-muted);
-    font-size: 0.7rem;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-:deep(.p-datatable-tbody > tr > td),
-:deep(.p-datatable-thead > tr > th) {
-    text-align: center;
-    vertical-align: middle;
-}
-
-:deep(.p-datatable-tbody > tr > td) {
-    border-color: var(--hrms-border);
-}
-
-:deep(.p-dialog-header),
-:deep(.p-dialog-footer) {
-    padding: 1rem;
-}
-
-:deep(.p-dialog-content) {
-    padding: 0 1rem 1rem;
-}
-
-@media (max-width: 1050px) {
-    .branch-toolbar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .branch-toolbar__filters,
-    .branch-toolbar__actions {
-        width: 100%;
-        flex-wrap: wrap;
-    }
-
-    .branch-search,
-    .branch-company-filter,
-    .branch-status-filter {
-        width: 100%;
-    }
-}
-
-@media (max-width: 900px) {
-    .branch-page__header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-}
-
-@media (max-width: 650px) {
-    .branch-form__grid {
-        grid-template-columns: 1fr;
-    }
-
-    .branch-page h2 {
-        font-size: 1.2rem;
+@media (max-width: 760px) {
+    .branch-table-wrap {
+        height: 32rem;
     }
 }
 </style>

@@ -2,6 +2,18 @@ import mongoose from "mongoose"
 
 const { Schema } = mongoose
 
+export const EMPLOYEE_TYPE_DASHBOARD_CATEGORIES = Object.freeze([
+    "BLUE_COLLAR_SEWER",
+    "BLUE_COLLAR_NON_SEWER",
+    "WHITE_COLLAR",
+    "CUSTOM",
+])
+
+export const EMPLOYEE_TYPE_POSITION_ASSIGNMENT_MODES = Object.freeze([
+    "ALL_POSITIONS",
+    "SPECIFIC_POSITIONS",
+])
+
 function normalizeCode(value) {
     if (typeof value !== "string") {
         return value
@@ -37,6 +49,20 @@ const employeeTypeChildSchema = new Schema(
             minlength: 2,
             maxlength: 120,
             set: normalizeText,
+        },
+
+        dashboardCategory: {
+            type: String,
+            enum: EMPLOYEE_TYPE_DASHBOARD_CATEGORIES,
+            default: "CUSTOM",
+            required: true,
+        },
+
+        positionAssignmentMode: {
+            type: String,
+            enum: EMPLOYEE_TYPE_POSITION_ASSIGNMENT_MODES,
+            default: "SPECIFIC_POSITIONS",
+            required: true,
         },
 
         positionIds: [
@@ -85,6 +111,20 @@ const employeeTypeSchema = new Schema(
             maxlength: 80,
             set: normalizeText,
             default: "",
+        },
+
+        dashboardCategory: {
+            type: String,
+            enum: EMPLOYEE_TYPE_DASHBOARD_CATEGORIES,
+            default: "CUSTOM",
+            required: true,
+        },
+
+        positionAssignmentMode: {
+            type: String,
+            enum: EMPLOYEE_TYPE_POSITION_ASSIGNMENT_MODES,
+            default: "SPECIFIC_POSITIONS",
+            required: true,
         },
 
         positionIds: [
@@ -152,6 +192,16 @@ employeeTypeSchema.index(
     },
     {
         name: "idx_employee_type_company_status_name",
+    },
+)
+
+employeeTypeSchema.index(
+    {
+        dashboardCategory: 1,
+        status: 1,
+    },
+    {
+        name: "idx_employee_type_dashboard_category_status",
     },
 )
 

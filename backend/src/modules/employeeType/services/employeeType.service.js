@@ -55,14 +55,10 @@ function getCompanyScopeFilter(user) {
     const companyIds = getUserCompanyIds(user)
 
     if (companyIds.length === 0) {
-        return {
-            _id: { $in: [] },
-        }
+        return { _id: { $in: [] } }
     }
 
-    return {
-        _id: { $in: companyIds },
-    }
+    return { _id: { $in: companyIds } }
 }
 
 function getEmployeeTypeScopeFilter(user) {
@@ -73,14 +69,10 @@ function getEmployeeTypeScopeFilter(user) {
     const companyIds = getUserCompanyIds(user)
 
     if (companyIds.length === 0) {
-        return {
-            _id: { $in: [] },
-        }
+        return { _id: { $in: [] } }
     }
 
-    return {
-        companyId: { $in: companyIds },
-    }
+    return { companyId: { $in: companyIds } }
 }
 
 function getPositionScopeFilter(user) {
@@ -104,26 +96,18 @@ function getPositionScopeFilter(user) {
     const filters = []
 
     if (allBranchCompanyIds.length > 0) {
-        filters.push({
-            companyId: { $in: [...new Set(allBranchCompanyIds)] },
-        })
+        filters.push({ companyId: { $in: [...new Set(allBranchCompanyIds)] } })
     }
 
     if (branchIds.length > 0) {
-        filters.push({
-            branchId: { $in: [...new Set(branchIds)] },
-        })
+        filters.push({ branchId: { $in: [...new Set(branchIds)] } })
     }
 
     if (filters.length === 0) {
-        return {
-            _id: { $in: [] },
-        }
+        return { _id: { $in: [] } }
     }
 
-    return {
-        $or: filters,
-    }
+    return { $or: filters }
 }
 
 function buildEmployeeTypeSearchFilter(search) {
@@ -243,11 +227,17 @@ function serializeEmployeeTypeChild(child) {
         id: child._id?.toString?.() || child.id || child.code,
         code: child.code,
         name: child.name,
+        dashboardCategory: child.dashboardCategory || "CUSTOM",
+        positionAssignmentMode:
+            child.positionAssignmentMode || "SPECIFIC_POSITIONS",
         positionIds: populatedPositions.length
             ? populatedPositions.map((position) => position.id)
             : rawPositionIds,
         positions: populatedPositions,
-        positionCount: populatedPositions.length || rawPositionIds.length || 0,
+        positionCount:
+            child.positionAssignmentMode === "ALL_POSITIONS"
+                ? "ALL"
+                : populatedPositions.length || rawPositionIds.length || 0,
     }
 }
 
@@ -259,9 +249,7 @@ function serializeEmployeeType(employeeType) {
     const raw =
         typeof employeeType.toJSON === "function"
             ? employeeType.toJSON()
-            : {
-                  ...employeeType,
-              }
+            : { ...employeeType }
 
     const populatedCompany =
         raw.companyId && typeof raw.companyId === "object"
@@ -283,10 +271,13 @@ function serializeEmployeeType(employeeType) {
         ? raw.children.map(serializeEmployeeTypeChild).filter(Boolean)
         : []
 
-    const childPositionCount = children.reduce(
-        (sum, child) => sum + child.positionCount,
-        0,
-    )
+    const childPositionCount = children.reduce((sum, child) => {
+        if (child.positionAssignmentMode === "ALL_POSITIONS") {
+            return sum
+        }
+
+        return sum + Number(child.positionCount || 0)
+    }, 0)
 
     const allPositions = children.length
         ? children.flatMap((child) => child.positions || [])
@@ -300,7 +291,10 @@ function serializeEmployeeType(employeeType) {
         code: raw.code,
         name: raw.name,
         shortName: raw.shortName || "",
+        dashboardCategory: raw.dashboardCategory || "CUSTOM",
         assignmentMode: children.length > 0 ? "CHILD" : "DIRECT",
+        positionAssignmentMode:
+            raw.positionAssignmentMode || "SPECIFIC_POSITIONS",
         positionIds: populatedPositions.length
             ? populatedPositions.map((position) => position.id)
             : rawPositionIds,
@@ -314,8 +308,14 @@ function serializeEmployeeType(employeeType) {
         allPositions,
         childCount: children.length,
         positionCount: children.length
-            ? childPositionCount
-            : populatedPositions.length || rawPositionIds.length || 0,
+            ? children.some(
+                  (child) => child.positionAssignmentMode === "ALL_POSITIONS",
+              )
+                ? "ALL"
+                : childPositionCount
+            : raw.positionAssignmentMode === "ALL_POSITIONS"
+              ? "ALL"
+              : populatedPositions.length || rawPositionIds.length || 0,
         description: raw.description || "",
         status: raw.status,
         createdAt: raw.createdAt,
@@ -324,14 +324,14 @@ function serializeEmployeeType(employeeType) {
 }
 
 function buildEmployeeTypeUpdatePayload(payload, accountId) {
-    const updatePayload = {
-        updatedByAccountId: accountId,
-    }
+    const updatePayload = { updatedByAccountId: accountId }
 
     for (const field of [
         "code",
         "name",
         "shortName",
+        "dashboardCategory",
+        "positionAssignmentMode",
         "positionIds",
         "children",
         "description",
@@ -355,9 +355,7 @@ function handleDuplicateEmployeeTypeError(error) {
             statusCode: 409,
             code: "ORGANIZATION_EMPLOYEE_TYPE_CODE_EXISTS",
             messageKey: "errors.organization.employeeType.codeExists",
-            fields: {
-                code: ["errors.organization.employeeType.codeExists"],
-            },
+            fields: { code: ["errors.organization.employeeType.codeExists"] },
         })
     }
 
@@ -372,7 +370,13 @@ function normalizeChildGroups(children = []) {
     return (children || []).map((child) => ({
         code: normalizeCode(child.code || child.name),
         name: child.name,
-        positionIds: [...new Set(child.positionIds || [])],
+        dashboardCategory: child.dashboardCategory || "CUSTOM",
+        positionAssignmentMode:
+            child.positionAssignmentMode || "SPECIFIC_POSITIONS",
+        positionIds:
+            child.positionAssignmentMode === "ALL_POSITIONS"
+                ? []
+                : [...new Set(child.positionIds || [])],
     }))
 }
 
@@ -386,8 +390,18 @@ function flattenAssignmentPositionIds({ positionIds = [], children = [] }) {
 }
 
 function normalizeAssignmentPayload(payload) {
-    const normalized = {
-        ...payload,
+    const normalized = { ...payload }
+
+    if (!normalized.dashboardCategory) {
+        normalized.dashboardCategory = "CUSTOM"
+    }
+
+    if (!normalized.positionAssignmentMode) {
+        normalized.positionAssignmentMode = "SPECIFIC_POSITIONS"
+    }
+
+    if (normalized.positionAssignmentMode === "ALL_POSITIONS") {
+        normalized.positionIds = []
     }
 
     if (normalized.children !== undefined) {
@@ -400,6 +414,7 @@ function normalizeAssignmentPayload(payload) {
 
     if ((normalized.children || []).length > 0) {
         normalized.positionIds = []
+        normalized.positionAssignmentMode = "SPECIFIC_POSITIONS"
     }
 
     return normalized
@@ -520,9 +535,7 @@ async function ensurePositionsNotAlreadyMapped({
         code: "ORGANIZATION_EMPLOYEE_TYPE_POSITION_ALREADY_MAPPED",
         messageKey: "errors.organization.employeeType.positionAlreadyMapped",
         fields: {
-            positionIds: [
-                "errors.organization.employeeType.positionAlreadyMapped",
-            ],
+            positionIds: ["errors.organization.employeeType.positionAlreadyMapped"],
             children: ["errors.organization.employeeType.positionAlreadyMapped"],
         },
     })
@@ -576,6 +589,8 @@ function addPositionMatchFilter(filter, positionIds) {
         $or: [
             { positionIds: { $in: ids } },
             { "children.positionIds": { $in: ids } },
+            { positionAssignmentMode: "ALL_POSITIONS" },
+            { "children.positionAssignmentMode": "ALL_POSITIONS" },
         ],
     }
 
@@ -622,6 +637,29 @@ function populateEmployeeTypeQuery(query) {
         })
 }
 
+function applyDashboardCategoryFilter(filter, dashboardCategory) {
+    if (!dashboardCategory || dashboardCategory === "ALL") {
+        return
+    }
+
+    if (!filter.$and) {
+        filter.$and = []
+    }
+
+    filter.$and.push({
+        $or: [
+            { dashboardCategory },
+            { "children.dashboardCategory": dashboardCategory },
+        ],
+    })
+}
+
+function clearEmployeeTypeRelatedCaches() {
+    clearCacheByPrefix("employeeType:")
+    clearCacheByPrefix("employee:list:")
+    clearCacheByPrefix("hr-dashboard:")
+}
+
 export async function listEmployeeTypes({ query, user }) {
     const cacheKey = `employeeType:list:${user?.accountId || "anonymous"}:${JSON.stringify(query)}`
     const cachedResult = getCache(cacheKey)
@@ -636,17 +674,15 @@ export async function listEmployeeTypes({ query, user }) {
     }
 
     if (query.companyId) {
-        await ensureCompanyExists({
-            companyId: query.companyId,
-            user,
-        })
-
+        await ensureCompanyExists({ companyId: query.companyId, user })
         filter.companyId = query.companyId
     }
 
     if (query.status !== "ALL") {
         filter.status = query.status
     }
+
+    applyDashboardCategoryFilter(filter, query.dashboardCategory)
 
     if (query.positionId) {
         ensureValidObjectId(
@@ -716,10 +752,7 @@ export async function getEmployeeTypeById({ employeeTypeId, user }) {
 }
 
 export async function createEmployeeType({ payload, user }) {
-    await ensureCompanyExists({
-        companyId: payload.companyId,
-        user,
-    })
+    await ensureCompanyExists({ companyId: payload.companyId, user })
 
     const normalizedPayload = normalizeAssignmentPayload(payload)
     const allPositionIds = flattenAssignmentPositionIds(normalizedPayload)
@@ -742,12 +775,9 @@ export async function createEmployeeType({ payload, user }) {
             updatedByAccountId: user?.accountId || null,
         })
 
-        clearCacheByPrefix("employeeType:")
+        clearEmployeeTypeRelatedCaches()
 
-        return getEmployeeTypeById({
-            employeeTypeId: employeeType._id,
-            user,
-        })
+        return getEmployeeTypeById({ employeeTypeId: employeeType._id, user })
     } catch (error) {
         handleDuplicateEmployeeTypeError(error)
     }
@@ -781,11 +811,17 @@ export async function updateEmployeeType({ employeeTypeId, payload, user }) {
         })
     }
 
-    const normalizedPayload = normalizeAssignmentPayload(payload)
+    const normalizedPayload = normalizeAssignmentPayload({
+        ...existingEmployeeType,
+        ...payload,
+    })
+
+    const patchPayload = normalizeAssignmentPayload(payload)
 
     if (
-        normalizedPayload.positionIds !== undefined ||
-        normalizedPayload.children !== undefined
+        patchPayload.positionIds !== undefined ||
+        patchPayload.children !== undefined ||
+        patchPayload.positionAssignmentMode !== undefined
     ) {
         const allPositionIds = flattenAssignmentPositionIds(normalizedPayload)
 
@@ -810,7 +846,7 @@ export async function updateEmployeeType({ employeeTypeId, payload, user }) {
             },
             {
                 $set: buildEmployeeTypeUpdatePayload(
-                    normalizedPayload,
+                    patchPayload,
                     user?.accountId || null,
                 ),
             },
@@ -820,7 +856,7 @@ export async function updateEmployeeType({ employeeTypeId, payload, user }) {
             },
         )
 
-        clearCacheByPrefix("employeeType:")
+        clearEmployeeTypeRelatedCaches()
 
         return getEmployeeTypeById({
             employeeTypeId: updatedEmployeeType._id,
@@ -868,7 +904,7 @@ export async function archiveEmployeeType({ employeeTypeId, user }) {
         },
     )
 
-    clearCacheByPrefix("employeeType:")
+    clearEmployeeTypeRelatedCaches()
 
     return getEmployeeTypeById({ employeeTypeId, user })
 }

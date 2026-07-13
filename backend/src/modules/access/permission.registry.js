@@ -183,6 +183,13 @@ export const PERMISSION_REGISTRY = Object.freeze([
         "IMPORT",
         "EXPORT",
     ]),
+    ...permissionGroup("ORGANIZATION.RECRUITMENT_CHANNEL", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "ARCHIVE",
+    ]),
+
 
 
     ...permissionGroup("REPORT.HR_ANALYTICS", ["VIEW", "EXPORT"]),

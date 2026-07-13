@@ -13,13 +13,25 @@ const TEMPLATE_HEADERS = [
     "employeeTypeCode",
     "employeeTypeName",
     "shortName",
+    "dashboardCategory",
+    "positionAssignmentMode",
+    "childCode",
     "childName",
+    "childDashboardCategory",
+    "childPositionAssignmentMode",
     "positionCodes",
     "status",
     "description",
 ]
 
 const STATUS_VALUES = ["ACTIVE", "INACTIVE"]
+const DASHBOARD_CATEGORIES = [
+    "BLUE_COLLAR_SEWER",
+    "BLUE_COLLAR_NON_SEWER",
+    "WHITE_COLLAR",
+    "CUSTOM",
+]
+const POSITION_ASSIGNMENT_MODES = ["ALL_POSITIONS", "SPECIFIC_POSITIONS"]
 
 function normalizeCode(value) {
     return String(value || "")
@@ -33,6 +45,26 @@ function normalizeText(value) {
     return String(value || "")
         .trim()
         .replace(/\s+/g, " ")
+}
+
+function normalizeDashboardCategory(value) {
+    const normalized = normalizeCode(value || "CUSTOM")
+
+    return DASHBOARD_CATEGORIES.includes(normalized) ? normalized : null
+}
+
+function normalizeAssignmentMode(value) {
+    const normalized = normalizeCode(value || "SPECIFIC_POSITIONS")
+
+    if (normalized === "ALL" || normalized === "ALL_POSITION") {
+        return "ALL_POSITIONS"
+    }
+
+    if (normalized === "SPECIFIC" || normalized === "POSITION") {
+        return "SPECIFIC_POSITIONS"
+    }
+
+    return POSITION_ASSIGNMENT_MODES.includes(normalized) ? normalized : null
 }
 
 function normalizeStatus(value) {
@@ -61,17 +93,9 @@ function getCellValue(row, index) {
     }
 
     if (typeof value === "object") {
-        if (value.text) {
-            return String(value.text)
-        }
-
-        if (value.result) {
-            return String(value.result)
-        }
-
-        if (value.richText) {
-            return value.richText.map((item) => item.text).join("")
-        }
+        if (value.text) return String(value.text)
+        if (value.result) return String(value.result)
+        if (value.richText) return value.richText.map((item) => item.text).join("")
     }
 
     return String(value)
@@ -89,7 +113,6 @@ function getRowObject(row) {
 
 function validateHeaderRow(worksheet) {
     const headerRow = worksheet.getRow(1)
-
     const actualHeaders = TEMPLATE_HEADERS.map((_, index) =>
         normalizeText(getCellValue(headerRow, index + 1)),
     )
@@ -109,11 +132,7 @@ function validateHeaderRow(worksheet) {
 }
 
 function buildImportError(rowNumber, field, messageKey) {
-    return {
-        rowNumber,
-        field,
-        messageKey,
-    }
+    return { rowNumber, field, messageKey }
 }
 
 function buildWorkbookBase(title) {
@@ -132,26 +151,29 @@ function buildWorkbookBase(title) {
         { header: "employeeTypeCode", key: "employeeTypeCode", width: 22 },
         { header: "employeeTypeName", key: "employeeTypeName", width: 28 },
         { header: "shortName", key: "shortName", width: 18 },
-        { header: "childName", key: "childName", width: 18 },
+        { header: "dashboardCategory", key: "dashboardCategory", width: 26 },
+        { header: "positionAssignmentMode", key: "positionAssignmentMode", width: 28 },
+        { header: "childCode", key: "childCode", width: 18 },
+        { header: "childName", key: "childName", width: 22 },
+        { header: "childDashboardCategory", key: "childDashboardCategory", width: 28 },
+        {
+            header: "childPositionAssignmentMode",
+            key: "childPositionAssignmentMode",
+            width: 32,
+        },
         { header: "positionCodes", key: "positionCodes", width: 42 },
         { header: "status", key: "status", width: 14 },
         { header: "description", key: "description", width: 46 },
     ]
 
     const headerRow = worksheet.getRow(1)
-    headerRow.font = {
-        bold: true,
-        color: { argb: "FFFFFFFF" },
-    }
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } }
     headerRow.fill = {
         type: "pattern",
         pattern: "solid",
         fgColor: { argb: "FF1D4ED8" },
     }
-    headerRow.alignment = {
-        vertical: "middle",
-        horizontal: "center",
-    }
+    headerRow.alignment = { vertical: "middle", horizontal: "center" }
 
     worksheet.eachRow((row) => {
         row.eachCell((cell) => {
@@ -164,97 +186,79 @@ function buildWorkbookBase(title) {
         })
     })
 
-    return {
-        workbook,
-        worksheet,
-    }
+    return { workbook, worksheet }
 }
 
 export async function buildEmployeeTypeImportTemplateWorkbook() {
     const { workbook, worksheet } = buildWorkbookBase("Employee Type Import")
 
-    worksheet.addRow({
-        companyCode: "TRAX",
-        employeeTypeCode: "BLUE_COLLAR",
-        employeeTypeName: "Blue Collar",
-        shortName: "Blue Collar",
-        childName: "Direct",
-        positionCodes: "SEWER",
-        status: "ACTIVE",
-        description: "Factory production positions",
-    })
-
-    worksheet.addRow({
-        companyCode: "TRAX",
-        employeeTypeCode: "BLUE_COLLAR",
-        employeeTypeName: "Blue Collar",
-        shortName: "Blue Collar",
-        childName: "Indirect",
-        positionCodes: "CUTTER",
-        status: "ACTIVE",
-        description: "Factory support positions",
-    })
-
-    worksheet.addRow({
-        companyCode: "TRAX",
-        employeeTypeCode: "WHITE_COLLAR",
-        employeeTypeName: "White Collar",
-        shortName: "White Collar",
-        childName: "",
-        positionCodes: "HR_MANAGER",
-        status: "ACTIVE",
-        description: "Office and management positions",
-    })
+    worksheet.addRows([
+        {
+            companyCode: "TRAX",
+            employeeTypeCode: "BLUE_COLLAR",
+            employeeTypeName: "Blue Collar",
+            shortName: "Blue Collar",
+            dashboardCategory: "CUSTOM",
+            positionAssignmentMode: "SPECIFIC_POSITIONS",
+            childCode: "SEWER",
+            childName: "Sewer",
+            childDashboardCategory: "BLUE_COLLAR_SEWER",
+            childPositionAssignmentMode: "SPECIFIC_POSITIONS",
+            positionCodes: "SEWER",
+            status: "ACTIVE",
+            description: "Blue collar sewer positions.",
+        },
+        {
+            companyCode: "TRAX",
+            employeeTypeCode: "BLUE_COLLAR",
+            employeeTypeName: "Blue Collar",
+            shortName: "Blue Collar",
+            dashboardCategory: "CUSTOM",
+            positionAssignmentMode: "SPECIFIC_POSITIONS",
+            childCode: "NON_SEWER",
+            childName: "Non-Sewer",
+            childDashboardCategory: "BLUE_COLLAR_NON_SEWER",
+            childPositionAssignmentMode: "SPECIFIC_POSITIONS",
+            positionCodes: "CUTTER,QC,PACKING",
+            status: "ACTIVE",
+            description: "Blue collar non-sewer positions.",
+        },
+        {
+            companyCode: "TRAX",
+            employeeTypeCode: "WHITE_COLLAR",
+            employeeTypeName: "White Collar",
+            shortName: "White Collar",
+            dashboardCategory: "WHITE_COLLAR",
+            positionAssignmentMode: "ALL_POSITIONS",
+            childCode: "",
+            childName: "",
+            childDashboardCategory: "",
+            childPositionAssignmentMode: "",
+            positionCodes: "",
+            status: "ACTIVE",
+            description: "White collar, office, management, or all allowed positions.",
+        },
+    ])
 
     const instructionSheet = workbook.addWorksheet("Instructions")
 
     instructionSheet.columns = [
-        { header: "Field", key: "field", width: 28 },
+        { header: "Field", key: "field", width: 32 },
         { header: "Required", key: "required", width: 14 },
-        { header: "Rule", key: "rule", width: 100 },
+        { header: "Rule", key: "rule", width: 120 },
     ]
 
     instructionSheet.addRows([
-        {
-            field: "companyCode",
-            required: "Yes",
-            rule: "Must match an existing active company code.",
-        },
-        {
-            field: "employeeTypeCode",
-            required: "Yes",
-            rule: "Unique inside the company. Example: BLUE_COLLAR or WHITE_COLLAR.",
-        },
-        {
-            field: "employeeTypeName",
-            required: "Yes",
-            rule: "Employee type display name. Example: Blue Collar, White Collar.",
-        },
-        {
-            field: "shortName",
-            required: "No",
-            rule: "Optional short display name.",
-        },
-        {
-            field: "childName",
-            required: "No",
-            rule: "Optional child group. Example: Direct or Indirect. Leave empty when positions belong directly to the employee type.",
-        },
-        {
-            field: "positionCodes",
-            required: "Yes",
-            rule: "Comma-separated position codes inside the company. Do not mix direct rows and child rows for the same employee type.",
-        },
-        {
-            field: "status",
-            required: "No",
-            rule: "ACTIVE or INACTIVE. Empty defaults to ACTIVE.",
-        },
-        {
-            field: "description",
-            required: "No",
-            rule: "Optional note up to 500 characters.",
-        },
+        { field: "companyCode", required: "Yes", rule: "Existing active company code." },
+        { field: "employeeTypeCode", required: "Yes", rule: "Example: BLUE_COLLAR or WHITE_COLLAR." },
+        { field: "employeeTypeName", required: "Yes", rule: "Display name." },
+        { field: "dashboardCategory", required: "Yes", rule: "BLUE_COLLAR_SEWER, BLUE_COLLAR_NON_SEWER, WHITE_COLLAR, or CUSTOM." },
+        { field: "positionAssignmentMode", required: "Yes", rule: "ALL_POSITIONS or SPECIFIC_POSITIONS." },
+        { field: "childCode", required: "No", rule: "Use child rows for groups like SEWER and NON_SEWER under BLUE_COLLAR." },
+        { field: "childDashboardCategory", required: "When child used", rule: "Dashboard category for the child group." },
+        { field: "childPositionAssignmentMode", required: "When child used", rule: "ALL_POSITIONS or SPECIFIC_POSITIONS. Multiple children should use SPECIFIC_POSITIONS." },
+        { field: "positionCodes", required: "When SPECIFIC_POSITIONS", rule: "Comma-separated position codes. Empty is allowed only for ALL_POSITIONS." },
+        { field: "status", required: "No", rule: "ACTIVE or INACTIVE. Empty defaults ACTIVE." },
     ])
 
     return workbook
@@ -280,90 +284,83 @@ export async function parseEmployeeTypeImportWorkbook(buffer) {
     const errors = []
 
     worksheet.eachRow((row, rowNumber) => {
-        if (rowNumber === 1) {
-            return
-        }
+        if (rowNumber === 1) return
 
         const rowObject = getRowObject(row)
         const isEmpty = TEMPLATE_HEADERS.every(
             (header) => !normalizeText(rowObject[header]),
         )
 
-        if (isEmpty) {
-            return
-        }
+        if (isEmpty) return
 
         const companyCode = normalizeCode(rowObject.companyCode)
         const employeeTypeCode = normalizeCode(rowObject.employeeTypeCode)
         const employeeTypeName = normalizeText(rowObject.employeeTypeName)
         const shortName = normalizeText(rowObject.shortName)
+        const dashboardCategory = normalizeDashboardCategory(
+            rowObject.dashboardCategory,
+        )
+        const positionAssignmentMode = normalizeAssignmentMode(
+            rowObject.positionAssignmentMode,
+        )
+        const childCode = normalizeCode(rowObject.childCode)
         const childName = normalizeText(rowObject.childName)
-        const childCode = childName ? normalizeCode(childName) : ""
+        const childDashboardCategory = childCode
+            ? normalizeDashboardCategory(rowObject.childDashboardCategory)
+            : null
+        const childPositionAssignmentMode = childCode
+            ? normalizeAssignmentMode(rowObject.childPositionAssignmentMode)
+            : null
         const positionCodes = splitCodes(rowObject.positionCodes)
         const status = normalizeStatus(rowObject.status)
         const description = normalizeText(rowObject.description)
 
         if (!companyCode) {
-            errors.push(
-                buildImportError(
-                    rowNumber,
-                    "companyCode",
-                    "errors.organization.employeeTypeImport.companyCodeRequired",
-                ),
-            )
+            errors.push(buildImportError(rowNumber, "companyCode", "errors.organization.employeeTypeImport.companyCodeRequired"))
         }
 
         if (!employeeTypeCode) {
-            errors.push(
-                buildImportError(
-                    rowNumber,
-                    "employeeTypeCode",
-                    "errors.organization.employeeTypeImport.employeeTypeCodeRequired",
-                ),
-            )
+            errors.push(buildImportError(rowNumber, "employeeTypeCode", "errors.organization.employeeTypeImport.employeeTypeCodeRequired"))
         }
 
-        if (
-            employeeTypeCode &&
-            !/^[A-Z0-9_-]{2,30}$/.test(employeeTypeCode)
-        ) {
-            errors.push(
-                buildImportError(
-                    rowNumber,
-                    "employeeTypeCode",
-                    "errors.organization.employeeTypeImport.employeeTypeCodeInvalid",
-                ),
-            )
+        if (employeeTypeCode && !/^[A-Z0-9_-]{2,30}$/.test(employeeTypeCode)) {
+            errors.push(buildImportError(rowNumber, "employeeTypeCode", "errors.organization.employeeTypeImport.employeeTypeCodeInvalid"))
         }
 
         if (!employeeTypeName) {
-            errors.push(
-                buildImportError(
-                    rowNumber,
-                    "employeeTypeName",
-                    "errors.organization.employeeTypeImport.employeeTypeNameRequired",
-                ),
-            )
+            errors.push(buildImportError(rowNumber, "employeeTypeName", "errors.organization.employeeTypeImport.employeeTypeNameRequired"))
         }
 
-        if (positionCodes.length === 0) {
-            errors.push(
-                buildImportError(
-                    rowNumber,
-                    "positionCodes",
-                    "errors.organization.employeeTypeImport.positionCodesRequired",
-                ),
-            )
+        if (!dashboardCategory) {
+            errors.push(buildImportError(rowNumber, "dashboardCategory", "errors.organization.employeeTypeImport.dashboardCategoryInvalid"))
+        }
+
+        if (!positionAssignmentMode) {
+            errors.push(buildImportError(rowNumber, "positionAssignmentMode", "errors.organization.employeeTypeImport.positionAssignmentModeInvalid"))
+        }
+
+        if (childCode && !childName) {
+            errors.push(buildImportError(rowNumber, "childName", "errors.organization.employeeTypeImport.childNameRequired"))
+        }
+
+        if (childCode && !childDashboardCategory) {
+            errors.push(buildImportError(rowNumber, "childDashboardCategory", "errors.organization.employeeTypeImport.dashboardCategoryInvalid"))
+        }
+
+        if (childCode && !childPositionAssignmentMode) {
+            errors.push(buildImportError(rowNumber, "childPositionAssignmentMode", "errors.organization.employeeTypeImport.positionAssignmentModeInvalid"))
+        }
+
+        const effectiveMode = childCode
+            ? childPositionAssignmentMode
+            : positionAssignmentMode
+
+        if (effectiveMode === "SPECIFIC_POSITIONS" && positionCodes.length === 0) {
+            errors.push(buildImportError(rowNumber, "positionCodes", "errors.organization.employeeTypeImport.positionCodesRequired"))
         }
 
         if (!status) {
-            errors.push(
-                buildImportError(
-                    rowNumber,
-                    "status",
-                    "errors.organization.employeeTypeImport.statusInvalid",
-                ),
-            )
+            errors.push(buildImportError(rowNumber, "status", "errors.organization.employeeTypeImport.statusInvalid"))
         }
 
         rows.push({
@@ -372,8 +369,13 @@ export async function parseEmployeeTypeImportWorkbook(buffer) {
             employeeTypeCode,
             employeeTypeName,
             shortName,
-            childName,
+            dashboardCategory: dashboardCategory || "CUSTOM",
+            positionAssignmentMode: positionAssignmentMode || "SPECIFIC_POSITIONS",
             childCode,
+            childName,
+            childDashboardCategory: childDashboardCategory || "CUSTOM",
+            childPositionAssignmentMode:
+                childPositionAssignmentMode || "SPECIFIC_POSITIONS",
             positionCodes,
             status: status || "ACTIVE",
             description,
@@ -388,23 +390,15 @@ export async function parseEmployeeTypeImportWorkbook(buffer) {
         })
     }
 
-    return {
-        rows,
-        errors,
-    }
+    return { rows, errors }
 }
 
 async function findCompanyByCode(companyCode) {
-    return Company.findOne({
-        code: companyCode,
-        status: { $ne: "ARCHIVED" },
-    }).lean()
+    return Company.findOne({ code: companyCode, status: { $ne: "ARCHIVED" } }).lean()
 }
 
 async function findPositionsByCodes({ companyId, positionCodes }) {
-    if (positionCodes.length === 0) {
-        return []
-    }
+    if (positionCodes.length === 0) return []
 
     return Position.find({
         companyId,
@@ -418,9 +412,7 @@ async function findPositionMappingConflict({
     positionIds,
     employeeTypeId = null,
 }) {
-    if (positionIds.length === 0) {
-        return null
-    }
+    if (positionIds.length === 0) return null
 
     const filter = {
         companyId,
@@ -431,9 +423,7 @@ async function findPositionMappingConflict({
         ],
     }
 
-    if (employeeTypeId) {
-        filter._id = { $ne: employeeTypeId }
-    }
+    if (employeeTypeId) filter._id = { $ne: employeeTypeId }
 
     return EmployeeType.findOne(filter).select("code name").lean()
 }
@@ -450,6 +440,8 @@ function groupRows(rows) {
                 employeeTypeCode: row.employeeTypeCode,
                 employeeTypeName: row.employeeTypeName,
                 shortName: row.shortName,
+                dashboardCategory: row.dashboardCategory,
+                positionAssignmentMode: row.positionAssignmentMode,
                 status: row.status,
                 description: row.description,
                 rowNumbers: [],
@@ -461,11 +453,13 @@ function groupRows(rows) {
         const group = groups.get(key)
         group.rowNumbers.push(row.rowNumber)
 
-        if (row.childName) {
+        if (row.childCode) {
             if (!group.childrenByCode.has(row.childCode)) {
                 group.childrenByCode.set(row.childCode, {
                     code: row.childCode,
                     name: row.childName,
+                    dashboardCategory: row.childDashboardCategory,
+                    positionAssignmentMode: row.childPositionAssignmentMode,
                     rowNumbers: [],
                     positionCodes: [],
                 })
@@ -474,9 +468,10 @@ function groupRows(rows) {
             const child = group.childrenByCode.get(row.childCode)
             child.rowNumbers.push(row.rowNumber)
             child.positionCodes.push(...row.positionCodes)
-        } else {
-            group.directPositionCodes.push(...row.positionCodes)
+            continue
         }
+
+        group.directPositionCodes.push(...row.positionCodes)
     }
 
     return [...groups.values()]
@@ -495,45 +490,34 @@ export async function importEmployeeTypesFromRows({
     const groups = groupRows(rows)
 
     for (const group of groups) {
-        const hasDirectRows = group.directPositionCodes.length > 0
+        const hasDirectRows = group.directPositionCodes.length > 0 || group.positionAssignmentMode === "ALL_POSITIONS"
         const hasChildRows = group.childrenByCode.size > 0
 
         if (hasDirectRows && hasChildRows) {
-            errors.push(
-                buildImportError(
-                    group.rowNumbers[0],
-                    "childName",
-                    "errors.organization.employeeTypeImport.mixedDirectAndChild",
-                ),
-            )
+            errors.push(buildImportError(group.rowNumbers[0], "childCode", "errors.organization.employeeTypeImport.mixedDirectAndChild"))
+        }
+
+        const children = [...group.childrenByCode.values()]
+        const allPositionChildren = children.filter(
+            (child) => child.positionAssignmentMode === "ALL_POSITIONS",
+        )
+
+        if (allPositionChildren.length > 0 && children.length > 1) {
+            errors.push(buildImportError(group.rowNumbers[0], "childPositionAssignmentMode", "errors.organization.employeeTypeImport.childAllPositionAmbiguous"))
         }
 
         const allPositionCodes = [
             ...group.directPositionCodes,
-            ...[...group.childrenByCode.values()].flatMap(
-                (child) => child.positionCodes,
-            ),
+            ...children.flatMap((child) => child.positionCodes),
         ]
 
         if (hasDuplicate(allPositionCodes)) {
-            errors.push(
-                buildImportError(
-                    group.rowNumbers[0],
-                    "positionCodes",
-                    "errors.organization.employeeTypeImport.duplicatePositionInFile",
-                ),
-            )
+            errors.push(buildImportError(group.rowNumbers[0], "positionCodes", "errors.organization.employeeTypeImport.duplicatePositionInFile"))
         }
     }
 
     if (errors.length > 0) {
-        return {
-            totalRows: rows.length,
-            created: 0,
-            updated: 0,
-            skipped: rows.length,
-            errors,
-        }
+        return { totalRows: rows.length, created: 0, updated: 0, skipped: rows.length, errors }
     }
 
     let created = 0
@@ -544,13 +528,7 @@ export async function importEmployeeTypesFromRows({
         const company = await findCompanyByCode(group.companyCode)
 
         if (!company) {
-            errors.push(
-                buildImportError(
-                    group.rowNumbers[0],
-                    "companyCode",
-                    "errors.organization.employeeTypeImport.companyNotFound",
-                ),
-            )
+            errors.push(buildImportError(group.rowNumbers[0], "companyCode", "errors.organization.employeeTypeImport.companyNotFound"))
             skipped += group.rowNumbers.length
             continue
         }
@@ -558,9 +536,7 @@ export async function importEmployeeTypesFromRows({
         const allPositionCodes = [
             ...new Set([
                 ...group.directPositionCodes,
-                ...[...group.childrenByCode.values()].flatMap(
-                    (child) => child.positionCodes,
-                ),
+                ...[...group.childrenByCode.values()].flatMap((child) => child.positionCodes),
             ]),
         ]
 
@@ -568,23 +544,11 @@ export async function importEmployeeTypesFromRows({
             companyId: company._id,
             positionCodes: allPositionCodes,
         })
-
-        const positionByCode = new Map(
-            positions.map((position) => [position.code, position]),
-        )
-
-        const missingPositionCodes = allPositionCodes.filter(
-            (positionCode) => !positionByCode.has(positionCode),
-        )
+        const positionByCode = new Map(positions.map((position) => [position.code, position]))
+        const missingPositionCodes = allPositionCodes.filter((positionCode) => !positionByCode.has(positionCode))
 
         if (missingPositionCodes.length > 0) {
-            errors.push(
-                buildImportError(
-                    group.rowNumbers[0],
-                    "positionCodes",
-                    "errors.organization.employeeTypeImport.positionNotFound",
-                ),
-            )
+            errors.push(buildImportError(group.rowNumbers[0], "positionCodes", "errors.organization.employeeTypeImport.positionNotFound"))
             skipped += group.rowNumbers.length
             continue
         }
@@ -594,16 +558,18 @@ export async function importEmployeeTypesFromRows({
             code: group.employeeTypeCode,
         })
 
-        const directPositionIds = group.directPositionCodes.map(
-            (positionCode) => positionByCode.get(positionCode)._id,
-        )
+        const directPositionIds = group.positionAssignmentMode === "ALL_POSITIONS"
+            ? []
+            : group.directPositionCodes.map((positionCode) => positionByCode.get(positionCode)._id)
 
         const children = [...group.childrenByCode.values()].map((child) => ({
             code: child.code,
             name: child.name,
-            positionIds: child.positionCodes.map(
-                (positionCode) => positionByCode.get(positionCode)._id,
-            ),
+            dashboardCategory: child.dashboardCategory,
+            positionAssignmentMode: child.positionAssignmentMode,
+            positionIds: child.positionAssignmentMode === "ALL_POSITIONS"
+                ? []
+                : child.positionCodes.map((positionCode) => positionByCode.get(positionCode)._id),
         }))
 
         const allPositionIds = [
@@ -620,13 +586,7 @@ export async function importEmployeeTypesFromRows({
         })
 
         if (conflict) {
-            errors.push(
-                buildImportError(
-                    group.rowNumbers[0],
-                    "positionCodes",
-                    "errors.organization.employeeTypeImport.positionAlreadyMapped",
-                ),
-            )
+            errors.push(buildImportError(group.rowNumbers[0], "positionCodes", "errors.organization.employeeTypeImport.positionAlreadyMapped"))
             skipped += group.rowNumbers.length
             continue
         }
@@ -636,6 +596,10 @@ export async function importEmployeeTypesFromRows({
             code: group.employeeTypeCode,
             name: group.employeeTypeName,
             shortName: group.shortName,
+            dashboardCategory: group.dashboardCategory,
+            positionAssignmentMode: children.length > 0
+                ? "SPECIFIC_POSITIONS"
+                : group.positionAssignmentMode,
             positionIds: children.length > 0 ? [] : directPositionIds,
             children,
             status: group.status,
@@ -653,13 +617,7 @@ export async function importEmployeeTypesFromRows({
         }
 
         if (existingEmployeeType.status === "ARCHIVED") {
-            errors.push(
-                buildImportError(
-                    group.rowNumbers[0],
-                    "employeeTypeCode",
-                    "errors.organization.employeeType.archived",
-                ),
-            )
+            errors.push(buildImportError(group.rowNumbers[0], "employeeTypeCode", "errors.organization.employeeType.archived"))
             skipped += group.rowNumbers.length
             continue
         }
@@ -670,23 +628,15 @@ export async function importEmployeeTypesFromRows({
     }
 
     clearCacheByPrefix("employeeType:")
+    clearCacheByPrefix("employee:list:")
+    clearCacheByPrefix("hr-dashboard:")
 
-    return {
-        totalRows: rows.length,
-        created,
-        updated,
-        skipped,
-        errors,
-    }
+    return { totalRows: rows.length, created, updated, skipped, errors }
 }
 
 export async function getExportEmployeeTypes({ query, user }) {
     const result = await listEmployeeTypes({
-        query: {
-            ...query,
-            page: 1,
-            limit: 100,
-        },
+        query: { ...query, page: 1, limit: 100 },
         user,
     })
 
@@ -695,7 +645,6 @@ export async function getExportEmployeeTypes({ query, user }) {
 
 export async function buildEmployeeTypeExportWorkbook({ employeeTypes }) {
     const { workbook, worksheet } = buildWorkbookBase("Employee Types")
-
     worksheet.spliceRows(2, 0)
 
     for (const employeeType of employeeTypes) {
@@ -706,10 +655,18 @@ export async function buildEmployeeTypeExportWorkbook({ employeeTypes }) {
                     employeeTypeCode: employeeType.code,
                     employeeTypeName: employeeType.name,
                     shortName: employeeType.shortName || "",
+                    dashboardCategory: employeeType.dashboardCategory || "CUSTOM",
+                    positionAssignmentMode:
+                        employeeType.positionAssignmentMode || "SPECIFIC_POSITIONS",
+                    childCode: child.code,
                     childName: child.name,
-                    positionCodes: (child.positions || [])
-                        .map((position) => position.code)
-                        .join(","),
+                    childDashboardCategory: child.dashboardCategory || "CUSTOM",
+                    childPositionAssignmentMode:
+                        child.positionAssignmentMode || "SPECIFIC_POSITIONS",
+                    positionCodes:
+                        child.positionAssignmentMode === "ALL_POSITIONS"
+                            ? ""
+                            : (child.positions || []).map((position) => position.code).join(","),
                     status: employeeType.status,
                     description: employeeType.description || "",
                 })
@@ -723,10 +680,17 @@ export async function buildEmployeeTypeExportWorkbook({ employeeTypes }) {
             employeeTypeCode: employeeType.code,
             employeeTypeName: employeeType.name,
             shortName: employeeType.shortName || "",
+            dashboardCategory: employeeType.dashboardCategory || "CUSTOM",
+            positionAssignmentMode:
+                employeeType.positionAssignmentMode || "SPECIFIC_POSITIONS",
+            childCode: "",
             childName: "",
-            positionCodes: (employeeType.positions || [])
-                .map((position) => position.code)
-                .join(","),
+            childDashboardCategory: "",
+            childPositionAssignmentMode: "",
+            positionCodes:
+                employeeType.positionAssignmentMode === "ALL_POSITIONS"
+                    ? ""
+                    : (employeeType.positions || []).map((position) => position.code).join(","),
             status: employeeType.status,
             description: employeeType.description || "",
         })

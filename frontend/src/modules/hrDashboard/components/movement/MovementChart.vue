@@ -18,18 +18,12 @@ const props = defineProps({
 const { t } = useI18n()
 
 const width = 960
-const height = 220
-const padding = {
-    top: 18,
-    right: 20,
-    bottom: 34,
-    left: 42,
-}
-
+const height = 240
+const padding = { top: 22, right: 22, bottom: 40, left: 48 }
 const chartWidth = width - padding.left - padding.right
 const chartHeight = height - padding.top - padding.bottom
-const groupWidth = chartWidth / 12
-const barWidth = Math.min(13, groupWidth / 5)
+const groupWidth = computed(() => chartWidth / Math.max(1, props.rows.length || 12))
+const barWidth = computed(() => Math.min(13, groupWidth.value / 5))
 
 const maxValue = computed(() => {
     const values = props.rows.flatMap((row) => [
@@ -44,12 +38,9 @@ const maxValue = computed(() => {
 const gridLines = computed(() =>
     Array.from({ length: 5 }, (_, index) => {
         const ratio = index / 4
-        const value = Math.round(maxValue.value * (1 - ratio))
-        const y = padding.top + chartHeight * ratio
-
         return {
-            value,
-            y,
+            value: Math.round(maxValue.value * (1 - ratio)),
+            y: padding.top + chartHeight * ratio,
         }
     }),
 )
@@ -59,7 +50,7 @@ function barHeight(value) {
 }
 
 function groupX(index) {
-    return padding.left + index * groupWidth + groupWidth / 2
+    return padding.left + index * groupWidth.value + groupWidth.value / 2
 }
 </script>
 
@@ -96,7 +87,7 @@ function groupX(index) {
 
             <g
                 v-for="(row, index) in rows"
-                :key="row.month"
+                :key="row.key"
             >
                 <rect
                     v-if="row.key === selectedPeriodKey"
@@ -145,27 +136,15 @@ function groupX(index) {
         </svg>
 
         <div class="movement-chart__legend">
-            <span>
-                <i :style="{ background: dashboardColors.primaryBlue }" />
-                {{ t("hrDashboard.movement.in") }}
-            </span>
-
-            <span>
-                <i :style="{ background: dashboardColors.orange }" />
-                {{ t("hrDashboard.movement.out") }}
-            </span>
-
-            <span>
-                <i :style="{ background: dashboardColors.gray }" />
-                {{ t("hrDashboard.movement.balance") }}
-            </span>
+            <span><i :style="{ background: dashboardColors.primaryBlue }" />{{ t("hrDashboard.movement.in") }}</span>
+            <span><i :style="{ background: dashboardColors.orange }" />{{ t("hrDashboard.movement.out") }}</span>
+            <span><i :style="{ background: dashboardColors.gray }" />{{ t("hrDashboard.movement.balance") }}</span>
         </div>
     </div>
 </template>
 
 <style scoped>
 .movement-chart-wrap {
-    min-width: 0;
     overflow: hidden;
     border: 1px solid #7f8fa6;
     border-top: 0;
@@ -175,36 +154,35 @@ function groupX(index) {
 .movement-chart {
     display: block;
     width: 100%;
-    min-width: 0;
     height: auto;
 }
 
 .movement-chart__axis-label,
 .movement-chart__month {
     fill: #404040;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
 }
 
 .movement-chart__legend {
     display: flex;
     justify-content: center;
-    gap: 1rem;
-    padding: 0 0.6rem 0.45rem;
+    gap: 1.25rem;
+    padding: 0 0.75rem 0.6rem;
     color: #333333;
-    font-size: 0.64rem;
+    font-size: 0.7rem;
     font-weight: 700;
 }
 
 .movement-chart__legend span {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.35rem;
 }
 
 .movement-chart__legend i {
     display: inline-block;
-    width: 0.75rem;
-    height: 0.5rem;
+    width: 0.85rem;
+    height: 0.55rem;
 }
 </style>

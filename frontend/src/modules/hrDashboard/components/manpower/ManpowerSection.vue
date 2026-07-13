@@ -8,6 +8,10 @@ defineProps({
         type: String,
         required: true,
     },
+    subtitle: {
+        type: String,
+        default: "",
+    },
     rows: {
         type: Array,
         default: () => [],
@@ -21,7 +25,10 @@ defineProps({
 
 <template>
     <section class="dashboard-section">
-        <DashboardSectionHeader :title="title" />
+        <DashboardSectionHeader
+            :title="title"
+            :subtitle="subtitle"
+        />
 
         <ManpowerTable
             :rows="rows"

@@ -1,9 +1,8 @@
 export default {
     app: {
         name: "HRMS Enterprise",
-        subtitle: "Workforce Operations Platform",
+        subtitle: "Workforce Operations Platform"
     },
-
     common: {
         english: "English",
         khmer: "ខ្មែរ",
@@ -27,10 +26,8 @@ export default {
         success: "Success",
         next: "Next",
         yes: "Yes",
-        no: "No",
-        close: "Close",
+        no: "No"
     },
-
     nav: {
         accessControl: "Access Control",
         accounts: "Accounts",
@@ -51,15 +48,14 @@ export default {
         reports: "Reports",
         manpowerPlans: "Manpower Plans",
         employeeMovements: "Employee Movements",
-        reports: "Reports",
         attendance: "Attendance",
         attendanceRecords: "Attendance Records",
         attendancePolicies: "Attendance Policies",
         attendanceRawScans: "Raw Scan Import",
         attendanceVerification: "Attendance Verification",
         hrDashboard: "HR Dashboard",
+        recruitmentChannels: "Recruitment Channels"
     },
-
     attendance: {
         title: "Attendance Records",
         description: "Import, review, and correct daily employee attendance.",
@@ -92,9 +88,9 @@ export default {
             earlyLeave: "Early leave",
             missingIn: "Missing in",
             missingOut: "Missing out",
-            restDay: "Rest day",
+            restDay: "Rest day"
         },
-            policy: {
+        policy: {
             title: "Attendance Policies",
             description: "Configure grace periods, rounding, and automatic absence rules.",
             add: "Add Policy",
@@ -106,7 +102,7 @@ export default {
             lateRoundUnit: "Late Round Unit",
             earlyRoundUnit: "Early Leave Round Unit",
             autoAbsent: "Automatically generate absent records",
-            sundayRest: "Treat Sunday as a rest day",
+            sundayRest: "Treat Sunday as a rest day"
         },
         scan: {
             title: "Raw Attendance Scans",
@@ -116,7 +112,7 @@ export default {
             scannedAt: "Scanned At",
             direction: "Direction",
             device: "Device",
-            batch: "Import Batch",
+            batch: "Import Batch"
         },
         verification: {
             title: "Attendance Verification",
@@ -128,13 +124,12 @@ export default {
             employees: "Employees",
             processed: "Processed",
             review: "Needs Review",
-            skipped: "Skipped",
+            skipped: "Skipped"
         },
         attendanceDashboard: {
             eyebrow: "Attendance Analytics",
             title: "Attendance Dashboard",
-            description:
-                "Daily attendance analytics by employee, department, line, shift, and verification status. Uses verified attendance records and the internal calendar source of truth.",
+            description: "Daily attendance analytics by employee, department, line, shift, and verification status. Uses verified attendance records and the internal calendar source of truth.",
             loadFailed: "Unable to load attendance dashboard",
             lookupLoadFailed: "Unable to load dashboard filters",
             filters: {
@@ -147,7 +142,7 @@ export default {
                 allPositions: "All Positions",
                 allLines: "All Lines",
                 allShifts: "All Shifts",
-                allEmployeeTypes: "All Employee Types",
+                allEmployeeTypes: "All Employee Types"
             },
             cards: {
                 expectedEmployees: "Expected Employees",
@@ -158,7 +153,7 @@ export default {
                 earlyLeave: "Early Leave",
                 needsReview: "Needs Review",
                 holiday: "Holiday",
-                missing: "Missing Punch",
+                missing: "Missing Punch"
             },
             sections: {
                 statusBreakdown: "Status Breakdown",
@@ -168,7 +163,7 @@ export default {
                 shiftSummary: "Shift Summary",
                 needsReview: "Needs Review Records",
                 topLateEmployees: "Top Late Employees",
-                minutesSummary: "Minutes Summary",
+                minutesSummary: "Minutes Summary"
             },
             fields: {
                 lateDays: "Late Days",
@@ -176,16 +171,14 @@ export default {
                 maxLate: "Max Late",
                 totalWorked: "Total Worked",
                 totalEarlyLeave: "Total Early Leave",
-                presentRate: "Present Rate",
-            },
-        },
-},
-
+                presentRate: "Present Rate"
+            }
+        }
+    },
     hrDashboard: {
         eyebrow: "Phase 1 Workforce Analytics",
         title: "HR Dashboard",
-        description:
-            "General workforce data, manpower planning, and employee movement for the selected period.",
+        description: "General workforce data, manpower planning, and employee movement for the selected period.",
         loadFailed: "Unable to load the HR dashboard.",
         filters: {
             startDate: "Start date",
@@ -201,7 +194,7 @@ export default {
             allDepartments: "All departments",
             allPositions: "All positions",
             allLines: "All lines",
-            allEmployeeTypes: "All employee types",
+            allEmployeeTypes: "All employee types"
         },
         sections: {
             generalData: "General Data",
@@ -212,15 +205,23 @@ export default {
             whiteCollarMovement: "White Collar Movement",
             attendanceDashboard: "Attendance Dashboard",
             attendanceByLine: "Attendance by Line",
+            manpower: "Manpower",
+            recruitmentChannels: "Recruitment Channels",
+            movement: "Movement"
         },
         general: {
             totalEmployees: "Total employees",
             sewerEmployees: "Sewer employees",
-            averageAge: "Average age",
+            averageAge: "Avg. Age",
             sewerAverageAge: "Sewer average age",
-            averageService: "Average years of service",
+            averageService: "Years Of Service",
             sewerAverageService: "Sewer average service",
-            directIndirectRatio: "Direct / indirect ratio",
+            directIndirectRatio: "Indirect / Direct Ratio",
+            indirectDirectRatio: "Indirect / Direct Ratio",
+            total: "Total",
+            selected: "Selected",
+            actual: "Actual",
+            budget: "Budget"
         },
         manpower: {
             item: "Item",
@@ -228,45 +229,65 @@ export default {
             roadmap: "Roadmap",
             actual: "Actual",
             fillRate: "Fill rate",
-            chartAria: "Monthly manpower roadmap and actual chart",
+            chartAria: "Monthly manpower budget, roadmap, actual, and gap chart",
+            title: "Manpower",
+            subtitle: "Budget, roadmap, actual manpower, over/less target, over/less roadmap, and fill rate.",
+            empty: "No manpower data matched this filter.",
+            noData: "No manpower data",
+            chartTitle: "Manpower Graph",
+            chartSubtitle: "Compare budget, roadmap, actual, and gap values for the selected filter.",
+            tableTitle: "Manpower Summary",
+            tableSubtitle: "Manpower target and actual comparison.",
+            category: "Category",
+            total: "Total",
+            selected: "Selected",
+            overLessTarget: "Over / Less Target",
+            overLessRoadmap: "Over / Less Roadmap",
+            percent: "Percent",
+            employeeCount: "Employee count",
+            targetGap: "Target gap",
+            roadmapGap: "Roadmap gap",
+            over: "Over",
+            less: "Less",
+            balanced: "Balanced"
         },
         movement: {
             item: "Movement",
             in: "In",
             out: "Out",
             balance: "Balance",
-            chartAria: "Monthly employee movement chart",
+            chartAria: "Monthly employee movement chart"
         },
         units: {
-            years: "years",
+            years: "years"
         },
         months: {
-            1: "January",
-            2: "February",
-            3: "March",
-            4: "April",
-            5: "May",
-            6: "June",
-            7: "July",
-            8: "August",
-            9: "September",
-            10: "October",
-            11: "November",
-            12: "December",
+            "1": "January",
+            "2": "February",
+            "3": "March",
+            "4": "April",
+            "5": "May",
+            "6": "June",
+            "7": "July",
+            "8": "August",
+            "9": "September",
+            "10": "October",
+            "11": "November",
+            "12": "December"
         },
         monthsShort: {
-            1: "Jan",
-            2: "Feb",
-            3: "Mar",
-            4: "Apr",
-            5: "May",
-            6: "Jun",
-            7: "Jul",
-            8: "Aug",
-            9: "Sep",
-            10: "Oct",
-            11: "Nov",
-            12: "Dec",
+            "1": "Jan",
+            "2": "Feb",
+            "3": "Mar",
+            "4": "Apr",
+            "5": "May",
+            "6": "Jun",
+            "7": "Jul",
+            "8": "Aug",
+            "9": "Sep",
+            "10": "Oct",
+            "11": "Nov",
+            "12": "Dec"
         },
         attendance: {
             item: "Attendance",
@@ -282,33 +303,39 @@ export default {
             attendanceRate: "Attendance Rate",
             line: "Line",
             noLineData: "No attendance line data for the selected period.",
-            chartAria: "Monthly attendance present, absent, and late chart",
+            chartAria: "Monthly attendance present, absent, and late chart"
         },
+        noData: "No dashboard data matched this filter.",
+        recruitment: {
+            channels: "Channels",
+            previousAveragePerMonth: "Avg / Month",
+            targetPerMonth: "Target / Month",
+            averagePerMonth: "Avg / Month",
+            total: "Total",
+            noData: "No data",
+            previousYearChart: "Hiring Source Breakdown – {year}",
+            currentYearChart: "Hiring Source Breakdown – {year}"
+        }
     },
-
     auth: {
         systemAccess: "Secure system access",
         welcomeTitle: "One secure foundation for your workforce.",
-        welcomeDescription:
-            "Sign in with your authorized HRMS account to access modules according to your role, permissions, company, and branch scope.",
+        welcomeDescription: "Sign in with your authorized HRMS account to access modules according to your role, permissions, company, and branch scope.",
         securityPoint: "Backend-enforced security and audit-ready access",
         permissionPoint: "Flexible roles and permissions across every module",
         globalDesignPoint: "Global theme, dark mode, and language support",
         signIn: "Sign in",
-        signInDescription:
-            "Use the Super Admin account seeded in the backend.",
+        signInDescription: "Use the Super Admin account seeded in the backend.",
         loginId: "Login ID",
         loginIdPlaceholder: "Enter your login ID",
         password: "Password",
         passwordPlaceholder: "Enter your password",
-        rootAdministrator: "Root Administrator",
+        rootAdministrator: "Root Administrator"
     },
-
     workspace: {
         eyebrow: "Secure Workspace",
         welcome: "Welcome back, {name}",
-        description:
-            "Your session is authenticated by the backend. This workspace only displays access that the backend has authorized.",
+        description: "Your session is authenticated by the backend. This workspace only displays access that the backend has authorized.",
         authorizedUser: "Authorized User",
         backendConnection: "Backend API",
         apiConnected: "API connected",
@@ -320,23 +347,18 @@ export default {
         role: "Role",
         accessControl: "Access Control",
         effectivePermissions: "Effective permissions",
-        permissionDescription:
-            "Permissions are resolved by the backend from your active roles.",
+        permissionDescription: "Permissions are resolved by the backend from your active roles.",
         nextModule: "Next Secure Module",
         organizationTitle: "Company and Branch Management",
-        organizationDescription:
-            "Root Admin can now create and manage companies through protected backend API routes and this interface.",
+        organizationDescription: "Root Admin can now create and manage companies through protected backend API routes and this interface.",
         permissionPreview: "Permission Preview",
-        permissionPreviewDescription:
-            "These are the permission codes returned by the backend for this signed-in user.",
-        morePermissions: "+{count} more permissions",
+        permissionPreviewDescription: "These are the permission codes returned by the backend for this signed-in user.",
+        morePermissions: "+{count} more permissions"
     },
-
     foundation: {
         eyebrow: "System Foundation",
         title: "HRMS Enterprise is ready for secure module development.",
-        description:
-            "Theme, language, API communication, and global response rules are working from one shared foundation.",
+        description: "Theme, language, API communication, and global response rules are working from one shared foundation.",
         apiConnection: "Backend API",
         databaseConnection: "MongoDB Atlas",
         language: "Language",
@@ -347,21 +369,18 @@ export default {
         databasePending: "Database will be connected in the next step",
         databaseConnected: "Database connected",
         lastChecked: "Last checked",
-        noCheckYet: "Not checked yet",
+        noCheckYet: "Not checked yet"
     },
-
     organization: {
         company: {
             eyebrow: "Organization Setup",
             title: "Companies",
-            description:
-                "Create and manage legal companies from the HRMS interface. Every action is authenticated, permission-protected, and validated by the backend.",
+            description: "Create and manage legal companies from the HRMS interface. Every action is authenticated, permission-protected, and validated by the backend.",
             newCompany: "New Company",
             createTitle: "Create Company",
             editTitle: "Edit Company",
             archiveTitle: "Archive Company",
-            archiveMessage:
-                "Are you sure you want to archive {name}? Archived companies are kept for history and cannot be hard deleted.",
+            archiveMessage: "Are you sure you want to archive {name}? Archived companies are kept for history and cannot be hard deleted.",
             searchPlaceholder: "Search code, name, registration, tax...",
             empty: "No companies found.",
             loadFailed: "Unable to load companies",
@@ -404,20 +423,17 @@ export default {
             city: "City",
             stateProvince: "State / Province",
             postalCode: "Postal Code",
-            countryCode: "Country Code",
+            countryCode: "Country Code"
         },
-
         branch: {
             eyebrow: "Organization Setup",
             title: "Branches",
-            description:
-                "Create and manage company branches, factories, offices, and operating locations. Every branch belongs to one company and is permission-protected by the backend.",
+            description: "Create and manage company branches, factories, offices, and operating locations. Every branch belongs to one company and is permission-protected by the backend.",
             newBranch: "New Branch",
             createTitle: "Create Branch",
             editTitle: "Edit Branch",
             archiveTitle: "Archive Branch",
-            archiveMessage:
-                "Are you sure you want to archive {name}? Archived branches are kept for history and cannot be hard deleted.",
+            archiveMessage: "Are you sure you want to archive {name}? Archived branches are kept for history and cannot be hard deleted.",
             searchPlaceholder: "Search code, name, phone, email, city...",
             empty: "No branches found.",
             loadFailed: "Unable to load branches",
@@ -459,20 +475,17 @@ export default {
             city: "City",
             stateProvince: "State / Province",
             postalCode: "Postal Code",
-            countryCode: "Country Code",
+            countryCode: "Country Code"
         },
-
         department: {
             eyebrow: "Organization Setup",
             title: "Departments",
-            description:
-                "Create, import, export, and manage departments under each company branch. Departments become the foundation for positions, employees, shifts, attendance, payroll, and dashboard reporting.",
+            description: "Create, import, export, and manage departments under each company branch. Departments become the foundation for positions, employees, shifts, attendance, payroll, and dashboard reporting.",
             newDepartment: "New Department",
             createTitle: "Create Department",
             editTitle: "Edit Department",
             archiveTitle: "Archive Department",
-            archiveMessage:
-                "Are you sure you want to archive {name}? Archived departments are kept for history and cannot be hard deleted.",
+            archiveMessage: "Are you sure you want to archive {name}? Archived departments are kept for history and cannot be hard deleted.",
             searchPlaceholder: "Search code, name, short name, description...",
             empty: "No departments found.",
             loadFailed: "Unable to load departments",
@@ -512,8 +525,7 @@ export default {
             importExcel: "Import Excel",
             exportExcel: "Export Excel",
             importTitle: "Import Departments",
-            importDescription:
-                "Upload the Excel file using the exact sample template columns. Existing department codes in the same branch will be updated; new codes will be created.",
+            importDescription: "Upload the Excel file using the exact sample template columns. Existing department codes in the same branch will be updated; new codes will be created.",
             importFileMissing: "No file selected",
             importCompleted: "Import completed",
             importCompletedDetail: "Department import completed successfully.",
@@ -529,24 +541,21 @@ export default {
             errorMessage: "Message",
             importClean: "No validation errors found.",
             templateDownloaded: "Sample downloaded",
-            templateDownloadedDetail:
-                "Use this Excel template to prepare department imports.",
+            templateDownloadedDetail: "Use this Excel template to prepare department imports.",
             templateDownloadFailed: "Unable to download sample",
             exportStarted: "Export downloaded",
             exportStartedDetail: "Department export file has been downloaded.",
-            exportFailed: "Unable to export departments",
+            exportFailed: "Unable to export departments"
         },
         position: {
             eyebrow: "Organization Setup",
             title: "Positions",
-            description:
-                "Create and manage job positions under each department. Position hierarchy is used later for employees, manager chains, approvals, dashboards, and access scope.",
+            description: "Create and manage job positions under each department. Position hierarchy is used later for employees, manager chains, approvals, dashboards, and access scope.",
             newPosition: "New Position",
             createTitle: "Create Position",
             editTitle: "Edit Position",
             archiveTitle: "Archive Position",
-            archiveMessage:
-                "Are you sure you want to archive {name}? Archived positions are kept for history and cannot be hard deleted.",
+            archiveMessage: "Are you sure you want to archive {name}? Archived positions are kept for history and cannot be hard deleted.",
             searchPlaceholder: "Search code, title, short name, description...",
             empty: "No positions found.",
             loadFailed: "Unable to load positions",
@@ -589,27 +598,23 @@ export default {
             statusInactive: "Inactive",
             statusArchived: "Archived",
             updatedAt: "Updated",
-
             downloadSample: "Download Sample",
             importExcel: "Import Excel",
             exportExcel: "Export Excel",
             sampleDownloaded: "Sample downloaded",
-            sampleDownloadedDetail:
-                "The position import sample has been downloaded.",
+            sampleDownloadedDetail: "The position import sample has been downloaded.",
             sampleDownloadFailed: "Unable to download sample",
             exported: "Export ready",
             exportedDetail: "The positions export has been downloaded.",
             exportFailed: "Unable to export positions",
             importTitle: "Import Positions",
-            importDescription:
-                "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
+            importDescription: "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
             importFileRequired: "Excel file required",
             importFileRequiredDetail: "Please choose an Excel file before importing.",
             importProgress: "Processing... {percent}%",
             importFinished: "Import finished",
             importFinishedSuccess: "Positions were imported successfully.",
-            importFinishedWithErrors:
-                "Import finished with validation errors. Please review the result.",
+            importFinishedWithErrors: "Import finished with validation errors. Please review the result.",
             importFailed: "Unable to import positions",
             importResultTitle: "Position Import Result",
             totalRows: "Total Rows",
@@ -619,19 +624,17 @@ export default {
             validationErrors: "Validation Errors",
             rowNumber: "Row",
             field: "Field",
-            issue: "Issue",
+            issue: "Issue"
         },
         line: {
             eyebrow: "Organization Setup",
             title: "Lines",
-            description:
-                "Create and manage production lines under each department. Lines connect positions to employees and become important for approval chains, attendance, OT, and manpower reporting.",
+            description: "Create and manage production lines under each department. Lines connect positions to employees and become important for approval chains, attendance, OT, and manpower reporting.",
             newLine: "New Line",
             createTitle: "Create Line",
             editTitle: "Edit Line",
             archiveTitle: "Archive Line",
-            archiveMessage:
-                "Are you sure you want to archive {name}? Archived lines are kept for history and cannot be hard deleted.",
+            archiveMessage: "Are you sure you want to archive {name}? Archived lines are kept for history and cannot be hard deleted.",
             searchPlaceholder: "Search code, name, short name, description...",
             empty: "No lines found.",
             loadFailed: "Unable to load lines",
@@ -665,8 +668,7 @@ export default {
             lineName: "Line",
             shortName: "Short Name",
             allowedPositions: "Allowed Positions",
-            allowedPositionsHelp:
-                "Leave blank if this line can use all active positions in the selected department.",
+            allowedPositionsHelp: "Leave blank if this line can use all active positions in the selected department.",
             allDepartmentPositions: "All department positions",
             leaderPosition: "Leader Position",
             noLeaderPosition: "No Leader Position",
@@ -677,7 +679,6 @@ export default {
             statusInactive: "Inactive",
             statusArchived: "Archived",
             updatedAt: "Updated",
-
             downloadSample: "Download Sample",
             importExcel: "Import Excel",
             exportExcel: "Export Excel",
@@ -688,15 +689,13 @@ export default {
             exportedDetail: "The lines export has been downloaded.",
             exportFailed: "Unable to export lines",
             importTitle: "Import Lines",
-            importDescription:
-                "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
+            importDescription: "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
             importFileRequired: "Excel file required",
             importFileRequiredDetail: "Please choose an Excel file before importing.",
             importProgress: "Processing... {percent}%",
             importFinished: "Import finished",
             importFinishedSuccess: "Lines were imported successfully.",
-            importFinishedWithErrors:
-                "Import finished with validation errors. Please review the result.",
+            importFinishedWithErrors: "Import finished with validation errors. Please review the result.",
             importFailed: "Unable to import lines",
             importResultTitle: "Line Import Result",
             totalRows: "Total Rows",
@@ -706,19 +705,17 @@ export default {
             validationErrors: "Validation Errors",
             rowNumber: "Row",
             field: "Field",
-            issue: "Issue",
+            issue: "Issue"
         },
         shift: {
             eyebrow: "Organization Setup",
             title: "Shifts",
-            description:
-                "Create and manage branch working shifts. Shift rules are used later by employees, attendance, OT, late/early calculation, and payroll.",
+            description: "Create and manage branch working shifts. Shift rules are used later by employees, attendance, OT, late/early calculation, and payroll.",
             newShift: "New Shift",
             createTitle: "Create Shift",
             editTitle: "Edit Shift",
             archiveTitle: "Archive Shift",
-            archiveMessage:
-                "Are you sure you want to archive {name}? Archived shifts are kept for history and cannot be hard deleted.",
+            archiveMessage: "Are you sure you want to archive {name}? Archived shifts are kept for history and cannot be hard deleted.",
             searchPlaceholder: "Search code, name, short name, description...",
             empty: "No shifts found.",
             loadFailed: "Unable to load shifts",
@@ -733,7 +730,6 @@ export default {
             archived: "Shift archived",
             archivedDetail: "The shift was archived successfully.",
             readOnly: "Archived",
-
             basicInfo: "Basic Information",
             timeInfo: "Time Information",
             allCompanies: "All Companies",
@@ -767,7 +763,6 @@ export default {
             statusInactive: "Inactive",
             statusArchived: "Archived",
             updatedAt: "Updated",
-
             downloadSample: "Download Sample",
             importExcel: "Import Excel",
             exportExcel: "Export Excel",
@@ -778,15 +773,13 @@ export default {
             exportedDetail: "The shifts export has been downloaded.",
             exportFailed: "Unable to export shifts",
             importTitle: "Import Shifts",
-            importDescription:
-                "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
+            importDescription: "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
             importFileRequired: "Excel file required",
             importFileRequiredDetail: "Please choose an Excel file before importing.",
             importProgress: "Processing... {percent}%",
             importFinished: "Import finished",
             importFinishedSuccess: "Shifts were imported successfully.",
-            importFinishedWithErrors:
-                "Import finished with validation errors. Please review the result.",
+            importFinishedWithErrors: "Import finished with validation errors. Please review the result.",
             importFailed: "Unable to import shifts",
             importResultTitle: "Shift Import Result",
             totalRows: "Total Rows",
@@ -796,19 +789,17 @@ export default {
             validationErrors: "Validation Errors",
             rowNumber: "Row",
             field: "Field",
-            issue: "Issue",
+            issue: "Issue"
         },
         employeeType: {
             eyebrow: "Organization Setup",
             title: "Employee Types",
-            description:
-                "Create employee types such as Blue Collar and White Collar. A type can map positions directly, or it can have child groups such as Direct and Indirect.",
+            description: "Create employee types such as Blue Collar and White Collar. A type can map positions directly, or it can have child groups such as Direct and Indirect.",
             newEmployeeType: "New Employee Type",
             createTitle: "Create Employee Type",
             editTitle: "Edit Employee Type",
             archiveTitle: "Archive Employee Type",
-            archiveMessage:
-                "Are you sure you want to archive {name}? Archived employee types are kept for history and cannot be hard deleted.",
+            archiveMessage: "Are you sure you want to archive {name}? Archived employee types are kept for history and cannot be hard deleted.",
             searchPlaceholder: "Search code, name, short name, child name, description...",
             empty: "No employee types found.",
             loadFailed: "Unable to load employee types",
@@ -842,15 +833,13 @@ export default {
             assignmentMode: "Position Assignment",
             directPositions: "Add positions directly",
             childGroups: "Use child groups",
-            directPositionsHelp:
-                "Use this when the employee type directly owns positions, for example White Collar → HR Manager.",
+            directPositionsHelp: "Use this when the employee type directly owns positions, for example White Collar → HR Manager.",
             children: "Child Groups",
             child: "Child",
             childName: "Child Name",
             addChild: "Add Child",
             removeChild: "Remove child",
-            childrenHelp:
-                "Use this when the type has groups, for example Blue Collar → Direct → Sewer and Blue Collar → Indirect → Cutter.",
+            childrenHelp: "Use this when the type has groups, for example Blue Collar → Direct → Sewer and Blue Collar → Indirect → Cutter.",
             descriptionLabel: "Description",
             status: "Status",
             statusAll: "All Statuses",
@@ -858,27 +847,23 @@ export default {
             statusInactive: "Inactive",
             statusArchived: "Archived",
             updatedAt: "Updated",
-
             downloadSample: "Download Sample",
             importExcel: "Import Excel",
             exportExcel: "Export Excel",
             sampleDownloaded: "Sample downloaded",
-            sampleDownloadedDetail:
-                "The employee type import sample has been downloaded.",
+            sampleDownloadedDetail: "The employee type import sample has been downloaded.",
             sampleDownloadFailed: "Unable to download sample",
             exported: "Export ready",
             exportedDetail: "The employee types export has been downloaded.",
             exportFailed: "Unable to export employee types",
             importTitle: "Import Employee Types",
-            importDescription:
-                "Upload the completed Excel template. Leave childName empty for direct positions. Fill childName for grouped positions such as Direct or Indirect.",
+            importDescription: "Upload the completed Excel template. Leave childName empty for direct positions. Fill childName for grouped positions such as Direct or Indirect.",
             importFileRequired: "Excel file required",
             importFileRequiredDetail: "Please choose an Excel file before importing.",
             importProgress: "Processing... {percent}%",
             importFinished: "Import finished",
             importFinishedSuccess: "Employee types were imported successfully.",
-            importFinishedWithErrors:
-                "Import finished with validation errors. Please review the result.",
+            importFinishedWithErrors: "Import finished with validation errors. Please review the result.",
             importFailed: "Unable to import employee types",
             importResultTitle: "Employee Type Import Result",
             totalRows: "Total Rows",
@@ -888,27 +873,24 @@ export default {
             validationErrors: "Validation Errors",
             rowNumber: "Row",
             field: "Field",
-            issue: "Issue",
+            issue: "Issue"
         },
-
         location: {
             eyebrow: "Organization Setup",
             title: "Location Master",
-            description:
-                "Create and manage reusable address masters for employee place of birth, current address, permanent address, and family address.",
+            description: "Create and manage reusable address masters for employee place of birth, current address, permanent address, and family address.",
             tabs: {
                 countries: "Countries",
                 provinces: "Provinces",
                 districts: "Districts",
                 communes: "Communes",
-                villages: "Villages",
+                villages: "Villages"
             },
             newLocation: "New {entity}",
             createTitle: "Create {entity}",
             editTitle: "Edit {entity}",
             archiveTitle: "Archive Location",
-            archiveMessage:
-                "Are you sure you want to archive {name}? Archived locations are kept for history and cannot be hard deleted.",
+            archiveMessage: "Are you sure you want to archive {name}? Archived locations are kept for history and cannot be hard deleted.",
             searchPlaceholder: "Search code, name, short name, nationality...",
             empty: "No {entity} found.",
             loadFailed: "Unable to load locations",
@@ -954,8 +936,7 @@ export default {
             importExcel: "Import Excel",
             exportExcel: "Export Excel",
             importTitle: "Import {entity}",
-            importDescription:
-                "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
+            importDescription: "Upload the completed Excel template. Keep the same columns as the downloaded sample.",
             importFileRequired: "Excel file required",
             importFileRequiredDetail: "Please choose an Excel file before importing.",
             importResultTitle: "Location Import Result",
@@ -963,7 +944,7 @@ export default {
             importCreated: "Created",
             importFailedCount: "Failed",
             importErrors: "Validation Errors",
-            pagination: "Page {page} of {totalPages} · {total} records",
+            pagination: "Page {page} of {totalPages} · {total} records"
         },
         employee: {
             profile: {
@@ -973,6 +954,10 @@ export default {
                 employeeCodeExists: "This employee ID already exists.",
                 positionNotAllowedInLine: "Selected position is not allowed in selected line.",
                 resignDateRequired: "Resign date is required for this employment status.",
+                recruitmentChannelInvalidId: "Invalid recruitment channel ID.",
+                recruitmentChannelNotFound: "Recruitment channel was not found or is archived.",
+                recruitmentChannelCompanyMismatch: "Recruitment channel does not belong to the selected company.",
+                recruitmentChannelBranchMismatch: "Recruitment channel does not belong to the selected branch."
             },
             import: {
                 fileRequired: "Please choose an Excel file to import.",
@@ -991,8 +976,11 @@ export default {
                 positionNotFound: "Position was not found.",
                 lineNotFound: "Line was not found.",
                 shiftNotFound: "Shift was not found.",
-                introducerNotFound: "Introducer employee was not found.",
+                introducerNotFound: "Introducer employee was not found."
             },
+            recruitmentChannel: "Recruitment Channel",
+            selectRecruitmentChannel: "Select recruitment channel",
+            sourceOfHiring: "Source of hiring"
         },
         approval: {
             policy: {
@@ -1003,8 +991,8 @@ export default {
                 invalidReference: "One or more approval policy references are invalid.",
                 noPolicyMatched: "No approval policy matched this employee assignment.",
                 requiredApproverMissing: "One or more required approvers could not be resolved.",
-                assignmentRequired: "Assignment is required to resolve approval chain.",
-            },
+                assignmentRequired: "Assignment is required to resolve approval chain."
+            }
         },
         calendar: {
             scope: {
@@ -1012,13 +1000,13 @@ export default {
                 GLOBAL: "Global",
                 COMPANY: "Company",
                 BRANCH: "Branch",
-                DEFAULT: "Default",
+                DEFAULT: "Default"
             },
             status: {
                 ALL: "All Statuses",
                 ACTIVE: "Active",
                 INACTIVE: "Inactive",
-                ARCHIVED: "Archived",
+                ARCHIVED: "Archived"
             },
             dayTypes: {
                 ALL: "All Day Types",
@@ -1027,7 +1015,7 @@ export default {
                 HOLIDAY: "Holiday",
                 SPECIAL_WORKING_DAY: "Special Working Day",
                 COMPANY_EVENT: "Company Event",
-                CLOSED_DAY: "Closed Day",
+                CLOSED_DAY: "Closed Day"
             },
             day: {
                 eyebrow: "Internal Calendar",
@@ -1082,30 +1070,91 @@ export default {
                 validationErrors: "Validation Errors",
                 rowNumber: "Row",
                 field: "Field",
-                issue: "Issue",
-            },
+                issue: "Issue"
+            }
+        },
+        recruitmentChannel: {
+            title: "Recruitment Channels",
+            create: "New Channel",
+            createTitle: "Create Recruitment Channel",
+            editTitle: "Edit Recruitment Channel",
+            archiveTitle: "Archive Recruitment Channel",
+            archiveConfirm: "Archive recruitment channel",
+            searchPlaceholder: "Search code, name, or short name...",
+            allCompanies: "All companies",
+            allBranches: "All branches",
+            global: "Global",
+            globalCompany: "Global / all companies",
+            globalBranch: "All branches",
+            company: "Company",
+            branch: "Branch",
+            scope: "Scope",
+            code: "Code",
+            name: "Name",
+            shortName: "Short name",
+            targetMonthly: "Target / Month",
+            sortOrder: "Sort order",
+            status: "Status",
+            description: "Description",
+            statusAll: "All statuses",
+            statusActive: "Active",
+            statusInactive: "Inactive",
+            statusArchived: "Archived",
+            saved: "Recruitment channel saved.",
+            archived: "Recruitment channel archived.",
+            saveFailed: "Unable to save recruitment channel.",
+            archiveFailed: "Unable to archive recruitment channel.",
+            lookupLoadFailed: "Unable to load company or branch options."
         }
-
-
     },
-
     manpowerPlan: {
         title: "Manpower Plans",
         description: "Monthly budget and roadmap targets for dashboard comparison.",
-        sample: "Sample", import: "Import", export: "Export", new: "New", search: "Search",
-        company: "Company", branch: "Branch", year: "Year", month: "Month", employeeType: "Employee Type",
-        status: "Status", apply: "Apply", department: "Department", position: "Position", line: "Line",
-        shift: "Shift", type: "Type", budget: "Budget", roadmap: "Roadmap", action: "Action",
-        childGroup: "Child Group", targetBudget: "Target Budget", targetRoadmap: "Target Roadmap", remark: "Remark",
-        createTitle: "Create Manpower Plan", editTitle: "Edit Manpower Plan",
-        archiveTitle: "Archive Manpower Plan", archiveMessage: "Archive this manpower plan?", archive: "Archive",
-        importTitle: "Import Manpower Plans", importResultTitle: "Import Result", chooseFile: "Choose Excel file",
-        all: "All", active: "Active", inactive: "Inactive", archived: "Archived", allMonths: "All Months",
-        loadFailed: "Unable to load manpower plans", saveFailed: "Unable to save manpower plan",
-        archiveFailed: "Unable to archive manpower plan", importFailed: "Unable to import manpower plans",
-        created: "Manpower plan created", updated: "Manpower plan updated", archivedMessage: "Manpower plan archived",
+        sample: "Sample",
+        import: "Import",
+        export: "Export",
+        new: "New",
+        search: "Search",
+        company: "Company",
+        branch: "Branch",
+        year: "Year",
+        month: "Month",
+        employeeType: "Employee Type",
+        status: "Status",
+        apply: "Apply",
+        department: "Department",
+        position: "Position",
+        line: "Line",
+        shift: "Shift",
+        type: "Type",
+        budget: "Budget",
+        roadmap: "Roadmap",
+        action: "Action",
+        childGroup: "Child Group",
+        targetBudget: "Target Budget",
+        targetRoadmap: "Target Roadmap",
+        remark: "Remark",
+        createTitle: "Create Manpower Plan",
+        editTitle: "Edit Manpower Plan",
+        archiveTitle: "Archive Manpower Plan",
+        archiveMessage: "Archive this manpower plan?",
+        archive: "Archive",
+        importTitle: "Import Manpower Plans",
+        importResultTitle: "Import Result",
+        chooseFile: "Choose Excel file",
+        all: "All",
+        active: "Active",
+        inactive: "Inactive",
+        archived: "Archived",
+        allMonths: "All Months",
+        loadFailed: "Unable to load manpower plans",
+        saveFailed: "Unable to save manpower plan",
+        archiveFailed: "Unable to archive manpower plan",
+        importFailed: "Unable to import manpower plans",
+        created: "Manpower plan created",
+        updated: "Manpower plan updated",
+        archivedMessage: "Manpower plan archived"
     },
-
     errors: {
         internal: "An unexpected system error occurred.",
         routeNotFound: "The requested route was not found.",
@@ -1114,236 +1163,177 @@ export default {
         authInvalidCredentials: "Login ID or password is incorrect.",
         authTokenRequired: "Your session has expired. Please sign in again.",
         authTokenInvalid: "Your session is invalid. Please sign in again.",
-        authTokenRevoked:
-            "Your session is no longer valid. Please sign in again.",
-        authAccountUnavailable:
-            "This account is unavailable. Please contact a system administrator.",
+        authTokenRevoked: "Your session is no longer valid. Please sign in again.",
+        authAccountUnavailable: "This account is unavailable. Please contact a system administrator.",
         permissionDenied: "You do not have permission to perform this action.",
-
         location: {
             entityNotFound: "Location type was not found.",
             import: {
                 fileRequired: "Please choose an Excel file to import.",
-                hasErrors: "The import finished with validation errors. Please review the result.",
+                hasErrors: "The import finished with validation errors. Please review the result."
             },
             country: {
                 invalidId: "Invalid country ID.",
                 notFound: "Country was not found.",
                 codeExists: "This country code already exists.",
-                hasChildren: "This country has active provinces and cannot be archived.",
+                hasChildren: "This country has active provinces and cannot be archived."
             },
             province: {
                 invalidId: "Invalid province ID.",
                 notFound: "Province was not found.",
                 codeExists: "This province code already exists inside the selected country.",
                 parentMismatch: "Province does not belong to the selected country.",
-                hasChildren: "This province has active districts and cannot be archived.",
+                hasChildren: "This province has active districts and cannot be archived."
             },
             district: {
                 invalidId: "Invalid district ID.",
                 notFound: "District was not found.",
                 codeExists: "This district code already exists inside the selected province.",
                 parentMismatch: "District does not belong to the selected province.",
-                hasChildren: "This district has active communes and cannot be archived.",
+                hasChildren: "This district has active communes and cannot be archived."
             },
             commune: {
                 invalidId: "Invalid commune ID.",
                 notFound: "Commune was not found.",
                 codeExists: "This commune code already exists inside the selected district.",
                 parentMismatch: "Commune does not belong to the selected district.",
-                hasChildren: "This commune has active villages and cannot be archived.",
+                hasChildren: "This commune has active villages and cannot be archived."
             },
             village: {
                 invalidId: "Invalid village ID.",
                 notFound: "Village was not found.",
-                codeExists: "This village code already exists inside the selected commune.",
-            },
+                codeExists: "This village code already exists inside the selected commune."
+            }
         },
-
         organization: {
             company: {
                 invalidId: "Invalid company ID.",
                 notFound: "Company was not found.",
                 archived: "This company is archived and cannot be used.",
                 codeExists: "This company code already exists.",
-                duplicate: "This company already exists.",
+                duplicate: "This company already exists."
             },
-
             branch: {
                 invalidId: "Invalid branch ID.",
                 notFound: "Branch was not found.",
                 archived: "This branch is archived and cannot be used.",
-                codeExists:
-                    "This branch code already exists inside the selected company.",
-                headOfficeExists:
-                    "This company already has one Head Office branch.",
-                duplicate: "This branch already exists.",
+                codeExists: "This branch code already exists inside the selected company.",
+                headOfficeExists: "This company already has one Head Office branch.",
+                duplicate: "This branch already exists."
             },
-
             department: {
                 invalidId: "Invalid department ID.",
                 notFound: "Department was not found.",
-                parentNotFound:
-                    "Parent department was not found in the selected branch.",
+                parentNotFound: "Parent department was not found in the selected branch.",
                 parentSelf: "A department cannot be its own parent.",
-                hasChildren:
-                    "This department has active child departments and cannot be archived.",
-                codeExists:
-                    "This department code already exists inside the selected branch.",
-                duplicate: "This department already exists.",
+                hasChildren: "This department has active child departments and cannot be archived.",
+                codeExists: "This department code already exists inside the selected branch.",
+                duplicate: "This department already exists."
             },
-
             departmentImport: {
                 fileRequired: "Please choose an Excel file to import.",
-                invalidTemplate:
-                    "Invalid Excel template. Please download the sample template and use the same columns.",
+                invalidTemplate: "Invalid Excel template. Please download the sample template and use the same columns.",
                 emptyFile: "The uploaded Excel file is empty.",
-                noDataRows:
-                    "The Excel file has no department rows to import.",
-                hasErrors:
-                    "The import finished with validation errors. Please review the result.",
+                noDataRows: "The Excel file has no department rows to import.",
+                hasErrors: "The import finished with validation errors. Please review the result.",
                 companyCodeRequired: "Company code is required.",
                 branchCodeRequired: "Branch code is required.",
                 departmentCodeRequired: "Department code is required.",
-                departmentCodeInvalid:
-                    "Department code must be 2-30 characters and use letters, numbers, dash, or underscore only.",
+                departmentCodeInvalid: "Department code must be 2-30 characters and use letters, numbers, dash, or underscore only.",
                 departmentNameRequired: "Department name is required.",
                 statusInvalid: "Status must be ACTIVE or INACTIVE.",
-                companyNotFound:
-                    "Company code was not found or the company is archived.",
-                branchNotFound:
-                    "Branch code was not found inside the selected company or the branch is archived.",
-                duplicateInFile:
-                    "Duplicate department code found in this Excel file for the same branch.",
+                companyNotFound: "Company code was not found or the company is archived.",
+                branchNotFound: "Branch code was not found inside the selected company or the branch is archived.",
+                duplicateInFile: "Duplicate department code found in this Excel file for the same branch."
             },
             position: {
                 invalidId: "Invalid position ID.",
                 notFound: "Position was not found.",
-                reportsToNotFound:
-                    "Reports-to position was not found in the selected branch.",
+                reportsToNotFound: "Reports-to position was not found in the selected branch.",
                 reportsToSelf: "A position cannot report to itself.",
-                hasReportingPositions:
-                    "This position has active reporting positions and cannot be archived.",
-                codeExists:
-                    "This position code already exists inside the selected department.",
-                duplicate: "This position already exists.",
+                hasReportingPositions: "This position has active reporting positions and cannot be archived.",
+                codeExists: "This position code already exists inside the selected department.",
+                duplicate: "This position already exists."
             },
-
             positionImport: {
                 fileRequired: "Please choose an Excel file to import.",
-                invalidTemplate:
-                    "Invalid Excel template. Please download the sample template and use the same columns.",
+                invalidTemplate: "Invalid Excel template. Please download the sample template and use the same columns.",
                 emptyFile: "The uploaded Excel file is empty.",
                 noDataRows: "The Excel file has no position rows to import.",
-                hasErrors:
-                    "The import finished with validation errors. Please review the result.",
+                hasErrors: "The import finished with validation errors. Please review the result.",
                 companyCodeRequired: "Company code is required.",
                 branchCodeRequired: "Branch code is required.",
                 departmentCodeRequired: "Department code is required.",
                 positionCodeRequired: "Position code is required.",
-                positionCodeInvalid:
-                    "Position code must be 2-30 characters and use letters, numbers, dash, or underscore only.",
+                positionCodeInvalid: "Position code must be 2-30 characters and use letters, numbers, dash, or underscore only.",
                 positionTitleRequired: "Position title is required.",
                 levelInvalid: "Level must be a whole number from 0 to 99.",
-                isManagerInvalid:
-                    "Is Manager must be YES, NO, TRUE, FALSE, 1, or 0.",
+                isManagerInvalid: "Is Manager must be YES, NO, TRUE, FALSE, 1, or 0.",
                 statusInvalid: "Status must be ACTIVE or INACTIVE.",
-                companyNotFound:
-                    "Company code was not found or the company is archived.",
-                branchNotFound:
-                    "Branch code was not found inside the selected company or the branch is archived.",
-                departmentNotFound:
-                    "Department code was not found inside the selected branch or the department is archived.",
-                duplicateInFile:
-                    "Duplicate position code found in this Excel file for the same department.",
+                companyNotFound: "Company code was not found or the company is archived.",
+                branchNotFound: "Branch code was not found inside the selected company or the branch is archived.",
+                departmentNotFound: "Department code was not found inside the selected branch or the department is archived.",
+                duplicateInFile: "Duplicate position code found in this Excel file for the same department."
             },
             line: {
                 invalidId: "Invalid line ID.",
                 notFound: "Line was not found.",
                 archived: "This line is archived and cannot be updated.",
-                codeExists:
-                    "This line code already exists inside the selected department.",
+                codeExists: "This line code already exists inside the selected department.",
                 duplicate: "This line already exists.",
-                positionNotFound:
-                    "One or more selected positions were not found in the selected department.",
-                leaderPositionNotFound:
-                    "Leader position was not found in the selected department.",
-                leaderPositionNotAllowed:
-                    "Leader position must be included in allowed positions.",
+                positionNotFound: "One or more selected positions were not found in the selected department.",
+                leaderPositionNotFound: "Leader position was not found in the selected department.",
+                leaderPositionNotAllowed: "Leader position must be included in allowed positions."
             },
-
             lineImport: {
                 fileRequired: "Please choose an Excel file to import.",
-                invalidTemplate:
-                    "Invalid Excel template. Please download the sample template and use the same columns.",
+                invalidTemplate: "Invalid Excel template. Please download the sample template and use the same columns.",
                 emptyFile: "The uploaded Excel file is empty.",
                 noDataRows: "The Excel file has no line rows to import.",
-                hasErrors:
-                    "The import finished with validation errors. Please review the result.",
+                hasErrors: "The import finished with validation errors. Please review the result.",
                 companyCodeRequired: "Company code is required.",
                 branchCodeRequired: "Branch code is required.",
                 departmentCodeRequired: "Department code is required.",
                 lineCodeRequired: "Line code is required.",
-                lineCodeInvalid:
-                    "Line code must be 2-30 characters and use letters, numbers, dash, or underscore only.",
+                lineCodeInvalid: "Line code must be 2-30 characters and use letters, numbers, dash, or underscore only.",
                 lineNameRequired: "Line name is required.",
                 statusInvalid: "Status must be ACTIVE or INACTIVE.",
-                companyNotFound:
-                    "Company code was not found or the company is archived.",
-                branchNotFound:
-                    "Branch code was not found inside the selected company or the branch is archived.",
-                departmentNotFound:
-                    "Department code was not found inside the selected branch or the department is archived.",
-                positionNotFound:
-                    "One or more allowed position codes were not found in the selected department.",
-                leaderPositionNotFound:
-                    "Leader position code was not found in the selected department.",
-                leaderPositionNotAllowed:
-                    "Leader position code must also be included in allowedPositionCodes.",
-                duplicateInFile:
-                    "Duplicate line code found in this Excel file for the same department.",
+                companyNotFound: "Company code was not found or the company is archived.",
+                branchNotFound: "Branch code was not found inside the selected company or the branch is archived.",
+                departmentNotFound: "Department code was not found inside the selected branch or the department is archived.",
+                positionNotFound: "One or more allowed position codes were not found in the selected department.",
+                leaderPositionNotFound: "Leader position code was not found in the selected department.",
+                leaderPositionNotAllowed: "Leader position code must also be included in allowedPositionCodes.",
+                duplicateInFile: "Duplicate line code found in this Excel file for the same department."
             },
             shift: {
                 invalidId: "Invalid shift ID.",
                 notFound: "Shift was not found.",
                 archived: "This shift is archived and cannot be updated.",
-                codeExists:
-                    "This shift code already exists inside the selected branch.",
-                invalidTimeRange:
-                    "Shift time range is invalid. End time must create a valid working duration.",
-                invalidBreakRange:
-                    "Break time must be inside the shift duration and shorter than total shift time.",
-                invalidWorkingMinutes:
-                    "Working minutes must be greater than zero.",
+                codeExists: "This shift code already exists inside the selected branch.",
+                invalidTimeRange: "Shift time range is invalid. End time must create a valid working duration.",
+                invalidBreakRange: "Break time must be inside the shift duration and shorter than total shift time.",
+                invalidWorkingMinutes: "Working minutes must be greater than zero."
             },
-
             shiftImport: {
                 fileRequired: "Please choose an Excel file to import.",
-                invalidTemplate:
-                    "Invalid Excel template. Please download the sample template and use the same columns.",
+                invalidTemplate: "Invalid Excel template. Please download the sample template and use the same columns.",
                 emptyFile: "The uploaded Excel file is empty.",
                 noDataRows: "The Excel file has no shift rows to import.",
-                hasErrors:
-                    "The import finished with validation errors. Please review the result.",
+                hasErrors: "The import finished with validation errors. Please review the result.",
                 companyCodeRequired: "Company code is required.",
                 branchCodeRequired: "Branch code is required.",
                 shiftCodeRequired: "Shift code is required.",
                 shiftNameRequired: "Shift name is required.",
                 startTimeInvalid: "Start time must use HH:mm format.",
                 endTimeInvalid: "End time must use HH:mm format.",
-                breakTimePairRequired:
-                    "Break start time and break end time must be filled together.",
-                graceMinutesInvalid:
-                    "Grace minutes must be a whole number from 0 to 240.",
+                breakTimePairRequired: "Break start time and break end time must be filled together.",
+                graceMinutesInvalid: "Grace minutes must be a whole number from 0 to 240.",
                 statusInvalid: "Status must be ACTIVE or INACTIVE.",
-                invalidTimeRange:
-                    "Shift time or break time is invalid. Please check start, end, and break time.",
-                companyNotFound:
-                    "Company code was not found or the company is archived.",
-                branchNotFound:
-                    "Branch code was not found inside the selected company or the branch is archived.",
-                duplicateInFile:
-                    "Duplicate shift code found in this Excel file for the same branch.",
+                invalidTimeRange: "Shift time or break time is invalid. Please check start, end, and break time.",
+                companyNotFound: "Company code was not found or the company is archived.",
+                branchNotFound: "Branch code was not found inside the selected company or the branch is archived.",
+                duplicateInFile: "Duplicate shift code found in this Excel file for the same branch."
             },
             employeeType: {
                 invalidId: "Invalid employee type ID.",
@@ -1352,34 +1342,25 @@ export default {
                 codeExists: "This employee type code already exists inside the selected company.",
                 duplicate: "This employee type already exists.",
                 positionNotFound: "One or more selected positions were not found in the selected company.",
-                positionAlreadyMapped: "One or more selected positions are already mapped to another employee type.",
+                positionAlreadyMapped: "One or more selected positions are already mapped to another employee type."
             },
-
             employeeTypeImport: {
                 fileRequired: "Please choose an Excel file to import.",
-                invalidTemplate:
-                    "Invalid Excel template. Please download the sample template and use the same columns.",
+                invalidTemplate: "Invalid Excel template. Please download the sample template and use the same columns.",
                 emptyFile: "The uploaded Excel file is empty.",
                 noDataRows: "The Excel file has no employee type rows to import.",
-                hasErrors:
-                    "The import finished with validation errors. Please review the result.",
+                hasErrors: "The import finished with validation errors. Please review the result.",
                 companyCodeRequired: "Company code is required.",
                 employeeTypeCodeRequired: "Employee type code is required.",
-                employeeTypeCodeInvalid:
-                    "Employee type code must be 2-30 characters and use letters, numbers, dash, or underscore only.",
+                employeeTypeCodeInvalid: "Employee type code must be 2-30 characters and use letters, numbers, dash, or underscore only.",
                 employeeTypeNameRequired: "Employee type name is required.",
                 positionCodesRequired: "Position codes are required.",
                 statusInvalid: "Status must be ACTIVE or INACTIVE.",
-                companyNotFound:
-                    "Company code was not found or the company is archived.",
-                positionNotFound:
-                    "One or more position codes were not found inside the selected company.",
-                positionAlreadyMapped:
-                    "One or more position codes are already mapped to another employee type.",
-                mixedDirectAndChild:
-                    "Do not mix direct positions and child groups for the same employee type.",
-                duplicatePositionInFile:
-                    "Duplicate position code found in this Excel file for the same employee type.",
+                companyNotFound: "Company code was not found or the company is archived.",
+                positionNotFound: "One or more position codes were not found inside the selected company.",
+                positionAlreadyMapped: "One or more position codes are already mapped to another employee type.",
+                mixedDirectAndChild: "Do not mix direct positions and child groups for the same employee type.",
+                duplicatePositionInFile: "Duplicate position code found in this Excel file for the same employee type."
             },
             calendar: {
                 day: {
@@ -1387,7 +1368,7 @@ export default {
                     notFound: "Calendar day was not found.",
                     archived: "This calendar day is archived and cannot be updated.",
                     duplicate: "A calendar day already exists for this scope and date.",
-                    rangeTooLarge: "Calendar date range is too large. Maximum range is 370 days.",
+                    rangeTooLarge: "Calendar date range is too large. Maximum range is 370 days."
                 },
                 import: {
                     fileRequired: "Please choose an Excel file to import.",
@@ -1405,9 +1386,28 @@ export default {
                     statusInvalid: "Status must be ACTIVE or INACTIVE.",
                     companyNotFound: "Company code was not found or is archived.",
                     branchNotFound: "Branch code was not found in the selected company or is archived.",
-                    duplicateInFile: "Duplicate calendar date found for the same scope in this Excel file.",
-                },
+                    duplicateInFile: "Duplicate calendar date found for the same scope in this Excel file."
+                }
             },
+            recruitmentChannel: {
+                notFound: "Recruitment channel was not found.",
+                codeExists: "Recruitment channel code already exists in this scope."
+            }
         },
+        employee: {
+            profile: {
+                recruitmentChannelInvalidId: "Invalid recruitment channel ID.",
+                recruitmentChannelNotFound: "Recruitment channel was not found or is archived.",
+                recruitmentChannelCompanyMismatch: "Recruitment channel does not belong to the selected company.",
+                recruitmentChannelBranchMismatch: "Recruitment channel does not belong to the selected branch."
+            }
+        }
     },
+    employee: {
+        profile: {
+            recruitmentChannel: "Recruitment Channel",
+            selectRecruitmentChannel: "Select recruitment channel",
+            sourceOfHiring: "Source of hiring"
+        }
+    }
 }

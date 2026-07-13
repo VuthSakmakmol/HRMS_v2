@@ -16,6 +16,7 @@ import "primeicons/primeicons.css"
 import "./styles/tokens.css"
 import "./styles/base.css"
 import "./styles/components.css"
+import "./styles/enterprise-list.css"
 
 const app = createApp(App)
 const pinia = createPinia()

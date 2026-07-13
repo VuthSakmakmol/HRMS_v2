@@ -10,6 +10,7 @@ import DashboardFilterBar from "../components/shared/DashboardFilterBar.vue"
 import GeneralDataSection from "../components/general/GeneralDataSection.vue"
 import ManpowerSection from "../components/manpower/ManpowerSection.vue"
 import MovementSection from "../components/movement/MovementSection.vue"
+import RecruitmentChannelSection from "../components/recruitment/RecruitmentChannelSection.vue"
 import { useHrDashboardStore } from "../stores/hrDashboard.store.js"
 
 const { t } = useI18n()
@@ -18,22 +19,72 @@ const dashboardStore = useHrDashboardStore()
 const filters = ref(normalizeFilters(dashboardStore.filters))
 
 const dashboard = computed(() => dashboardStore.dashboard || {})
-const selectedPeriodKey = computed(
-    () => dashboard.value.filters?.selectedPeriodKey || null,
+const selectedPeriodKey = computed(() =>
+    dashboard.value.filters?.selectedPeriodKey || null,
+)
+const employeeTypeLabel = computed(() =>
+    dashboard.value.filters?.employeeTypeLabel ||
+    safeT("hrDashboard.filters.allEmployeeTypes", "All employee types"),
+)
+const hasDashboardData = computed(() => {
+    const data = dashboard.value
+
+    if (!data || !data.general) return false
+
+    const generalHasData = [
+        data.general.totalEmployees,
+        data.general.workingEmployees,
+        data.general.inactiveEmployees,
+        data.general.leftEmployees,
+    ].some((value) => Number(value) > 0)
+
+    const manpowerHasData = (data.manpower || []).some((row) =>
+        [row.budget, row.roadmap, row.actual].some((value) => Number(value) > 0),
+    )
+
+    const attendanceHasData = (data.attendance?.monthly || []).some((row) =>
+        [
+            row.processed,
+            row.present,
+            row.absent,
+            row.late,
+            row.earlyLeave,
+            row.missingPunch,
+            row.needsReview,
+            row.holiday,
+            row.restDay,
+        ].some((value) => Number(value) > 0),
+    )
+
+    const recruitmentHasData = (data.recruitment?.rows || []).some((row) =>
+        [row.previousTotal, row.currentTotal, row.targetPerMonth].some(
+            (value) => Number(value) > 0,
+        ),
+    )
+
+    const movementHasData = (data.movement || []).some((row) =>
+        [row.in, row.out, row.balance].some((value) => Number(value) !== 0),
+    )
+
+    return generalHasData || manpowerHasData || attendanceHasData || recruitmentHasData || movementHasData
+})
+const showNoDataMessage = computed(() =>
+    Boolean(dashboardStore.dashboard) &&
+    !dashboardStore.loading &&
+    !dashboardStore.error &&
+    !hasDashboardData.value,
 )
 
+function safeT(key, fallback) {
+    const translated = t(key)
+
+    return translated === key ? fallback : translated
+}
+
 function toDateString(value) {
-    if (!value) {
-        return ""
-    }
-
-    if (typeof value === "string") {
-        return value.slice(0, 10)
-    }
-
-    if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
-        return ""
-    }
+    if (!value) return ""
+    if (typeof value === "string") return value.slice(0, 10)
+    if (!(value instanceof Date) || Number.isNaN(value.getTime())) return ""
 
     const year = value.getFullYear()
     const month = String(value.getMonth() + 1).padStart(2, "0")
@@ -58,10 +109,10 @@ function createDefaultFilters() {
         endDate: `${year}-12-31`,
         companyId: undefined,
         branchId: undefined,
+        employeeTypeFilterKey: undefined,
         departmentId: undefined,
         positionId: undefined,
         lineId: undefined,
-        employeeTypeId: undefined,
     }
 }
 
@@ -75,7 +126,6 @@ async function loadLookups(scopeFilters = filters.value) {
 
 async function handleScopeChange(nextFilters) {
     filters.value = normalizeFilters(nextFilters)
-
     await loadLookups(filters.value)
 }
 
@@ -122,7 +172,15 @@ onMounted(async () => {
                 severity="error"
                 :closable="false"
             >
-                {{ t("hrDashboard.loadFailed") }}
+                {{ safeT("hrDashboard.loadFailed", "Unable to load the HR dashboard.") }}
+            </Message>
+
+            <Message
+                v-else-if="showNoDataMessage"
+                severity="info"
+                :closable="false"
+            >
+                {{ safeT("hrDashboard.noData", "No dashboard data matched this filter.") }}
             </Message>
 
             <div
@@ -136,41 +194,34 @@ onMounted(async () => {
                 v-else
                 class="hr-dashboard-page__content"
             >
-                <GeneralDataSection :data="dashboard.general" />
-
-                <ManpowerSection
-                    :title="t('hrDashboard.sections.sewerManpower')"
-                    :rows="dashboard.manpower?.sewer || []"
-                    :selected-period-key="selectedPeriodKey"
+                <GeneralDataSection
+                    :data="dashboard.general"
+                    :employee-type-label="employeeTypeLabel"
                 />
 
                 <ManpowerSection
-                    :title="t('hrDashboard.sections.nonSewerManpower')"
-                    :rows="dashboard.manpower?.nonSewer || []"
+                    :title="safeT('hrDashboard.sections.manpower', 'Manpower')"
+                    :subtitle="employeeTypeLabel"
+                    :rows="dashboard.manpower || []"
+                    :selected-period-key="selectedPeriodKey"
+                />
+
+                <RecruitmentChannelSection
+                    :title="safeT('hrDashboard.sections.recruitmentChannels', 'Recruitment Channels')"
+                    :data="dashboard.recruitment || {}"
                     :selected-period-key="selectedPeriodKey"
                 />
 
                 <AttendanceDashboardSection
-                    :title="t('hrDashboard.sections.attendanceDashboard')"
+                    :title="safeT('hrDashboard.sections.attendanceDashboard', 'Attendance Dashboard')"
                     :data="dashboard.attendance || {}"
                     :selected-period-key="selectedPeriodKey"
                 />
 
                 <MovementSection
-                    :title="t('hrDashboard.sections.sewerMovement')"
-                    :rows="dashboard.movement?.sewer || []"
-                    :selected-period-key="selectedPeriodKey"
-                />
-
-                <MovementSection
-                    :title="t('hrDashboard.sections.nonSewerMovement')"
-                    :rows="dashboard.movement?.nonSewer || []"
-                    :selected-period-key="selectedPeriodKey"
-                />
-
-                <MovementSection
-                    :title="t('hrDashboard.sections.whiteCollarMovement')"
-                    :rows="dashboard.movement?.whiteCollar || []"
+                    :title="safeT('hrDashboard.sections.movement', 'Movement')"
+                    :subtitle="employeeTypeLabel"
+                    :rows="dashboard.movement || []"
                     :selected-period-key="selectedPeriodKey"
                 />
             </main>
@@ -183,18 +234,22 @@ onMounted(async () => {
     display: grid;
     min-width: 0;
     min-height: 100%;
-    overflow-x: hidden;
+    overflow: visible;
+    isolation: isolate;
 }
 
 .hr-dashboard-page__sticky-tools {
     position: sticky;
     top: 0;
-    z-index: 60;
-    min-width: 0;
+    z-index: 11000;
     width: 100%;
+    min-width: 0;
+    margin: 0;
     background: var(--hrms-surface);
     border-bottom: 1px solid var(--hrms-border);
-    box-shadow: 0 0.35rem 1rem rgb(15 23 42 / 0.06);
+    box-shadow: 0 0.3rem 0.9rem rgb(15 23 42 / 0.08);
+    transform: translateZ(0);
+    pointer-events: auto;
 }
 
 .hr-dashboard-page__body {
@@ -202,7 +257,6 @@ onMounted(async () => {
     gap: 0.65rem;
     min-width: 0;
     padding: 0.65rem 0.875rem 0.875rem;
-    overflow-x: hidden;
 }
 
 .hr-dashboard-page__content {
@@ -210,7 +264,6 @@ onMounted(async () => {
     grid-template-columns: minmax(0, 1fr);
     gap: 0.7rem;
     min-width: 0;
-    overflow-x: hidden;
 }
 
 .hr-dashboard-page__loading {
@@ -219,7 +272,10 @@ onMounted(async () => {
     place-items: center;
 }
 
-.hr-dashboard-page :deep(*) {
+.hr-dashboard-page :deep(.dashboard-card),
+.hr-dashboard-page :deep(.dashboard-section),
+.hr-dashboard-page :deep(.p-datatable),
+.hr-dashboard-page :deep(.p-chart) {
     max-width: 100%;
 }
 

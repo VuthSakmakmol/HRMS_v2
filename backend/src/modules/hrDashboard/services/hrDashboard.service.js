@@ -4,6 +4,7 @@ import { getCache, setCache } from "../../../shared/cache/memoryCache.js"
 import AttendanceRecord from "../../attendance/models/AttendanceRecord.js"
 import Employee from "../../employee/models/Employee.js"
 import EmployeeMovement from "../../employeeMovement/models/EmployeeMovement.js"
+import RecruitmentChannel from "../../recruitmentChannel/models/RecruitmentChannel.js"
 import EmployeeType from "../../employeeType/models/EmployeeType.js"
 import Line from "../../line/models/Line.js"
 import ManpowerPlan from "../../manpowerPlan/models/ManpowerPlan.js"
@@ -62,20 +63,9 @@ const PRESENT_STATUSES = new Set([
     "MISSING_OUT",
 ])
 
-const LATE_STATUSES = new Set([
-    "LATE",
-    "LATE_AND_EARLY_LEAVE",
-])
-
-const EARLY_STATUSES = new Set([
-    "EARLY_LEAVE",
-    "LATE_AND_EARLY_LEAVE",
-])
-
-const MISSING_STATUSES = new Set([
-    "MISSING_IN",
-    "MISSING_OUT",
-])
+const LATE_STATUSES = new Set(["LATE", "LATE_AND_EARLY_LEAVE"])
+const EARLY_STATUSES = new Set(["EARLY_LEAVE", "LATE_AND_EARLY_LEAVE"])
+const MISSING_STATUSES = new Set(["MISSING_IN", "MISSING_OUT"])
 
 function toObjectId(value) {
     return value ? new mongoose.Types.ObjectId(value) : undefined
@@ -97,16 +87,59 @@ function monthEnd(year, month) {
     return new Date(Date.UTC(year, month, 0, 23, 59, 59, 999))
 }
 
+function parseEmployeeTypeFilter(query = {}) {
+    const result = {
+        employeeTypeId: query.employeeTypeId || null,
+        employeeTypeChildCode: query.employeeTypeChildCode || null,
+        employeeTypeFilterKey: query.employeeTypeFilterKey || null,
+    }
+
+    if (!query.employeeTypeFilterKey) {
+        return result
+    }
+
+    const parts = String(query.employeeTypeFilterKey).split(":")
+
+    if (parts[0] === "TYPE") {
+        result.employeeTypeId = parts[1]
+        result.employeeTypeChildCode = null
+    }
+
+    if (parts[0] === "CHILD") {
+        result.employeeTypeId = parts[1]
+        result.employeeTypeChildCode = parts[2]
+    }
+
+    return result
+}
+
+function normalizedQuery(query = {}) {
+    const employeeTypeFilter = parseEmployeeTypeFilter(query)
+
+    return {
+        ...query,
+        employeeTypeId: employeeTypeFilter.employeeTypeId || undefined,
+        employeeTypeChildCode:
+            employeeTypeFilter.employeeTypeChildCode || undefined,
+        employeeTypeFilterKey:
+            employeeTypeFilter.employeeTypeFilterKey || undefined,
+    }
+}
+
 function buildDimensionMatch(query, prefix = "") {
     const match = {}
+    const filter = normalizedQuery(query)
 
     for (const field of FILTER_FIELDS) {
-        if (!query[field]) {
-            continue
-        }
+        if (!filter[field]) continue
 
         const key = prefix ? `${prefix}.${field}` : field
-        match[key] = toObjectId(query[field])
+        match[key] = toObjectId(filter[field])
+    }
+
+    if (filter.employeeTypeChildCode) {
+        const key = prefix ? `${prefix}.employeeTypeChildCode` : "employeeTypeChildCode"
+        match[key] = filter.employeeTypeChildCode
     }
 
     return match
@@ -116,10 +149,7 @@ function buildAttendanceDimensionMatch(query) {
     const match = {}
 
     for (const field of ATTENDANCE_FILTER_FIELDS) {
-        if (!query[field]) {
-            continue
-        }
-
+        if (!query[field]) continue
         match[field] = toObjectId(query[field])
     }
 
@@ -156,6 +186,8 @@ function createPeriods(startDate, endDate) {
             budget: 0,
             roadmap: 0,
             actual: 0,
+            targetGap: 0,
+            roadmapGap: 0,
             fillRate: 0,
             in: 0,
             out: 0,
@@ -168,42 +200,6 @@ function createPeriods(startDate, endDate) {
     return periods
 }
 
-function normalizeCategoryText(value) {
-    return String(value || "")
-        .trim()
-        .replace(/[_-]+/g, " ")
-        .replace(/\s+/g, " ")
-        .toUpperCase()
-}
-
-function classifyCategory(source = {}) {
-    const categoryText = normalizeCategoryText(
-        [
-            source.employeeTypeChildCode,
-            source.employeeTypeChildName,
-        ].filter(Boolean).join(" "),
-    )
-
-    if (
-        categoryText.includes("WHITE COLLAR") ||
-        categoryText.includes("OFFICE") ||
-        categoryText.includes("STAFF")
-    ) {
-        return "WHITE_COLLAR"
-    }
-
-    if (
-        categoryText.includes("SEWER") ||
-        categoryText.includes("SEWING OPERATOR") ||
-        categoryText.includes("DIRECT LABOR") ||
-        categoryText === "DIRECT"
-    ) {
-        return "SEWER"
-    }
-
-    return "NON_SEWER"
-}
-
 function round(value, digits = 2) {
     const factor = 10 ** digits
     return Math.round((Number(value) || 0) * factor) / factor
@@ -212,24 +208,17 @@ function round(value, digits = 2) {
 function average(values) {
     const validValues = values.filter((value) => Number.isFinite(value))
 
-    if (!validValues.length) {
-        return 0
-    }
+    if (!validValues.length) return 0
 
-    return validValues.reduce((sum, value) => sum + value, 0) /
-        validValues.length
+    return validValues.reduce((sum, value) => sum + value, 0) / validValues.length
 }
 
 function calculateYears(startDate, endDate) {
-    if (!startDate) {
-        return null
-    }
+    if (!startDate) return null
 
     const milliseconds = endDate.getTime() - new Date(startDate).getTime()
 
-    if (milliseconds < 0) {
-        return null
-    }
+    if (milliseconds < 0) return null
 
     return milliseconds / (365.2425 * 24 * 60 * 60 * 1000)
 }
@@ -244,9 +233,7 @@ function employeeWasActiveOn(employee, date) {
 async function loadEmployees(query) {
     return Employee.find({
         ...buildDimensionMatch(query),
-        recordStatus: {
-            $ne: "ARCHIVED",
-        },
+        recordStatus: { $ne: "ARCHIVED" },
     })
         .select([
             "dateOfBirth",
@@ -259,8 +246,11 @@ async function loadEmployees(query) {
             "positionId",
             "lineId",
             "employeeTypeId",
+            "employeeTypeChildId",
             "employeeTypeChildCode",
             "employeeTypeChildName",
+            "sourceOfHiring",
+            "recruitmentChannelId",
         ])
         .lean()
 }
@@ -281,6 +271,8 @@ async function loadPlans(query, periods) {
             "month",
             "targetBudget",
             "targetRoadmap",
+            "employeeTypeId",
+            "employeeTypeChildId",
             "employeeTypeChildCode",
             "employeeTypeChildName",
         ])
@@ -290,25 +282,24 @@ async function loadPlans(query, periods) {
 async function loadMovements(query, startDate, endDate) {
     const fromMatch = buildDimensionMatch(query, "from")
     const toMatch = buildDimensionMatch(query, "to")
-    const hasDimensionFilter = FILTER_FIELDS.some((field) => query[field])
+    const hasDimensionFilter =
+        FILTER_FIELDS.some((field) => normalizedQuery(query)[field]) ||
+        Boolean(normalizedQuery(query).employeeTypeChildCode)
 
     return EmployeeMovement.find({
-        effectiveDate: {
-            $gte: startDate,
-            $lte: endDate,
-        },
+        effectiveDate: { $gte: startDate, $lte: endDate },
         status: "ACTIVE",
-        ...(hasDimensionFilter
-            ? {
-                $or: [fromMatch, toMatch],
-            }
-            : {}),
+        ...(hasDimensionFilter ? { $or: [fromMatch, toMatch] } : {}),
     })
         .select([
             "movementType",
             "effectiveDate",
+            "from.employeeTypeId",
+            "from.employeeTypeChildId",
             "from.employeeTypeChildCode",
             "from.employeeTypeChildName",
+            "to.employeeTypeId",
+            "to.employeeTypeChildId",
             "to.employeeTypeChildCode",
             "to.employeeTypeChildName",
         ])
@@ -318,22 +309,17 @@ async function loadMovements(query, startDate, endDate) {
 async function loadAttendanceRecords(query, startDate, endDate, employees) {
     const match = {
         ...buildAttendanceDimensionMatch(query),
-        attendanceDate: {
-            $gte: startDate,
-            $lte: endDate,
-        },
+        attendanceDate: { $gte: startDate, $lte: endDate },
     }
 
-    if (query.employeeTypeId) {
+    const employeeTypeFilter = normalizedQuery(query)
+
+    if (employeeTypeFilter.employeeTypeId || employeeTypeFilter.employeeTypeChildCode) {
         const employeeIds = employees.map((employee) => employee._id)
 
-        if (!employeeIds.length) {
-            return []
-        }
+        if (!employeeIds.length) return []
 
-        match.employeeId = {
-            $in: employeeIds,
-        }
+        match.employeeId = { $in: employeeIds }
     }
 
     return AttendanceRecord.find(match)
@@ -363,6 +349,8 @@ function clonePeriods(periods) {
         budget: 0,
         roadmap: 0,
         actual: 0,
+        targetGap: 0,
+        roadmapGap: 0,
         fillRate: 0,
         in: 0,
         out: 0,
@@ -389,21 +377,15 @@ function cloneAttendancePeriods(periods) {
     }))
 }
 
-function buildManpowerSeries({ employees, plans, periods, category }) {
+function buildManpowerSeries({ employees, plans, periods }) {
     const rows = clonePeriods(periods)
     const rowByKey = new Map(rows.map((row) => [row.key, row]))
 
     for (const plan of plans) {
-        if (classifyCategory(plan) !== category) {
-            continue
-        }
-
         const key = `${plan.year}-${String(plan.month).padStart(2, "0")}`
         const row = rowByKey.get(key)
 
-        if (!row) {
-            continue
-        }
+        if (!row) continue
 
         row.budget += Number(plan.targetBudget) || 0
         row.roadmap += Number(plan.targetRoadmap) || 0
@@ -413,10 +395,11 @@ function buildManpowerSeries({ employees, plans, periods, category }) {
         const periodEnd = monthEnd(row.year, row.month)
 
         row.actual = employees.filter((employee) =>
-            classifyCategory(employee) === category &&
             employeeWasActiveOn(employee, periodEnd),
         ).length
 
+        row.targetGap = row.actual - row.budget
+        row.roadmapGap = row.actual - row.roadmap
         row.fillRate = row.roadmap > 0
             ? round((row.actual / row.roadmap) * 100, 1)
             : 0
@@ -425,37 +408,43 @@ function buildManpowerSeries({ employees, plans, periods, category }) {
     return rows
 }
 
-function movementCategory(movement, isEntry) {
-    return classifyCategory(isEntry ? movement.to : movement.from)
+function movementMatchesEmployeeTypeFilter(snapshot = {}, filter = {}) {
+    if (filter.employeeTypeId) {
+        const id = snapshot.employeeTypeId?.toString?.() || snapshot.employeeTypeId
+        if (id !== filter.employeeTypeId) return false
+    }
+
+    if (filter.employeeTypeChildCode) {
+        if (snapshot.employeeTypeChildCode !== filter.employeeTypeChildCode) {
+            return false
+        }
+    }
+
+    return true
 }
 
-function buildMovementSeries({ movements, periods, category }) {
+function buildMovementSeries({ movements, periods, query }) {
     const rows = clonePeriods(periods)
     const rowByKey = new Map(rows.map((row) => [row.key, row]))
+    const filter = normalizedQuery(query)
 
     for (const movement of movements) {
-        const effectiveDate = new Date(movement.effectiveDate)
-        const key = `${effectiveDate.getUTCFullYear()}-${String(
-            effectiveDate.getUTCMonth() + 1,
-        ).padStart(2, "0")}`
+        const date = new Date(movement.effectiveDate)
+        const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`
         const row = rowByKey.get(key)
-        const isEntry = ENTRY_TYPES.has(movement.movementType)
-        const isExit = EXIT_TYPES.has(movement.movementType)
 
-        if (!row || (!isEntry && !isExit)) {
-            continue
+        if (!row) continue
+
+        if (ENTRY_TYPES.has(movement.movementType)) {
+            if (movementMatchesEmployeeTypeFilter(movement.to, filter)) {
+                row.in += 1
+            }
         }
 
-        if (movementCategory(movement, isEntry) !== category) {
-            continue
-        }
-
-        if (isEntry) {
-            row.in += 1
-        }
-
-        if (isExit) {
-            row.out += 1
+        if (EXIT_TYPES.has(movement.movementType)) {
+            if (movementMatchesEmployeeTypeFilter(movement.from, filter)) {
+                row.out += 1
+            }
         }
     }
 
@@ -471,52 +460,22 @@ function buildAttendanceSeries({ records, periods }) {
     const rowByKey = new Map(rows.map((row) => [row.key, row]))
 
     for (const record of records) {
-        const attendanceDate = new Date(record.attendanceDate)
-        const key = `${attendanceDate.getUTCFullYear()}-${String(
-            attendanceDate.getUTCMonth() + 1,
-        ).padStart(2, "0")}`
+        const date = new Date(record.attendanceDate)
+        const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`
         const row = rowByKey.get(key)
 
-        if (!row) {
-            continue
-        }
+        if (!row) continue
 
         row.processed += 1
 
-        if (PRESENT_STATUSES.has(record.status)) {
-            row.present += 1
-        }
-
-        if (record.status === "ABSENT") {
-            row.absent += 1
-        }
-
-        if (LATE_STATUSES.has(record.status) || Number(record.lateMinutes) > 0) {
-            row.late += 1
-        }
-
-        if (
-            EARLY_STATUSES.has(record.status) ||
-            Number(record.earlyLeaveMinutes) > 0
-        ) {
-            row.earlyLeave += 1
-        }
-
-        if (MISSING_STATUSES.has(record.status)) {
-            row.missingPunch += 1
-        }
-
-        if (record.verificationStatus === "NEEDS_REVIEW") {
-            row.needsReview += 1
-        }
-
-        if (record.status === "HOLIDAY") {
-            row.holiday += 1
-        }
-
-        if (record.status === "REST_DAY") {
-            row.restDay += 1
-        }
+        if (PRESENT_STATUSES.has(record.status)) row.present += 1
+        if (record.status === "ABSENT") row.absent += 1
+        if (LATE_STATUSES.has(record.status) || Number(record.lateMinutes) > 0) row.late += 1
+        if (EARLY_STATUSES.has(record.status) || Number(record.earlyLeaveMinutes) > 0) row.earlyLeave += 1
+        if (MISSING_STATUSES.has(record.status)) row.missingPunch += 1
+        if (record.verificationStatus === "NEEDS_REVIEW") row.needsReview += 1
+        if (record.status === "HOLIDAY") row.holiday += 1
+        if (record.status === "REST_DAY") row.restDay += 1
     }
 
     for (const row of rows) {
@@ -530,32 +489,24 @@ function buildAttendanceSeries({ records, periods }) {
 }
 
 function buildAttendanceSummary(rows) {
-    const summary = rows.reduce(
-        (result, row) => {
-            result.processed += row.processed
-            result.present += row.present
-            result.absent += row.absent
-            result.late += row.late
-            result.earlyLeave += row.earlyLeave
-            result.missingPunch += row.missingPunch
-            result.needsReview += row.needsReview
-            result.holiday += row.holiday
-            result.restDay += row.restDay
-            return result
-        },
-        {
-            processed: 0,
-            present: 0,
-            absent: 0,
-            late: 0,
-            earlyLeave: 0,
-            missingPunch: 0,
-            needsReview: 0,
-            holiday: 0,
-            restDay: 0,
-            attendanceRate: 0,
-        },
-    )
+    const summary = {
+        processed: 0,
+        present: 0,
+        absent: 0,
+        late: 0,
+        earlyLeave: 0,
+        missingPunch: 0,
+        needsReview: 0,
+        holiday: 0,
+        restDay: 0,
+        attendanceRate: 0,
+    }
+
+    for (const row of rows) {
+        for (const key of Object.keys(summary)) {
+            if (key !== "attendanceRate") summary[key] += Number(row[key]) || 0
+        }
+    }
 
     const denominator = summary.present + summary.absent
     summary.attendanceRate = denominator > 0
@@ -571,14 +522,10 @@ function buildAttendanceLineSummary({ records, lines }) {
 
     for (const record of records) {
         const lineId = record.lineId?.toString?.()
-
-        if (!lineId) {
-            continue
-        }
+        if (!lineId) continue
 
         if (!rowByLineId.has(lineId)) {
             const line = lineById.get(lineId)
-
             rowByLineId.set(lineId, {
                 lineId,
                 code: line?.code || "-",
@@ -595,32 +542,16 @@ function buildAttendanceLineSummary({ records, lines }) {
 
         const row = rowByLineId.get(lineId)
         row.processed += 1
-
-        if (PRESENT_STATUSES.has(record.status)) {
-            row.present += 1
-        }
-
-        if (record.status === "ABSENT") {
-            row.absent += 1
-        }
-
-        if (LATE_STATUSES.has(record.status) || Number(record.lateMinutes) > 0) {
-            row.late += 1
-        }
-
-        if (MISSING_STATUSES.has(record.status)) {
-            row.missingPunch += 1
-        }
-
-        if (record.verificationStatus === "NEEDS_REVIEW") {
-            row.needsReview += 1
-        }
+        if (PRESENT_STATUSES.has(record.status)) row.present += 1
+        if (record.status === "ABSENT") row.absent += 1
+        if (LATE_STATUSES.has(record.status) || Number(record.lateMinutes) > 0) row.late += 1
+        if (MISSING_STATUSES.has(record.status)) row.missingPunch += 1
+        if (record.verificationStatus === "NEEDS_REVIEW") row.needsReview += 1
     }
 
     return [...rowByLineId.values()]
         .map((row) => {
             const denominator = row.present + row.absent
-
             return {
                 ...row,
                 attendanceRate: denominator > 0
@@ -632,30 +563,311 @@ function buildAttendanceLineSummary({ records, lines }) {
         .slice(0, 20)
 }
 
-function buildGeneralData({ employees, selectedDate }) {
+
+function normalizeRecruitmentText(value) {
+    return String(value || "")
+        .trim()
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .toUpperCase()
+}
+
+function getRecruitmentSourceKeys(channel = {}) {
+    const keys = []
+
+    if (channel._id) {
+        keys.push(`ID:${channel._id.toString()}`)
+    }
+
+    for (const value of [channel.code, channel.name, channel.shortName]) {
+        const normalized = normalizeRecruitmentText(value)
+        if (normalized) keys.push(`TEXT:${normalized}`)
+    }
+
+    return [...new Set(keys)]
+}
+
+function getEmployeeRecruitmentSourceKeys(employee = {}) {
+    const keys = []
+
+    if (employee.recruitmentChannelId) {
+        keys.push(`ID:${employee.recruitmentChannelId.toString()}`)
+    }
+
+    const normalizedSource = normalizeRecruitmentText(employee.sourceOfHiring)
+
+    if (normalizedSource) {
+        keys.push(`TEXT:${normalizedSource}`)
+    }
+
+    return keys
+}
+
+function getChannelTargetMonthly(channel = {}) {
+    return Number(
+        channel.targetMonthly ??
+        channel.targetPerMonth ??
+        channel.monthlyTarget ??
+        0,
+    ) || 0
+}
+
+async function loadRecruitmentChannels(query = {}) {
+    const match = {
+        status: "ACTIVE",
+    }
+    const andConditions = []
+
+    if (query.companyId) {
+        andConditions.push({
+            $or: [
+                { companyId: toObjectId(query.companyId) },
+                { companyId: null },
+                { companyId: { $exists: false } },
+            ],
+        })
+    }
+
+    if (query.branchId) {
+        andConditions.push({
+            $or: [
+                { branchId: toObjectId(query.branchId) },
+                { branchId: null },
+                { branchId: { $exists: false } },
+            ],
+        })
+    }
+
+    if (andConditions.length) {
+        match.$and = andConditions
+    }
+
+    return RecruitmentChannel.find(match)
+        .select([
+            "companyId",
+            "branchId",
+            "code",
+            "name",
+            "shortName",
+            "targetMonthly",
+            "targetPerMonth",
+            "monthlyTarget",
+            "sortOrder",
+            "status",
+        ])
+        .sort({ sortOrder: 1, name: 1 })
+        .lean()
+}
+
+function createRecruitmentMonthRows(periods = []) {
+    return periods.map((period) => ({
+        key: period.key,
+        year: period.year,
+        month: period.month,
+        label: period.label,
+        count: 0,
+    }))
+}
+
+function createRecruitmentRowFromChannel(channel, periods) {
+    return {
+        id: channel._id?.toString?.() || null,
+        key: channel._id?.toString?.() || normalizeRecruitmentText(channel.code || channel.name),
+        code: channel.code || "",
+        name: channel.name || channel.code || "-",
+        shortName: channel.shortName || channel.name || channel.code || "-",
+        targetPerMonth: getChannelTargetMonthly(channel),
+        previousTotal: 0,
+        previousAveragePerMonth: 0,
+        currentTotal: 0,
+        averagePerMonth: 0,
+        months: createRecruitmentMonthRows(periods),
+    }
+}
+
+function createRecruitmentRowFromText(sourceText, periods) {
+    const label = sourceText
+        ? String(sourceText).trim().replace(/\s+/g, " ")
+        : "Unassigned"
+
+    return {
+        id: null,
+        key: `TEXT:${normalizeRecruitmentText(label) || "UNASSIGNED"}`,
+        code: normalizeRecruitmentText(label) || "UNASSIGNED",
+        name: label,
+        shortName: label,
+        targetPerMonth: 0,
+        previousTotal: 0,
+        previousAveragePerMonth: 0,
+        currentTotal: 0,
+        averagePerMonth: 0,
+        months: createRecruitmentMonthRows(periods),
+    }
+}
+
+function findRecruitmentRowForEmployee(employee, rowBySourceKey, rows, periods) {
+    for (const key of getEmployeeRecruitmentSourceKeys(employee)) {
+        const row = rowBySourceKey.get(key)
+        if (row) return row
+    }
+
+    const sourceKey = normalizeRecruitmentText(employee.sourceOfHiring)
+    const fallbackKey = sourceKey ? `TEXT:${sourceKey}` : "TEXT:UNASSIGNED"
+
+    if (!rowBySourceKey.has(fallbackKey)) {
+        const row = createRecruitmentRowFromText(employee.sourceOfHiring || "Unassigned", periods)
+        rows.push(row)
+        rowBySourceKey.set(fallbackKey, row)
+    }
+
+    return rowBySourceKey.get(fallbackKey)
+}
+
+function buildRecruitmentPie(items = [], valueKey) {
+    const total = items.reduce(
+        (sum, item) => sum + (Number(item[valueKey]) || 0),
+        0,
+    )
+
+    if (!total) return []
+
+    return items
+        .filter((item) => Number(item[valueKey]) > 0)
+        .map((item) => ({
+            name: item.shortName || item.name,
+            value: Number(item[valueKey]) || 0,
+            percent: round(((Number(item[valueKey]) || 0) / total) * 100, 1),
+        }))
+        .sort((a, b) => b.value - a.value)
+}
+
+function buildRecruitmentTotalRow(rows = [], periods = []) {
+    const totalRow = {
+        id: null,
+        key: "TOTAL",
+        code: "TOTAL",
+        name: "Total",
+        shortName: "Total",
+        targetPerMonth: 0,
+        previousTotal: 0,
+        previousAveragePerMonth: 0,
+        currentTotal: 0,
+        averagePerMonth: 0,
+        months: createRecruitmentMonthRows(periods),
+    }
+
+    for (const row of rows) {
+        totalRow.targetPerMonth += Number(row.targetPerMonth) || 0
+        totalRow.previousTotal += Number(row.previousTotal) || 0
+        totalRow.currentTotal += Number(row.currentTotal) || 0
+
+        row.months.forEach((month, index) => {
+            totalRow.months[index].count += Number(month.count) || 0
+        })
+    }
+
+    totalRow.previousAveragePerMonth = round(totalRow.previousTotal / 12, 0)
+    totalRow.averagePerMonth = periods.length
+        ? round(totalRow.currentTotal / periods.length, 0)
+        : 0
+
+    return totalRow
+}
+
+function buildRecruitmentChannelDashboard({
+    employees,
+    recruitmentChannels,
+    periods,
+    startDate,
+    endDate,
+}) {
+    const firstPeriod = periods[0]
+    const currentYear = firstPeriod?.year || startDate.getUTCFullYear()
+    const previousYear = currentYear - 1
+    const rows = []
+    const rowBySourceKey = new Map()
+    const monthIndexByKey = new Map(periods.map((period, index) => [period.key, index]))
+
+    for (const channel of recruitmentChannels) {
+        const row = createRecruitmentRowFromChannel(channel, periods)
+        rows.push(row)
+
+        for (const key of getRecruitmentSourceKeys(channel)) {
+            rowBySourceKey.set(key, row)
+        }
+    }
+
+    for (const employee of employees) {
+        if (!employee.joinDate) continue
+
+        const joinDate = new Date(employee.joinDate)
+        const joinYear = joinDate.getUTCFullYear()
+        const row = findRecruitmentRowForEmployee(employee, rowBySourceKey, rows, periods)
+
+        if (joinYear === previousYear) {
+            row.previousTotal += 1
+        }
+
+        if (joinDate >= startDate && joinDate <= endDate) {
+            const key = `${joinYear}-${String(joinDate.getUTCMonth() + 1).padStart(2, "0")}`
+            const monthIndex = monthIndexByKey.get(key)
+
+            if (monthIndex !== undefined) {
+                row.months[monthIndex].count += 1
+                row.currentTotal += 1
+            }
+        }
+    }
+
+    for (const row of rows) {
+        row.previousAveragePerMonth = round(row.previousTotal / 12, 0)
+        row.averagePerMonth = periods.length
+            ? round(row.currentTotal / periods.length, 0)
+            : 0
+    }
+
+    const sortedRows = rows.sort(
+        (a, b) =>
+            (Number(b.currentTotal) || 0) - (Number(a.currentTotal) || 0) ||
+            String(a.name || "").localeCompare(String(b.name || "")),
+    )
+
+    return {
+        previousYear,
+        currentYear,
+        periods: periods.map((period) => ({
+            key: period.key,
+            year: period.year,
+            month: period.month,
+            label: period.label,
+        })),
+        rows: sortedRows,
+        total: buildRecruitmentTotalRow(sortedRows, periods),
+        charts: {
+            previousYear: buildRecruitmentPie(sortedRows, "previousTotal"),
+            currentYear: buildRecruitmentPie(sortedRows, "currentTotal"),
+        },
+    }
+}
+
+function summarizeEmployeesForGeneralData({ employees, selectedDate }) {
     const activeEmployees = employees.filter((employee) =>
         employeeWasActiveOn(employee, selectedDate),
     )
-    const sewerEmployees = activeEmployees.filter(
-        (employee) => classifyCategory(employee) === "SEWER",
+    const workingEmployees = activeEmployees.filter(
+        (employee) => employee.employmentStatus === "WORKING",
     )
-    const directCount = sewerEmployees.length
-    const indirectCount = activeEmployees.length - directCount
+    const inactiveEmployees = activeEmployees.filter(
+        (employee) => employee.employmentStatus !== "WORKING",
+    )
 
     return {
         totalEmployees: activeEmployees.length,
-        sewerEmployees: sewerEmployees.length,
+        workingEmployees: workingEmployees.length,
+        inactiveEmployees: inactiveEmployees.length,
         averageAge: round(
             average(
                 activeEmployees.map((employee) =>
-                    calculateYears(employee.dateOfBirth, selectedDate),
-                ),
-            ),
-            1,
-        ),
-        sewerAverageAge: round(
-            average(
-                sewerEmployees.map((employee) =>
                     calculateYears(employee.dateOfBirth, selectedDate),
                 ),
             ),
@@ -669,20 +881,108 @@ function buildGeneralData({ employees, selectedDate }) {
             ),
             1,
         ),
-        sewerAverageServiceYears: round(
-            average(
-                sewerEmployees.map((employee) =>
-                    calculateYears(employee.joinDate, selectedDate),
-                ),
-            ),
-            1,
-        ),
-        directCount,
-        indirectCount,
-        directIndirectRatio: indirectCount > 0
-            ? round(directCount / indirectCount, 2)
-            : directCount,
     }
+}
+
+function findPeriodRow(rows = [], periodKey) {
+    return rows.find((row) => row.key === periodKey) || null
+}
+
+function getBudgetValue(row) {
+    if (!row) return 0
+
+    const budget = Number(row.budget) || 0
+    const roadmap = Number(row.roadmap) || 0
+
+    return budget > 0 ? budget : roadmap
+}
+
+function buildIndirectDirectRatio({
+    totalSummary,
+    selectedSummary,
+    totalManpower,
+    selectedManpower,
+    selectedPeriodKey,
+}) {
+    const directActual = Number(selectedSummary.totalEmployees) || 0
+    const totalActual = Number(totalSummary.totalEmployees) || 0
+    const indirectActual = Math.max(totalActual - directActual, 0)
+    const actualRatio = directActual > 0
+        ? round(indirectActual / directActual, 2)
+        : 0
+
+    const totalPeriod = findPeriodRow(totalManpower, selectedPeriodKey)
+    const selectedPeriod = findPeriodRow(selectedManpower, selectedPeriodKey)
+    const directBudget = getBudgetValue(selectedPeriod)
+    const totalBudget = getBudgetValue(totalPeriod)
+    const indirectBudget = Math.max(totalBudget - directBudget, 0)
+    const budgetRatio = directBudget > 0
+        ? round(indirectBudget / directBudget, 2)
+        : 0
+
+    return {
+        actualRatio,
+        budgetRatio,
+        directActual,
+        indirectActual,
+        directBudget,
+        indirectBudget,
+    }
+}
+
+function buildGeneralData({
+    totalEmployees,
+    selectedEmployees,
+    selectedDate,
+    selectedLabel,
+    selectedPeriod,
+    totalManpower,
+    selectedManpower,
+}) {
+    const totalSummary = summarizeEmployeesForGeneralData({
+        employees: totalEmployees,
+        selectedDate,
+    })
+    const selectedSummary = summarizeEmployeesForGeneralData({
+        employees: selectedEmployees,
+        selectedDate,
+    })
+    const selectedPeriodKey = selectedPeriod?.key || null
+
+    return {
+        // Keep old fields for backward compatibility while the UI is being changed.
+        totalEmployees: selectedSummary.totalEmployees,
+        workingEmployees: selectedSummary.workingEmployees,
+        inactiveEmployees: selectedSummary.inactiveEmployees,
+        averageAge: selectedSummary.averageAge,
+        averageServiceYears: selectedSummary.averageServiceYears,
+
+        selectedLabel,
+        budgetLabel: selectedPeriod?.year
+            ? `Budget ${selectedPeriod.year}`
+            : "Budget",
+        total: totalSummary,
+        selected: selectedSummary,
+        indirectDirect: buildIndirectDirectRatio({
+            totalSummary,
+            selectedSummary,
+            totalManpower,
+            selectedManpower,
+            selectedPeriodKey,
+        }),
+    }
+}
+
+function toStringId(value) {
+    return value?.toString?.() || value || null
+}
+
+function normalizeIdList(values = []) {
+    return [...new Set(
+        values
+            .map((value) => toStringId(value))
+            .filter(Boolean),
+    )]
 }
 
 function normalizeLookupItem(document, nameField = "name") {
@@ -693,6 +993,144 @@ function normalizeLookupItem(document, nameField = "name") {
         companyId: document.companyId?.toString?.() || null,
         branchId: document.branchId?.toString?.() || null,
         departmentId: document.departmentId?.toString?.() || null,
+        positionIds: normalizeIdList(
+            document.positionIds ||
+            document.allowedPositionIds ||
+            [],
+        ),
+    }
+}
+
+function aggregateChildPositionIds(children = []) {
+    const positionIds = []
+
+    for (const child of children) {
+        positionIds.push(...(child.positionIds || []))
+    }
+
+    return normalizeIdList(positionIds)
+}
+
+function employeeTypeUsesAllChildPositions(children = []) {
+    return children.some(
+        (child) => child.positionAssignmentMode === "ALL_POSITIONS",
+    )
+}
+
+function buildEmployeeTypeLookupOptions(employeeTypes = []) {
+    const options = []
+
+    for (const employeeType of employeeTypes) {
+        const parentId = employeeType._id.toString()
+        const parentName = employeeType.name || employeeType.code
+        const children = employeeType.children || []
+        const hasChildren = children.length > 0
+        const parentPositionMode = hasChildren && employeeTypeUsesAllChildPositions(children)
+            ? "ALL_POSITIONS"
+            : employeeType.positionAssignmentMode || "SPECIFIC_POSITIONS"
+        const parentPositionIds = hasChildren
+            ? aggregateChildPositionIds(children)
+            : normalizeIdList(employeeType.positionIds || [])
+
+        options.push({
+            id: parentId,
+            key: `TYPE:${parentId}`,
+            type: "TYPE",
+            code: employeeType.code,
+            name: parentName,
+            label: employeeType.code
+                ? `${employeeType.code} - ${parentName}`
+                : parentName,
+            companyId: employeeType.companyId?.toString?.() || null,
+            employeeTypeId: parentId,
+            employeeTypeChildCode: null,
+            dashboardCategory: employeeType.dashboardCategory || "CUSTOM",
+            positionAssignmentMode: parentPositionMode,
+            positionIds: parentPositionIds,
+            hasChildren,
+        })
+
+        for (const child of children) {
+            const childPositionMode = child.positionAssignmentMode || "SPECIFIC_POSITIONS"
+            const childPositionIds = normalizeIdList(child.positionIds || [])
+            const childHasAssignment = childPositionMode === "ALL_POSITIONS" ||
+                childPositionIds.length > 0
+
+            if (!childHasAssignment) continue
+
+            options.push({
+                id: `${parentId}:${child.code}`,
+                key: `CHILD:${parentId}:${child.code}`,
+                type: "CHILD",
+                code: child.code,
+                name: child.name,
+                label: `${parentName} / ${child.name}`,
+                companyId: employeeType.companyId?.toString?.() || null,
+                employeeTypeId: parentId,
+                employeeTypeChildCode: child.code,
+                dashboardCategory: child.dashboardCategory || "CUSTOM",
+                positionAssignmentMode: childPositionMode,
+                positionIds: childPositionIds,
+                hasChildren: false,
+            })
+        }
+    }
+
+    return options.sort((a, b) =>
+        String(a.label || "").localeCompare(String(b.label || "")),
+    )
+}
+
+function getSelectedEmployeeTypeLabel({ query, lookups }) {
+    const filter = normalizedQuery(query)
+
+    if (!filter.employeeTypeFilterKey) return "All Employee Types"
+
+    const selected = lookups.employeeTypes.find(
+        (item) => item.key === filter.employeeTypeFilterKey,
+    )
+
+    return selected?.label || "Selected Employee Type"
+}
+
+function findLookupName(items = [], id) {
+    if (!id) return ""
+
+    const item = items.find((entry) => entry.id === id)
+
+    return item?.name || item?.label || item?.code || ""
+}
+
+function getSelectedMetricLabel({ query, lookups }) {
+    const filter = normalizedQuery(query)
+
+    if (filter.employeeTypeFilterKey) {
+        const selected = lookups.employeeTypes.find(
+            (item) => item.key === filter.employeeTypeFilterKey,
+        )
+
+        return selected?.name || selected?.label || "Selected"
+    }
+
+    if (filter.positionId) {
+        return findLookupName(lookups.positions, filter.positionId) || "Selected"
+    }
+
+    if (filter.lineId) {
+        return findLookupName(lookups.lines, filter.lineId) || "Selected"
+    }
+
+    if (filter.departmentId) {
+        return findLookupName(lookups.departments, filter.departmentId) || "Selected"
+    }
+
+    return "Selected"
+}
+
+function buildGeneralTotalQuery(query = {}) {
+    return {
+        companyId: query.companyId || undefined,
+        branchId: query.branchId || undefined,
     }
 }
 
@@ -700,56 +1138,37 @@ export async function getHrDashboardLookups({ query }) {
     const cacheKey = `hr-dashboard:lookups:${JSON.stringify(query)}`
     const cachedResult = getCache(cacheKey)
 
-    if (cachedResult) {
-        return cachedResult
-    }
+    if (cachedResult) return cachedResult
 
     const companyMatch = query.companyId
         ? { _id: toObjectId(query.companyId) }
         : {}
     const branchMatch = {
         status: "ACTIVE",
-        ...(query.companyId
-            ? { companyId: toObjectId(query.companyId) }
-            : {}),
-        ...(query.branchId
-            ? { _id: toObjectId(query.branchId) }
-            : {}),
+        ...(query.companyId ? { companyId: toObjectId(query.companyId) } : {}),
+        ...(query.branchId ? { _id: toObjectId(query.branchId) } : {}),
     }
     const dimensionMatch = {
         status: "ACTIVE",
-        ...(query.companyId
-            ? { companyId: toObjectId(query.companyId) }
-            : {}),
-        ...(query.branchId
-            ? { branchId: toObjectId(query.branchId) }
-            : {}),
+        ...(query.companyId ? { companyId: toObjectId(query.companyId) } : {}),
+        ...(query.branchId ? { branchId: toObjectId(query.branchId) } : {}),
     }
     const departmentMatch = {
         ...dimensionMatch,
-        ...(query.departmentId
-            ? { _id: toObjectId(query.departmentId) }
-            : {}),
+        ...(query.departmentId ? { _id: toObjectId(query.departmentId) } : {}),
     }
     const childDimensionMatch = {
         ...dimensionMatch,
-        ...(query.departmentId
-            ? { departmentId: toObjectId(query.departmentId) }
-            : {}),
+        ...(query.departmentId ? { departmentId: toObjectId(query.departmentId) } : {}),
     }
     const employeeTypeMatch = {
         status: "ACTIVE",
-        ...(query.companyId
-            ? { companyId: toObjectId(query.companyId) }
-            : {}),
+        ...(query.companyId ? { companyId: toObjectId(query.companyId) } : {}),
     }
 
     const [companies, branches, departments, positions, lines, employeeTypes] =
         await Promise.all([
-            Company.find({
-                status: "ACTIVE",
-                ...companyMatch,
-            })
+            Company.find({ status: "ACTIVE", ...companyMatch })
                 .select(["code", "displayName"])
                 .sort({ displayName: 1 })
                 .lean(),
@@ -766,124 +1185,156 @@ export async function getHrDashboardLookups({ query }) {
                 .sort({ title: 1 })
                 .lean(),
             Line.find(childDimensionMatch)
-                .select(["code", "name", "companyId", "branchId", "departmentId"])
+                .select([
+                    "code",
+                    "name",
+                    "companyId",
+                    "branchId",
+                    "departmentId",
+                    "positionIds",
+                    "allowedPositionIds",
+                ])
                 .sort({ name: 1 })
                 .lean(),
             EmployeeType.find(employeeTypeMatch)
-                .select(["code", "name", "companyId"])
+                .select([
+                    "code",
+                    "name",
+                    "companyId",
+                    "dashboardCategory",
+                    "positionAssignmentMode",
+                    "positionIds",
+                    "children.code",
+                    "children.name",
+                    "children.dashboardCategory",
+                    "children.positionAssignmentMode",
+                    "children.positionIds",
+                ])
                 .sort({ name: 1 })
                 .lean(),
         ])
 
     const result = {
-        companies: companies.map((item) =>
-            normalizeLookupItem(item, "displayName"),
-        ),
+        companies: companies.map((item) => normalizeLookupItem(item, "displayName")),
         branches: branches.map((item) => normalizeLookupItem(item)),
         departments: departments.map((item) => normalizeLookupItem(item)),
         positions: positions.map((item) => normalizeLookupItem(item, "title")),
         lines: lines.map((item) => normalizeLookupItem(item)),
-        employeeTypes: employeeTypes.map((item) => normalizeLookupItem(item)),
+        employeeTypes: buildEmployeeTypeLookupOptions(employeeTypes),
     }
 
     return setCache(cacheKey, result, 60_000)
 }
 
 export async function getHrDashboard({ query }) {
-    const cacheKey = `hr-dashboard:data:${JSON.stringify(query)}`
+    const cleanQuery = normalizedQuery(query)
+    const cacheKey = `hr-dashboard:data:${JSON.stringify(cleanQuery)}`
     const cachedResult = getCache(cacheKey)
 
-    if (cachedResult) {
-        return cachedResult
-    }
+    if (cachedResult) return cachedResult
 
-    const startDate = parseStartDate(query.startDate)
-    const endDate = parseEndDate(query.endDate)
+    const startDate = parseStartDate(cleanQuery.startDate)
+    const endDate = parseEndDate(cleanQuery.endDate)
     const periods = createPeriods(startDate, endDate)
 
-    const [employees, plans, movements, lines] = await Promise.all([
-        loadEmployees(query),
-        loadPlans(query, periods),
-        loadMovements(query, startDate, endDate),
-        Line.find({
-            status: "ACTIVE",
-            ...(query.companyId ? { companyId: toObjectId(query.companyId) } : {}),
-            ...(query.branchId ? { branchId: toObjectId(query.branchId) } : {}),
-            ...(query.departmentId ? { departmentId: toObjectId(query.departmentId) } : {}),
-            ...(query.lineId ? { _id: toObjectId(query.lineId) } : {}),
-        })
-            .select(["code", "name"])
-            .lean(),
-    ])
+    const lookups = await getHrDashboardLookups({
+        query: {
+            companyId: cleanQuery.companyId,
+            branchId: cleanQuery.branchId,
+            departmentId: cleanQuery.departmentId,
+        },
+    })
+
+    const totalGeneralQuery = buildGeneralTotalQuery(cleanQuery)
+
+    const [
+        employees,
+        totalGeneralEmployees,
+        plans,
+        totalGeneralPlans,
+        movements,
+        recruitmentChannels,
+        lines,
+    ] = await Promise.all([
+            loadEmployees(cleanQuery),
+            loadEmployees(totalGeneralQuery),
+            loadPlans(cleanQuery, periods),
+            loadPlans(totalGeneralQuery, periods),
+            loadMovements(cleanQuery, startDate, endDate),
+            loadRecruitmentChannels(cleanQuery),
+            Line.find({
+                status: "ACTIVE",
+                ...(cleanQuery.companyId ? { companyId: toObjectId(cleanQuery.companyId) } : {}),
+                ...(cleanQuery.branchId ? { branchId: toObjectId(cleanQuery.branchId) } : {}),
+                ...(cleanQuery.departmentId ? { departmentId: toObjectId(cleanQuery.departmentId) } : {}),
+                ...(cleanQuery.lineId ? { _id: toObjectId(cleanQuery.lineId) } : {}),
+            })
+                .select(["code", "name"])
+                .lean(),
+        ])
 
     const attendanceRecords = await loadAttendanceRecords(
-        query,
+        cleanQuery,
         startDate,
         endDate,
         employees,
     )
 
     const selectedPeriod = periods.at(-1)
-    const attendanceMonthly = buildAttendanceSeries({
-        records: attendanceRecords,
+    const attendanceMonthly = buildAttendanceSeries({ records: attendanceRecords, periods })
+    const manpower = buildManpowerSeries({ employees, plans, periods })
+    const totalManpower = buildManpowerSeries({
+        employees: totalGeneralEmployees,
+        plans: totalGeneralPlans,
         periods,
+    })
+    const selectedEmployeeTypeLabel = getSelectedEmployeeTypeLabel({
+        query: cleanQuery,
+        lookups,
+    })
+    const selectedMetricLabel = getSelectedMetricLabel({
+        query: cleanQuery,
+        lookups,
     })
 
     const result = {
         filters: {
-            startDate: query.startDate,
-            endDate: query.endDate,
+            startDate: cleanQuery.startDate,
+            endDate: cleanQuery.endDate,
             selectedPeriodKey: selectedPeriod?.key || null,
-            companyId: query.companyId || null,
-            branchId: query.branchId || null,
-            departmentId: query.departmentId || null,
-            positionId: query.positionId || null,
-            lineId: query.lineId || null,
-            employeeTypeId: query.employeeTypeId || null,
+            companyId: cleanQuery.companyId || null,
+            branchId: cleanQuery.branchId || null,
+            departmentId: cleanQuery.departmentId || null,
+            positionId: cleanQuery.positionId || null,
+            lineId: cleanQuery.lineId || null,
+            employeeTypeId: cleanQuery.employeeTypeId || null,
+            employeeTypeChildCode: cleanQuery.employeeTypeChildCode || null,
+            employeeTypeFilterKey: cleanQuery.employeeTypeFilterKey || null,
+            employeeTypeLabel: selectedEmployeeTypeLabel,
         },
         general: buildGeneralData({
-            employees,
+            totalEmployees: totalGeneralEmployees,
+            selectedEmployees: employees,
             selectedDate: endDate,
+            selectedLabel: selectedMetricLabel,
+            selectedPeriod,
+            totalManpower,
+            selectedManpower: manpower,
         }),
-        manpower: {
-            sewer: buildManpowerSeries({
-                employees,
-                plans,
-                periods,
-                category: "SEWER",
-            }),
-            nonSewer: buildManpowerSeries({
-                employees,
-                plans,
-                periods,
-                category: "NON_SEWER",
-            }),
-        },
+        manpower,
+        recruitment: buildRecruitmentChannelDashboard({
+            employees,
+            recruitmentChannels,
+            periods,
+            startDate,
+            endDate,
+        }),
         attendance: {
             summary: buildAttendanceSummary(attendanceMonthly),
             monthly: attendanceMonthly,
-            byLine: buildAttendanceLineSummary({
-                records: attendanceRecords,
-                lines,
-            }),
+            byLine: buildAttendanceLineSummary({ records: attendanceRecords, lines }),
         },
-        movement: {
-            sewer: buildMovementSeries({
-                movements,
-                periods,
-                category: "SEWER",
-            }),
-            nonSewer: buildMovementSeries({
-                movements,
-                periods,
-                category: "NON_SEWER",
-            }),
-            whiteCollar: buildMovementSeries({
-                movements,
-                periods,
-                category: "WHITE_COLLAR",
-            }),
-        },
+        movement: buildMovementSeries({ movements, periods, query: cleanQuery }),
     }
 
     return setCache(cacheKey, result, 30_000)

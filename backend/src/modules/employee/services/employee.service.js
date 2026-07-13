@@ -62,6 +62,8 @@ function serializeEmployeeType(employeeType) {
         code: employeeType.code || employeeType.typeCode || "",
         name: employeeType.name || employeeType.typeName || employeeType.title || employeeType.displayName || "",
         shortName: employeeType.shortName || "",
+        dashboardCategory: employeeType.dashboardCategory || "CUSTOM",
+        positionAssignmentMode: employeeType.positionAssignmentMode || "SPECIFIC_POSITIONS",
         status: employeeType.status || employeeType.recordStatus || "",
     }
 }
@@ -89,35 +91,83 @@ function sameId(a, b) {
     return Boolean(left && right && left === right)
 }
 
-function findEmployeeTypePositionMatch(employeeType, positionId) {
+function childMatchesPayload(child, payload = {}) {
+    if (!child) return false
+
+    if (payload.employeeTypeChildId && sameId(payload.employeeTypeChildId, child._id || child.id)) {
+        return true
+    }
+
+    if (
+        payload.employeeTypeChildCode &&
+        String(payload.employeeTypeChildCode).toUpperCase() === String(child.code || "").toUpperCase()
+    ) {
+        return true
+    }
+
+    return false
+}
+
+function childAllowsPosition(child, positionId) {
+    if (!child || !positionId) return false
+
+    if (child.positionAssignmentMode === "ALL_POSITIONS") {
+        return true
+    }
+
+    const childPositionIds = Array.isArray(child.positionIds)
+        ? child.positionIds
+        : []
+
+    return childPositionIds.some((item) => sameId(item, positionId))
+}
+
+function buildEmployeeTypeMatch(employeeType, child = null) {
+    return {
+        employeeTypeId: toId(employeeType._id || employeeType.id),
+        employeeTypeChildId: child ? toId(child._id || child.id) : null,
+        employeeTypeChildCode: child?.code || "",
+        employeeTypeChildName: child?.name || "",
+    }
+}
+
+function findEmployeeTypePositionMatch(employeeType, positionId, payload = {}) {
     if (!employeeType || !positionId) return null
+
+    const children = Array.isArray(employeeType.children)
+        ? employeeType.children
+        : []
+
+    if (children.length > 0) {
+        const requestedChild = children.find((child) =>
+            childMatchesPayload(child, payload),
+        )
+
+        if (requestedChild) {
+            return childAllowsPosition(requestedChild, positionId)
+                ? buildEmployeeTypeMatch(employeeType, requestedChild)
+                : null
+        }
+
+        const matchedChild = children.find((child) =>
+            childAllowsPosition(child, positionId),
+        )
+
+        return matchedChild
+            ? buildEmployeeTypeMatch(employeeType, matchedChild)
+            : null
+    }
+
+    if (employeeType.positionAssignmentMode === "ALL_POSITIONS") {
+        return buildEmployeeTypeMatch(employeeType)
+    }
 
     const directPositionIds = Array.isArray(employeeType.positionIds)
         ? employeeType.positionIds
         : []
 
     if (directPositionIds.some((item) => sameId(item, positionId))) {
-        return {
-            employeeTypeId: toId(employeeType._id || employeeType.id),
-            employeeTypeChildId: null,
-            employeeTypeChildCode: "",
-            employeeTypeChildName: "",
-        }
-    }
-
-    for (const child of employeeType.children || []) {
-        const childPositionIds = Array.isArray(child.positionIds)
-            ? child.positionIds
-            : []
-
-        if (childPositionIds.some((item) => sameId(item, positionId))) {
-            return {
-                employeeTypeId: toId(employeeType._id || employeeType.id),
-                employeeTypeChildId: toId(child._id || child.id),
-                employeeTypeChildCode: child.code || "",
-                employeeTypeChildName: child.name || "",
-            }
-        }
+        return buildEmployeeTypeMatch(employeeType)
     }
 
     return null
@@ -159,7 +209,7 @@ async function resolveEmployeeTypeReporting(payload) {
         }
     }
 
-    const match = findEmployeeTypePositionMatch(employeeType, payload.positionId)
+    const match = findEmployeeTypePositionMatch(employeeType, payload.positionId, payload)
 
     if (!match) {
         throw new AppError({
@@ -659,6 +709,7 @@ export async function createEmployee({ payload, user }) {
 
         clearCacheByPrefix("employee:list:")
         clearCacheByPrefix("employeeMovement:list:")
+        clearCacheByPrefix("hr-dashboard:")
         return getEmployeeById({ employeeId: employee._id, user })
     } catch (error) {
         handleDuplicate(error)
@@ -689,6 +740,7 @@ export async function updateEmployee({ employeeId, payload, user }) {
 
         clearCacheByPrefix("employee:list:")
         clearCacheByPrefix("employeeMovement:list:")
+        clearCacheByPrefix("hr-dashboard:")
         return getEmployeeById({ employeeId: updated._id, user })
     } catch (error) {
         handleDuplicate(error)
@@ -701,6 +753,7 @@ export async function archiveEmployee({ employeeId, user }) {
     if (!existing) throw new AppError({ statusCode: 404, code: "EMPLOYEE_NOT_FOUND", messageKey: "errors.employee.profile.notFound" })
     const archived = await Employee.findByIdAndUpdate(existing._id, { $set: { recordStatus: "ARCHIVED", updatedByAccountId: user.accountId } }, { new: true, runValidators: true, context: "query" }).lean()
     clearCacheByPrefix("employee:list:")
+    clearCacheByPrefix("hr-dashboard:")
     return getEmployeeById({ employeeId: archived._id, user })
 }
 

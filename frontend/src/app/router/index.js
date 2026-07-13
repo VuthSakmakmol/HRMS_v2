@@ -235,6 +235,17 @@ const router = createRouter({
                     },
                 },
 
+                {
+                    path: "organization/recruitment-channels",
+                    name: "organization-recruitment-channels",
+                    component: () =>
+                        import("@/modules/recruitmentChannel/views/RecruitmentChannelListView.vue"),
+                    meta: {
+                        titleKey: "nav.recruitmentChannels",
+                        permissionCode: "ORGANIZATION.RECRUITMENT_CHANNEL.VIEW",
+                    },
+                },
+
 
             ],
         },

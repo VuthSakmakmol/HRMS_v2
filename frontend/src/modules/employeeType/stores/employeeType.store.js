@@ -11,17 +11,11 @@ import {
 } from "../services/employeeType.api.js"
 
 function buildCleanFilters(filters) {
-    const cleanFilters = {
-        ...filters,
-    }
-
-    for (const field of ["companyId", "branchId", "departmentId", "positionId"]) {
-        if (!cleanFilters[field]) {
-            delete cleanFilters[field]
-        }
-    }
-
-    return cleanFilters
+    return Object.fromEntries(
+        Object.entries(filters).filter(([, value]) =>
+            value !== "" && value !== null && value !== undefined,
+        ),
+    )
 }
 
 export const useEmployeeTypeStore = defineStore("employeeType", {
@@ -40,6 +34,7 @@ export const useEmployeeTypeStore = defineStore("employeeType", {
             limit: 20,
             search: "",
             status: "ALL",
+            dashboardCategory: "ALL",
             companyId: undefined,
             branchId: undefined,
             departmentId: undefined,
@@ -49,13 +44,11 @@ export const useEmployeeTypeStore = defineStore("employeeType", {
         loading: false,
         saving: false,
         archiving: false,
-
         downloadingTemplate: false,
         exporting: false,
         importing: false,
         importProgress: 0,
         importSummary: null,
-
         error: null,
     }),
 
@@ -63,17 +56,10 @@ export const useEmployeeTypeStore = defineStore("employeeType", {
         async loadEmployeeTypes(params = {}) {
             this.loading = true
             this.error = null
-
-            this.filters = {
-                ...this.filters,
-                ...params,
-            }
+            this.filters = { ...this.filters, ...params }
 
             try {
-                const result = await fetchEmployeeTypes(
-                    buildCleanFilters(this.filters),
-                )
-
+                const result = await fetchEmployeeTypes(buildCleanFilters(this.filters))
                 this.items = result.items || []
                 this.pagination = result.pagination || {
                     page: this.filters.page,
@@ -81,7 +67,6 @@ export const useEmployeeTypeStore = defineStore("employeeType", {
                     total: 0,
                     totalPages: 1,
                 }
-
                 return result
             } catch (error) {
                 this.error = error
@@ -94,7 +79,6 @@ export const useEmployeeTypeStore = defineStore("employeeType", {
         async createEmployeeType(payload) {
             this.saving = true
             this.error = null
-
             try {
                 return await createEmployeeType(payload)
             } catch (error) {
@@ -108,7 +92,6 @@ export const useEmployeeTypeStore = defineStore("employeeType", {
         async updateEmployeeType(employeeTypeId, payload) {
             this.saving = true
             this.error = null
-
             try {
                 return await updateEmployeeType(employeeTypeId, payload)
             } catch (error) {
@@ -122,7 +105,6 @@ export const useEmployeeTypeStore = defineStore("employeeType", {
         async archiveEmployeeType(employeeTypeId) {
             this.archiving = true
             this.error = null
-
             try {
                 return await archiveEmployeeType(employeeTypeId)
             } catch (error) {
@@ -136,7 +118,6 @@ export const useEmployeeTypeStore = defineStore("employeeType", {
         async downloadImportTemplate() {
             this.downloadingTemplate = true
             this.error = null
-
             try {
                 await downloadEmployeeTypeImportTemplate()
             } catch (error) {
@@ -150,7 +131,6 @@ export const useEmployeeTypeStore = defineStore("employeeType", {
         async exportEmployeeTypes() {
             this.exporting = true
             this.error = null
-
             try {
                 await exportEmployeeTypes(buildCleanFilters(this.filters))
             } catch (error) {
@@ -166,18 +146,12 @@ export const useEmployeeTypeStore = defineStore("employeeType", {
             this.importProgress = 1
             this.importSummary = null
             this.error = null
-
             let processingTimer = null
 
             const startProcessingProgress = () => {
-                if (processingTimer) {
-                    return
-                }
-
+                if (processingTimer) return
                 processingTimer = window.setInterval(() => {
-                    if (this.importProgress < 95) {
-                        this.importProgress += 1
-                    }
+                    if (this.importProgress < 95) this.importProgress += 1
                 }, 800)
             }
 
@@ -187,37 +161,22 @@ export const useEmployeeTypeStore = defineStore("employeeType", {
                         startProcessingProgress()
                         return
                     }
-
-                    const uploadPercent = Math.round(
-                        (event.loaded * 70) / event.total,
-                    )
-
+                    const uploadPercent = Math.round((event.loaded * 70) / event.total)
                     this.importProgress = Math.max(3, uploadPercent)
-
                     if (event.loaded >= event.total) {
-                        this.importProgress = Math.max(
-                            this.importProgress,
-                            72,
-                        )
+                        this.importProgress = Math.max(this.importProgress, 72)
                         startProcessingProgress()
                     }
                 })
-
                 this.importProgress = 100
                 this.importSummary = summary
-
                 return summary
             } catch (error) {
                 this.error = error
                 throw error
             } finally {
-                if (processingTimer) {
-                    window.clearInterval(processingTimer)
-                }
-
-                window.setTimeout(() => {
-                    this.importing = false
-                }, 500)
+                if (processingTimer) window.clearInterval(processingTimer)
+                window.setTimeout(() => { this.importing = false }, 500)
             }
         },
     },

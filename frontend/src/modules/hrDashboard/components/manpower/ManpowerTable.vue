@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from "vue"
 import { useI18n } from "vue-i18n"
 
 const props = defineProps({
@@ -14,7 +15,7 @@ const props = defineProps({
 
 const { t } = useI18n()
 
-const metrics = [
+const metrics = computed(() => [
     {
         key: "budget",
         labelKey: "hrDashboard.manpower.budget",
@@ -31,12 +32,44 @@ const metrics = [
         className: "metric-actual",
     },
     {
+        key: "targetGap",
+        labelKey: "hrDashboard.manpower.overLessTarget",
+        className: "metric-target-gap",
+        signed: true,
+    },
+    {
+        key: "roadmapGap",
+        labelKey: "hrDashboard.manpower.overLessRoadmap",
+        className: "metric-roadmap-gap",
+        signed: true,
+    },
+    {
         key: "fillRate",
         labelKey: "hrDashboard.manpower.fillRate",
         className: "metric-fill-rate",
         suffix: "%",
     },
-]
+])
+
+function formatMetricValue(row, metric) {
+    const value = Number(row?.[metric.key]) || 0
+
+    if (metric.signed && value > 0) {
+        return `+${value}`
+    }
+
+    return `${value}${metric.suffix || ""}`
+}
+
+function valueClass(row, metric) {
+    const value = Number(row?.[metric.key]) || 0
+
+    return {
+        "is-selected-period-key": row.key === props.selectedPeriodKey,
+        "is-negative": ["targetGap", "roadmapGap"].includes(metric.key) && value < 0,
+        "is-positive": ["targetGap", "roadmapGap"].includes(metric.key) && value > 0,
+    }
+}
 </script>
 
 <template>
@@ -50,7 +83,7 @@ const metrics = [
 
                     <th
                         v-for="row in rows"
-                        :key="row.month"
+                        :key="row.key"
                         :class="{
                             'is-selected-period-key': row.key === selectedPeriodKey,
                         }"
@@ -72,13 +105,10 @@ const metrics = [
 
                     <td
                         v-for="row in rows"
-                        :key="`${metric.key}-${row.month}`"
-                        :class="{
-                            'is-selected-period-key': row.key === selectedPeriodKey,
-                            'is-negative': Number(row[metric.key]) < 0,
-                        }"
+                        :key="`${metric.key}-${row.key}`"
+                        :class="valueClass(row, metric)"
                     >
-                        {{ row[metric.key] ?? 0 }}{{ metric.suffix || "" }}
+                        {{ formatMetricValue(row, metric) }}
                     </td>
                 </tr>
             </tbody>
@@ -104,13 +134,13 @@ const metrics = [
 
 .manpower-table th,
 .manpower-table td {
-    height: 1.5rem;
-    padding: 0.18rem 0.22rem;
+    height: 1.38rem;
+    padding: 0.15rem 0.18rem;
     border: 1px solid #a6a6a6;
     color: #111111;
-    font-size: clamp(0.5rem, 0.72vw, 0.66rem);
+    font-size: clamp(0.47rem, 0.68vw, 0.62rem);
     font-weight: 700;
-    line-height: 1.1;
+    line-height: 1.04;
     text-align: center;
     vertical-align: middle;
     word-break: break-word;
@@ -124,7 +154,7 @@ const metrics = [
 
 .manpower-table__metric-header,
 .manpower-table tbody th {
-    width: 7rem;
+    width: 7.8rem;
     text-align: left;
 }
 
@@ -142,6 +172,16 @@ const metrics = [
 .metric-actual th,
 .metric-actual td {
     background: #e7e6e6;
+}
+
+.metric-target-gap th,
+.metric-target-gap td {
+    background: #fce4d6;
+}
+
+.metric-roadmap-gap th,
+.metric-roadmap-gap td {
+    background: #e2f0d9;
 }
 
 .metric-fill-rate th,
@@ -163,13 +203,25 @@ const metrics = [
 }
 
 .manpower-table .is-negative {
-    color: #ff0000;
+    color: #c00000;
+    font-weight: 900;
+}
+
+.manpower-table .is-positive {
+    color: #006100;
+    font-weight: 900;
 }
 
 @media (max-width: 720px) {
     .manpower-table__metric-header,
     .manpower-table tbody th {
-        width: 5.5rem;
+        width: 6.4rem;
+    }
+
+    .manpower-table th,
+    .manpower-table td {
+        height: 1.32rem;
+        padding: 0.14rem 0.12rem;
     }
 }
 </style>
