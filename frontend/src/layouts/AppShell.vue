@@ -225,6 +225,15 @@ const navGroups = computed(() => {
                     permissionCode: "ORGANIZATION.RECRUITMENT_CHANNEL.VIEW",
                 },
 
+                {
+                    labelKey: "nav.hrDashboardTargets",
+                    icon: "pi pi-bullseye",
+                    to: {
+                        name: "report-hr-dashboard-targets",
+                    },
+                    permissionCode: "REPORT.HR_DASHBOARD_TARGET.VIEW",
+                },
+
             ],
         },
 

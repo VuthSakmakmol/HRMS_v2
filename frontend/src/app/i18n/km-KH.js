@@ -11,22 +11,50 @@ export default {
         retry: "សាកល្បងម្តងទៀត",
         logout: "ចាកចេញ",
         menu: "ម៉ឺនុយ",
+        all: "ទាំងអស់",
+        active: "សកម្ម",
+        inactive: "អសកម្ម",
+        archived: "បានដាក់បណ្ណសារ",
+        status: "ស្ថានភាព",
+        remark: "កំណត់សម្គាល់",
+        description: "ការពិពណ៌នា",
         apply: "អនុវត្ត",
         clear: "សម្អាត",
         refresh: "ធ្វើបច្ចុប្បន្នភាព",
         actions: "សកម្មភាព",
         create: "បង្កើត",
+        created: "បានបង្កើត",
         edit: "កែប្រែ",
+        update: "កែប្រែ",
+        updated: "បានកែប្រែ",
         archive: "ដាក់ក្នុងបណ្ណសារ",
+        archivedAction: "បានដាក់ក្នុងបណ្ណសារ",
+        delete: "លុប",
         cancel: "បោះបង់",
         close: "បិទ",
         save: "រក្សាទុក",
+        saved: "បានរក្សាទុក",
         search: "ស្វែងរក",
         note: "កំណត់សម្គាល់",
         success: "ជោគជ័យ",
+        failed: "បរាជ័យ",
+        loading: "កំពុងផ្ទុក",
+        noData: "មិនមានទិន្នន័យ",
+        noRecords: "រកមិនឃើញទិន្នន័យ",
+        somethingWentWrong: "មានបញ្ហាកើតឡើង។",
         next: "បន្ទាប់",
+        previous: "មុន",
         yes: "បាទ/ចាស",
-        no: "ទេ"
+        no: "ទេ",
+        required: "ត្រូវការ",
+        optional: "ជាជម្រើស",
+        select: "ជ្រើសរើស",
+        code: "កូដ",
+        name: "ឈ្មោះ",
+        type: "ប្រភេទ",
+        date: "កាលបរិច្ឆេទ",
+        year: "ឆ្នាំ",
+        month: "ខែ"
     },
     nav: {
         accessControl: "ការគ្រប់គ្រងសិទ្ធិ",
@@ -55,7 +83,8 @@ export default {
         employeeMovements: "ចលនាបុគ្គលិក",
         hrManagementDashboard: "ផ្ទាំងគ្រប់គ្រង HR",
         hrDashboard: "ផ្ទាំងគ្រប់គ្រង HR",
-        recruitmentChannels: "ប្រភពជ្រើសរើសបុគ្គលិក"
+        recruitmentChannels: "ប្រភពជ្រើសរើសបុគ្គលិក",
+        hrDashboardTargets: "គោលដៅផ្ទាំងគ្រប់គ្រង"
     },
     attendance: {
         title: "កំណត់ត្រាវត្តមាន",
@@ -208,7 +237,9 @@ export default {
             attendanceByLine: "វត្តមានតាម Line",
             manpower: "កម្លាំងពលកម្ម",
             recruitmentChannels: "ប្រភពជ្រើសរើសបុគ្គលិក",
-            movement: "ចលនាបុគ្គលិក"
+        hrDashboardTargets: "គោលដៅផ្ទាំងគ្រប់គ្រង",
+            movement: "ចលនាបុគ្គលិក",
+            turnover: "ការចាកចេញពីការងារ"
         },
         general: {
             totalEmployees: "បុគ្គលិកសរុប",
@@ -304,7 +335,21 @@ export default {
             attendanceRate: "អត្រាវត្តមាន",
             line: "ខ្សែផលិតកម្ម",
             noLineData: "មិនមានទិន្នន័យវត្តមានតាមខ្សែផលិតកម្មសម្រាប់រយៈពេលដែលបានជ្រើស។",
-            chartAria: "ក្រាហ្វវត្តមានប្រចាំខែ មានវត្តមាន អវត្តមាន និងមកយឺត"
+            chartAria: "ក្រាហ្វផ្ទាំងគ្រប់គ្រងវត្តមាន",
+            totalView: "សរុប",
+            detailView: "លម្អិត",
+            selectDetail: "ជ្រើសរើសលម្អិត",
+            detailType: "លម្អិត",
+            totalAbsentPercent: "អវត្តមាន",
+            targetLessThan: "គោលដៅ <",
+            avg: "មធ្យម",
+            codes: {
+                TOTAL: "អវត្តមានសរុប",
+                AL: "AL",
+                SP: "SP",
+                UL: "UL",
+                AB: "AB"
+            }
         },
         noData: "មិនមានទិន្នន័យ Dashboard ត្រូវនឹងតម្រងនេះទេ។",
         recruitment: {
@@ -316,6 +361,52 @@ export default {
             noData: "គ្មានទិន្នន័យ",
             previousYearChart: "សមាមាត្រប្រភពជ្រើសរើស – {year}",
             currentYearChart: "សមាមាត្រប្រភពជ្រើសរើស – {year}"
+        },
+        turnover: {
+            turnover: "ការចាកចេញពីការងារ",
+            targetLessThan: "គោលដៅ <",
+            avg: "មធ្យម",
+            previousYear: "ឆ្នាំមុន",
+            currentYear: "ឆ្នាំបច្ចុប្បន្ន",
+            exitCount: "ចំនួនចាកចេញ",
+            averageHeadcount: "ចំនួនបុគ្គលិកមធ្យម",
+            turnoverRate: "អត្រាចាកចេញ"
+        }
+    },
+    hrDashboardTarget: {
+        title: "គោលដៅផ្ទាំងគ្រប់គ្រង",
+        createTitle: "បង្កើតគោលដៅផ្ទាំងគ្រប់គ្រង",
+        editTitle: "កែប្រែគោលដៅផ្ទាំងគ្រប់គ្រង",
+        archiveTitle: "ទុកក្នុងបណ្ណសារគោលដៅផ្ទាំងគ្រប់គ្រង",
+        archiveConfirm: "តើអ្នកចង់ទុកគោលដៅនេះក្នុងបណ្ណសារមែនទេ? វានឹងមិនត្រូវបានប្រើក្នុង HR Dashboard ទៀតទេ។",
+        allMetrics: "គ្រប់ប្រភេទគោលដៅ",
+        allMonths: "គ្រប់ខែ",
+        wholeYear: "ពេញមួយឆ្នាំ",
+        noChild: "គ្មានកូន / កូនទាំងអស់",
+        metric: "ប្រភេទគោលដៅ",
+        year: "ឆ្នាំ",
+        month: "ខែ",
+        targetRate: "អត្រាគោលដៅ",
+        scope: "វិសាលភាព",
+        company: "ក្រុមហ៊ុន",
+        branch: "សាខា",
+        employeeType: "ប្រភេទបុគ្គលិក",
+        employeeTypeChild: "កូនប្រភេទបុគ្គលិក",
+        department: "ផ្នែក",
+        position: "មុខតំណែង",
+        line: "ខ្សែផលិតកម្ម",
+        metrics: {
+            absenceRate: "អត្រាអវត្តមាន",
+            turnoverRate: "អត្រាបុគ្គលិកចាកចេញ"
+        },
+        messages: {
+            loadOptionsFailed: "មិនអាចទាញយកទិន្នន័យកំណត់បានទេ",
+            loadFailed: "មិនអាចទាញយកគោលដៅផ្ទាំងគ្រប់គ្រងបានទេ",
+            saveFailed: "មិនអាចរក្សាទុកគោលដៅផ្ទាំងគ្រប់គ្រងបានទេ",
+            archiveFailed: "មិនអាចទុកគោលដៅផ្ទាំងគ្រប់គ្រងក្នុងបណ្ណសារបានទេ",
+            created: "បានបង្កើតគោលដៅផ្ទាំងគ្រប់គ្រង។",
+            updated: "បានកែប្រែគោលដៅផ្ទាំងគ្រប់គ្រង។",
+            archived: "បានទុកគោលដៅផ្ទាំងគ្រប់គ្រងក្នុងបណ្ណសារ។"
         }
     },
     auth: {
@@ -1130,6 +1221,18 @@ export default {
         authTokenRevoked: "Session របស់អ្នកមិនអាចប្រើបានទៀតទេ។ សូមចូលប្រើប្រាស់ម្តងទៀត។",
         authAccountUnavailable: "គណនីនេះមិនអាចប្រើបានទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រងប្រព័ន្ធ។",
         permissionDenied: "អ្នកមិនមានសិទ្ធិធ្វើសកម្មភាពនេះទេ។",
+        report: {
+            hrDashboardTarget: {
+                invalidId: "លេខសម្គាល់គោលដៅផ្ទាំងគ្រប់គ្រងមិនត្រឹមត្រូវ។",
+                notFound: "រកមិនឃើញគោលដៅផ្ទាំងគ្រប់គ្រង។",
+                archived: "គោលដៅដែលបានទុកក្នុងបណ្ណសារមិនអាចកែប្រែបានទេ។",
+                duplicateScope: "មានគោលដៅរួចហើយសម្រាប់ប្រភេទគោលដៅ រយៈពេល និងវិសាលភាពនេះ។",
+                invalidReference: "ទិន្នន័យយោងមួយចំនួនមិនត្រឹមត្រូវ។",
+                referenceNotFound: "រកមិនឃើញទិន្នន័យយោងមួយចំនួន ឬត្រូវបានទុកក្នុងបណ្ណសារ។",
+                employeeTypeNotFound: "រកមិនឃើញប្រភេទបុគ្គលិក ឬត្រូវបានទុកក្នុងបណ្ណសារ។",
+                employeeTypeChildNotFound: "រកមិនឃើញកូនប្រភេទបុគ្គលិក។"
+            }
+        },
         organization: {
             company: {
                 invalidId: "Company ID មិនត្រឹមត្រូវ។",

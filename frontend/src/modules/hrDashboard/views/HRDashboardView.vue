@@ -11,6 +11,7 @@ import GeneralDataSection from "../components/general/GeneralDataSection.vue"
 import ManpowerSection from "../components/manpower/ManpowerSection.vue"
 import MovementSection from "../components/movement/MovementSection.vue"
 import RecruitmentChannelSection from "../components/recruitment/RecruitmentChannelSection.vue"
+import TurnoverDashboardSection from "../components/turnover/TurnoverDashboardSection.vue"
 import { useHrDashboardStore } from "../stores/hrDashboard.store.js"
 
 const { t } = useI18n()
@@ -62,11 +63,17 @@ const hasDashboardData = computed(() => {
         ),
     )
 
+    const turnoverHasData = (data.turnover?.rows || []).some((row) =>
+        [row.previousCount, row.currentCount, row.previousRate, row.currentRate].some(
+            (value) => Number(value) !== 0,
+        ),
+    )
+
     const movementHasData = (data.movement || []).some((row) =>
         [row.in, row.out, row.balance].some((value) => Number(value) !== 0),
     )
 
-    return generalHasData || manpowerHasData || attendanceHasData || recruitmentHasData || movementHasData
+    return generalHasData || manpowerHasData || attendanceHasData || recruitmentHasData || turnoverHasData || movementHasData
 })
 const showNoDataMessage = computed(() =>
     Boolean(dashboardStore.dashboard) &&
@@ -215,6 +222,12 @@ onMounted(async () => {
                 <AttendanceDashboardSection
                     :title="safeT('hrDashboard.sections.attendanceDashboard', 'Attendance Dashboard')"
                     :data="dashboard.attendance || {}"
+                    :selected-period-key="selectedPeriodKey"
+                />
+
+                <TurnoverDashboardSection
+                    :title="safeT('hrDashboard.sections.turnover', 'Turnover')"
+                    :data="dashboard.turnover || {}"
                     :selected-period-key="selectedPeriodKey"
                 />
 

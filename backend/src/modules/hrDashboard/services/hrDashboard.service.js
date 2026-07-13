@@ -8,6 +8,7 @@ import RecruitmentChannel from "../../recruitmentChannel/models/RecruitmentChann
 import EmployeeType from "../../employeeType/models/EmployeeType.js"
 import Line from "../../line/models/Line.js"
 import ManpowerPlan from "../../manpowerPlan/models/ManpowerPlan.js"
+import HrDashboardTarget from "../../hrDashboardTarget/models/HrDashboardTarget.js"
 import Branch from "../../organization/models/Branch.js"
 import Company from "../../organization/models/Company.js"
 import Department from "../../organization/models/Department.js"
@@ -66,6 +67,41 @@ const PRESENT_STATUSES = new Set([
 const LATE_STATUSES = new Set(["LATE", "LATE_AND_EARLY_LEAVE"])
 const EARLY_STATUSES = new Set(["EARLY_LEAVE", "LATE_AND_EARLY_LEAVE"])
 const MISSING_STATUSES = new Set(["MISSING_IN", "MISSING_OUT"])
+
+const DEFAULT_ABSENCE_TARGET_RATE = 4.88
+const DEFAULT_TURNOVER_TARGET_RATE = 2.64
+
+const ABSENCE_DETAIL_OPTIONS = Object.freeze([
+    {
+        code: "AL",
+        label: "AL",
+        name: "Annual Leave",
+    },
+    {
+        code: "SP",
+        label: "SP",
+        name: "Special Permission",
+    },
+    {
+        code: "UL",
+        label: "UL",
+        name: "Unpaid Leave",
+    },
+    {
+        code: "AB",
+        label: "AB",
+        name: "Absent",
+    },
+])
+
+const ATTENDANCE_DETAIL_CODE_ALIASES = Object.freeze({
+    ANNUAL_LEAVE: "AL",
+    SPECIAL_PERMISSION: "SP",
+    SPECIAL_LEAVE: "SP",
+    UNPAID_LEAVE: "UL",
+    ABSENT: "AB",
+    ABSENCE: "AB",
+})
 
 function toObjectId(value) {
     return value ? new mongoose.Types.ObjectId(value) : undefined
@@ -336,6 +372,11 @@ async function loadAttendanceRecords(query, startDate, endDate, employees) {
             "workedMinutes",
             "lateMinutes",
             "earlyLeaveMinutes",
+            "attendanceCode",
+            "absenceCode",
+            "leaveCode",
+            "leaveTypeCode",
+            "correctionCode",
         ])
         .lean()
 }
@@ -659,6 +700,140 @@ async function loadRecruitmentChannels(query = {}) {
         .lean()
 }
 
+
+function toOptionalStringId(value) {
+    if (!value) return ""
+
+    return value?.toString?.() || String(value)
+}
+
+function targetFieldMatches(target, query, field) {
+    const targetValue = toOptionalStringId(target[field])
+
+    if (!targetValue) return true
+
+    const queryValue = toOptionalStringId(query[field])
+
+    return Boolean(queryValue && queryValue === targetValue)
+}
+
+function dashboardTargetMatches(target = {}, query = {}) {
+    const fields = [
+        "companyId",
+        "branchId",
+        "departmentId",
+        "positionId",
+        "lineId",
+        "employeeTypeId",
+    ]
+
+    for (const field of fields) {
+        if (!targetFieldMatches(target, query, field)) {
+            return false
+        }
+    }
+
+    if (target.employeeTypeChildCode) {
+        return target.employeeTypeChildCode === (query.employeeTypeChildCode || "")
+    }
+
+    return true
+}
+
+function dashboardTargetSpecificity(target = {}, month) {
+    let score = 0
+
+    for (const field of [
+        "companyId",
+        "branchId",
+        "departmentId",
+        "positionId",
+        "lineId",
+        "employeeTypeId",
+    ]) {
+        if (toOptionalStringId(target[field])) score += 10
+    }
+
+    if (target.employeeTypeChildCode) score += 10
+    if (Number(target.month) === month) score += 100
+
+    return score
+}
+
+function pickDashboardTargetRate({ targets, metric, month, query, fallbackRate }) {
+    const candidates = targets
+        .filter((target) => target.metric === metric)
+        .filter((target) => [0, month].includes(Number(target.month || 0)))
+        .filter((target) => dashboardTargetMatches(target, query))
+        .sort((a, b) => {
+            const specificityDifference = dashboardTargetSpecificity(b, month) -
+                dashboardTargetSpecificity(a, month)
+
+            if (specificityDifference !== 0) return specificityDifference
+
+            return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
+        })
+
+    return candidates.length
+        ? Number(candidates[0].targetRate || 0)
+        : fallbackRate
+}
+
+function buildDashboardTargetRates({ targets, metric, query, fallbackRate }) {
+    const monthly = {}
+
+    for (let month = 1; month <= 12; month += 1) {
+        monthly[month] = pickDashboardTargetRate({
+            targets,
+            metric,
+            month,
+            query,
+            fallbackRate,
+        })
+    }
+
+    return {
+        monthly,
+        average: round(
+            Object.values(monthly).reduce((sum, value) => sum + value, 0) / 12,
+            2,
+        ),
+    }
+}
+
+async function loadDashboardTargets(query, year) {
+    const match = {
+        status: "ACTIVE",
+        metric: { $in: ["ABSENCE_RATE", "TURNOVER_RATE"] },
+        year,
+    }
+
+    if (query.companyId) {
+        match.companyId = toObjectId(query.companyId)
+    }
+
+    if (query.branchId) {
+        match.branchId = toObjectId(query.branchId)
+    }
+
+    return HrDashboardTarget.find(match)
+        .select([
+            "companyId",
+            "branchId",
+            "metric",
+            "year",
+            "month",
+            "departmentId",
+            "positionId",
+            "lineId",
+            "employeeTypeId",
+            "employeeTypeChildCode",
+            "targetRate",
+            "updatedAt",
+        ])
+        .lean()
+}
+
 function createRecruitmentMonthRows(periods = []) {
     return periods.map((period) => ({
         key: period.key,
@@ -847,6 +1022,418 @@ function buildRecruitmentChannelDashboard({
             previousYear: buildRecruitmentPie(sortedRows, "previousTotal"),
             currentYear: buildRecruitmentPie(sortedRows, "currentTotal"),
         },
+    }
+}
+
+function normalizeAttendanceDetailCode(value) {
+    if (!value) return ""
+
+    const normalized = String(value)
+        .trim()
+        .replace(/[\s-]+/g, "_")
+        .toUpperCase()
+
+    return ATTENDANCE_DETAIL_CODE_ALIASES[normalized] || normalized
+}
+
+function getAttendanceDetailCode(record = {}) {
+    const explicitCode = normalizeAttendanceDetailCode(
+        record.absenceCode ||
+            record.leaveCode ||
+            record.leaveTypeCode ||
+            record.attendanceCode ||
+            record.correctionCode,
+    )
+
+    if (explicitCode) return explicitCode
+
+    if (record.status === "ABSENT") return "AB"
+
+    return ""
+}
+
+function isAttendanceExpectedWorkRecord(record = {}) {
+    return !["REST_DAY", "HOLIDAY"].includes(record.status)
+}
+
+function isAbsenceRecord(record = {}) {
+    const code = getAttendanceDetailCode(record)
+
+    return ["AL", "SP", "UL", "AB"].includes(code) || record.status === "ABSENT"
+}
+
+function createAttendanceComparisonMonth({ year, month }) {
+    const key = `${year}-${String(month).padStart(2, "0")}`
+
+    return {
+        key,
+        year,
+        month,
+        label: MONTH_LABELS[month - 1],
+        expected: 0,
+        totalAbsence: 0,
+        rate: 0,
+        details: ABSENCE_DETAIL_OPTIONS.reduce((result, option) => {
+            result[option.code] = 0
+            return result
+        }, {}),
+    }
+}
+
+function createAttendanceComparisonYear(year) {
+    return Array.from({ length: 12 }, (_, index) =>
+        createAttendanceComparisonMonth({
+            year,
+            month: index + 1,
+        }),
+    )
+}
+
+function calculateAttendanceMonthRates(months = []) {
+    for (const month of months) {
+        month.rate = month.expected > 0
+            ? round((month.totalAbsence / month.expected) * 100, 2)
+            : 0
+    }
+
+    return months
+}
+
+function summarizeAttendanceMonths(months = []) {
+    const expected = months.reduce((sum, month) => sum + month.expected, 0)
+    const totalAbsence = months.reduce((sum, month) => sum + month.totalAbsence, 0)
+    const details = ABSENCE_DETAIL_OPTIONS.reduce((result, option) => {
+        result[option.code] = months.reduce(
+            (sum, month) => sum + (Number(month.details?.[option.code]) || 0),
+            0,
+        )
+        return result
+    }, {})
+
+    return {
+        key: "AVG",
+        year: months[0]?.year || null,
+        month: "AVG",
+        label: "AVG",
+        expected,
+        totalAbsence,
+        rate: expected > 0 ? round((totalAbsence / expected) * 100, 2) : 0,
+        details,
+    }
+}
+
+function buildAttendanceDetailRows({ previousMonths, currentMonths }) {
+    return ABSENCE_DETAIL_OPTIONS.map((option) => {
+        const months = currentMonths.map((currentMonth, index) => {
+            const previousMonth = previousMonths[index]
+            const currentCount = Number(currentMonth.details?.[option.code]) || 0
+            const previousCount = Number(previousMonth.details?.[option.code]) || 0
+
+            return {
+                key: currentMonth.key,
+                month: currentMonth.month,
+                label: currentMonth.label,
+                previousCount,
+                currentCount,
+                previousExpected: previousMonth.expected,
+                currentExpected: currentMonth.expected,
+                previousRate: previousMonth.expected > 0
+                    ? round((previousCount / previousMonth.expected) * 100, 2)
+                    : 0,
+                currentRate: currentMonth.expected > 0
+                    ? round((currentCount / currentMonth.expected) * 100, 2)
+                    : 0,
+            }
+        })
+
+        const previousTotal = previousMonths.reduce(
+            (sum, month) => sum + (Number(month.details?.[option.code]) || 0),
+            0,
+        )
+        const currentTotal = currentMonths.reduce(
+            (sum, month) => sum + (Number(month.details?.[option.code]) || 0),
+            0,
+        )
+        const previousExpected = previousMonths.reduce(
+            (sum, month) => sum + month.expected,
+            0,
+        )
+        const currentExpected = currentMonths.reduce(
+            (sum, month) => sum + month.expected,
+            0,
+        )
+
+        return {
+            ...option,
+            previousTotal,
+            currentTotal,
+            previousExpected,
+            currentExpected,
+            previousRate: previousExpected > 0
+                ? round((previousTotal / previousExpected) * 100, 2)
+                : 0,
+            currentRate: currentExpected > 0
+                ? round((currentTotal / currentExpected) * 100, 2)
+                : 0,
+            months,
+        }
+    })
+}
+
+function buildAttendanceAbsenceComparison({
+    records,
+    selectedYear,
+    selectedLabel,
+    targetRates,
+}) {
+    const previousYear = selectedYear - 1
+    const previousMonths = createAttendanceComparisonYear(previousYear)
+    const currentMonths = createAttendanceComparisonYear(selectedYear)
+    const monthsByYear = new Map([
+        [previousYear, previousMonths],
+        [selectedYear, currentMonths],
+    ])
+
+    for (const record of records) {
+        const recordDate = new Date(record.attendanceDate)
+        const year = recordDate.getUTCFullYear()
+        const month = recordDate.getUTCMonth()
+        const months = monthsByYear.get(year)
+
+        if (!months) continue
+
+        const bucket = months[month]
+
+        if (!bucket) continue
+
+        if (isAttendanceExpectedWorkRecord(record)) {
+            bucket.expected += 1
+        }
+
+        if (isAbsenceRecord(record)) {
+            const code = getAttendanceDetailCode(record) || "AB"
+            bucket.totalAbsence += 1
+
+            if (bucket.details[code] !== undefined) {
+                bucket.details[code] += 1
+            }
+        }
+    }
+
+    calculateAttendanceMonthRates(previousMonths)
+    calculateAttendanceMonthRates(currentMonths)
+
+    const previousAverage = summarizeAttendanceMonths(previousMonths)
+    const currentAverage = summarizeAttendanceMonths(currentMonths)
+
+    const rows = currentMonths.map((currentMonth, index) => {
+        const previousMonth = previousMonths[index]
+
+        return {
+            key: currentMonth.key,
+            month: currentMonth.month,
+            label: currentMonth.label,
+            previousYear,
+            currentYear: selectedYear,
+            previousCount: previousMonth.totalAbsence,
+            currentCount: currentMonth.totalAbsence,
+            previousExpected: previousMonth.expected,
+            currentExpected: currentMonth.expected,
+            previousRate: previousMonth.rate,
+            currentRate: currentMonth.rate,
+            targetRate: round(targetRates?.monthly?.[currentMonth.month] || DEFAULT_ABSENCE_TARGET_RATE, 2),
+        }
+    })
+
+    rows.push({
+        key: "AVG",
+        month: "AVG",
+        label: "AVG",
+        previousYear,
+        currentYear: selectedYear,
+        previousCount: previousAverage.totalAbsence,
+        currentCount: currentAverage.totalAbsence,
+        previousExpected: previousAverage.expected,
+        currentExpected: currentAverage.expected,
+        previousRate: previousAverage.rate,
+        currentRate: currentAverage.rate,
+        targetRate: round(targetRates?.average || DEFAULT_ABSENCE_TARGET_RATE, 2),
+    })
+
+    return {
+        selectedLabel,
+        previousYear,
+        currentYear: selectedYear,
+        targetRate: round(targetRates?.average || DEFAULT_ABSENCE_TARGET_RATE, 2),
+        monthlyTargetRates: targetRates?.monthly || {},
+        options: [
+            {
+                code: "TOTAL",
+                label: "Total absent",
+                name: "Total absent",
+            },
+            ...ABSENCE_DETAIL_OPTIONS,
+        ],
+        rows,
+        detailRows: buildAttendanceDetailRows({
+            previousMonths,
+            currentMonths,
+        }),
+    }
+}
+
+function createTurnoverComparisonMonth({ year, month }) {
+    const key = `${year}-${String(month).padStart(2, "0")}`
+
+    return {
+        key,
+        year,
+        month,
+        label: MONTH_LABELS[month - 1],
+        exits: 0,
+        headcountStart: 0,
+        headcountEnd: 0,
+        averageHeadcount: 0,
+        rate: 0,
+    }
+}
+
+function createTurnoverComparisonYear(year) {
+    return Array.from({ length: 12 }, (_, index) =>
+        createTurnoverComparisonMonth({
+            year,
+            month: index + 1,
+        }),
+    )
+}
+
+function calculateTurnoverMonthRates(months = []) {
+    for (const month of months) {
+        month.averageHeadcount = round(
+            ((Number(month.headcountStart) || 0) + (Number(month.headcountEnd) || 0)) / 2,
+            2,
+        )
+        month.rate = month.averageHeadcount > 0
+            ? round((month.exits / month.averageHeadcount) * 100, 2)
+            : 0
+    }
+
+    return months
+}
+
+function summarizeTurnoverMonths(months = []) {
+    const exits = months.reduce((sum, month) => sum + (Number(month.exits) || 0), 0)
+    const averageHeadcount = months.reduce(
+        (sum, month) => sum + (Number(month.averageHeadcount) || 0),
+        0,
+    )
+
+    return {
+        key: "AVG",
+        year: months[0]?.year || null,
+        month: "AVG",
+        label: "AVG",
+        exits,
+        headcountStart: months[0]?.headcountStart || 0,
+        headcountEnd: months.at(-1)?.headcountEnd || 0,
+        averageHeadcount,
+        rate: averageHeadcount > 0
+            ? round((exits / averageHeadcount) * 100, 2)
+            : 0,
+    }
+}
+
+function buildTurnoverComparison({
+    employees,
+    movements,
+    selectedYear,
+    selectedLabel,
+    targetRates,
+}) {
+    const previousYear = selectedYear - 1
+    const previousMonths = createTurnoverComparisonYear(previousYear)
+    const currentMonths = createTurnoverComparisonYear(selectedYear)
+    const monthsByYear = new Map([
+        [previousYear, previousMonths],
+        [selectedYear, currentMonths],
+    ])
+
+    for (const month of [...previousMonths, ...currentMonths]) {
+        const start = monthStart(month.year, month.month)
+        const end = monthEnd(month.year, month.month)
+
+        month.headcountStart = employees.filter((employee) =>
+            employeeWasActiveOn(employee, start),
+        ).length
+        month.headcountEnd = employees.filter((employee) =>
+            employeeWasActiveOn(employee, end),
+        ).length
+    }
+
+    for (const movement of movements) {
+        if (!EXIT_TYPES.has(movement.movementType)) continue
+
+        const date = new Date(movement.effectiveDate)
+        const year = date.getUTCFullYear()
+        const month = date.getUTCMonth()
+        const months = monthsByYear.get(year)
+
+        if (!months) continue
+
+        const bucket = months[month]
+
+        if (!bucket) continue
+
+        bucket.exits += 1
+    }
+
+    calculateTurnoverMonthRates(previousMonths)
+    calculateTurnoverMonthRates(currentMonths)
+
+    const previousAverage = summarizeTurnoverMonths(previousMonths)
+    const currentAverage = summarizeTurnoverMonths(currentMonths)
+
+    const rows = currentMonths.map((currentMonth, index) => {
+        const previousMonth = previousMonths[index]
+
+        return {
+            key: currentMonth.key,
+            month: currentMonth.month,
+            label: currentMonth.label,
+            previousYear,
+            currentYear: selectedYear,
+            previousCount: previousMonth.exits,
+            currentCount: currentMonth.exits,
+            previousAverageHeadcount: previousMonth.averageHeadcount,
+            currentAverageHeadcount: currentMonth.averageHeadcount,
+            previousRate: previousMonth.rate,
+            currentRate: currentMonth.rate,
+            targetRate: round(targetRates?.monthly?.[currentMonth.month] || DEFAULT_TURNOVER_TARGET_RATE, 2),
+        }
+    })
+
+    rows.push({
+        key: "AVG",
+        month: "AVG",
+        label: "AVG",
+        previousYear,
+        currentYear: selectedYear,
+        previousCount: previousAverage.exits,
+        currentCount: currentAverage.exits,
+        previousAverageHeadcount: previousAverage.averageHeadcount,
+        currentAverageHeadcount: currentAverage.averageHeadcount,
+        previousRate: previousAverage.rate,
+        currentRate: currentAverage.rate,
+        targetRate: round(targetRates?.average || DEFAULT_TURNOVER_TARGET_RATE, 2),
+    })
+
+    return {
+        selectedLabel,
+        previousYear,
+        currentYear: selectedYear,
+        targetRate: round(targetRates?.average || DEFAULT_TURNOVER_TARGET_RATE, 2),
+        monthlyTargetRates: targetRates?.monthly || {},
+        rows,
     }
 }
 
@@ -1253,7 +1840,9 @@ export async function getHrDashboard({ query }) {
         plans,
         totalGeneralPlans,
         movements,
+        turnoverMovements,
         recruitmentChannels,
+        dashboardTargets,
         lines,
     ] = await Promise.all([
             loadEmployees(cleanQuery),
@@ -1261,7 +1850,9 @@ export async function getHrDashboard({ query }) {
             loadPlans(cleanQuery, periods),
             loadPlans(totalGeneralQuery, periods),
             loadMovements(cleanQuery, startDate, endDate),
+            loadMovements(cleanQuery, monthStart(startDate.getUTCFullYear() - 1, 1), monthEnd(startDate.getUTCFullYear(), 12)),
             loadRecruitmentChannels(cleanQuery),
+            loadDashboardTargets(cleanQuery, startDate.getUTCFullYear()),
             Line.find({
                 status: "ACTIVE",
                 ...(cleanQuery.companyId ? { companyId: toObjectId(cleanQuery.companyId) } : {}),
@@ -1273,14 +1864,33 @@ export async function getHrDashboard({ query }) {
                 .lean(),
         ])
 
+    const selectedYear = startDate.getUTCFullYear()
     const attendanceRecords = await loadAttendanceRecords(
         cleanQuery,
         startDate,
         endDate,
         employees,
     )
+    const attendanceComparisonRecords = await loadAttendanceRecords(
+        cleanQuery,
+        monthStart(selectedYear - 1, 1),
+        monthEnd(selectedYear, 12),
+        employees,
+    )
 
     const selectedPeriod = periods.at(-1)
+    const absenceTargetRates = buildDashboardTargetRates({
+        targets: dashboardTargets,
+        metric: "ABSENCE_RATE",
+        query: cleanQuery,
+        fallbackRate: DEFAULT_ABSENCE_TARGET_RATE,
+    })
+    const turnoverTargetRates = buildDashboardTargetRates({
+        targets: dashboardTargets,
+        metric: "TURNOVER_RATE",
+        query: cleanQuery,
+        fallbackRate: DEFAULT_TURNOVER_TARGET_RATE,
+    })
     const attendanceMonthly = buildAttendanceSeries({ records: attendanceRecords, periods })
     const manpower = buildManpowerSeries({ employees, plans, periods })
     const totalManpower = buildManpowerSeries({
@@ -1295,6 +1905,19 @@ export async function getHrDashboard({ query }) {
     const selectedMetricLabel = getSelectedMetricLabel({
         query: cleanQuery,
         lookups,
+    })
+    const attendanceAbsenceComparison = buildAttendanceAbsenceComparison({
+        records: attendanceComparisonRecords,
+        selectedYear,
+        selectedLabel: selectedMetricLabel,
+        targetRates: absenceTargetRates,
+    })
+    const turnoverComparison = buildTurnoverComparison({
+        employees,
+        movements: turnoverMovements,
+        selectedYear,
+        selectedLabel: selectedMetricLabel,
+        targetRates: turnoverTargetRates,
     })
 
     const result = {
@@ -1333,7 +1956,9 @@ export async function getHrDashboard({ query }) {
             summary: buildAttendanceSummary(attendanceMonthly),
             monthly: attendanceMonthly,
             byLine: buildAttendanceLineSummary({ records: attendanceRecords, lines }),
+            absenceComparison: attendanceAbsenceComparison,
         },
+        turnover: turnoverComparison,
         movement: buildMovementSeries({ movements, periods, query: cleanQuery }),
     }
 

@@ -33,6 +33,19 @@ function formatNumber(value) {
 <template>
     <div class="recruitment-table-wrap">
         <table class="recruitment-table">
+            <colgroup>
+                <col class="recruitment-col-no">
+                <col class="recruitment-col-channel">
+                <col class="recruitment-col-previous">
+                <col class="recruitment-col-target">
+                <col
+                    v-for="period in periods"
+                    :key="`col-${period.key}`"
+                    class="recruitment-col-month"
+                >
+                <col class="recruitment-col-average">
+            </colgroup>
+
             <thead>
                 <tr>
                     <th
@@ -66,6 +79,7 @@ function formatNumber(value) {
                     <th
                         v-for="period in periods"
                         :key="period.key"
+                        class="recruitment-table__month"
                         :class="{
                             'is-selected-period': period.key === selectedPeriodKey,
                         }"
@@ -99,6 +113,7 @@ function formatNumber(value) {
                     <td
                         v-for="month in row.months"
                         :key="month.key"
+                        class="recruitment-table__month"
                         :class="{
                             'is-selected-period': month.key === selectedPeriodKey,
                             'is-empty': !Number(month.count),
@@ -124,6 +139,7 @@ function formatNumber(value) {
                     <td
                         v-for="month in total.months"
                         :key="month.key"
+                        class="recruitment-table__month"
                         :class="{
                             'is-selected-period': month.key === selectedPeriodKey,
                             'is-empty': !Number(month.count),
@@ -147,6 +163,7 @@ function formatNumber(value) {
 
 .recruitment-table {
     width: 100%;
+    min-width: 0;
     border-collapse: collapse;
     table-layout: fixed;
     color: #000000;
@@ -157,7 +174,7 @@ function formatNumber(value) {
 .recruitment-table th,
 .recruitment-table td {
     border: 1px solid #8e8e8e;
-    padding: 0.24rem 0.28rem;
+    padding: 0.2rem 0.18rem;
     text-align: center;
     vertical-align: middle;
 }
@@ -183,13 +200,43 @@ function formatNumber(value) {
     border-top-color: transparent !important;
 }
 
+.recruitment-col-no {
+    width: 2.05rem;
+}
+
+.recruitment-col-channel {
+    width: 31%;
+}
+
+.recruitment-col-previous,
+.recruitment-col-target,
+.recruitment-col-average {
+    width: 4.7rem;
+}
+
+.recruitment-col-month {
+    width: 3.2rem;
+}
+
 .recruitment-table__no {
-    width: 2.25rem;
+    width: 2.05rem;
 }
 
 .recruitment-table__channel {
-    width: 18rem;
     text-align: left !important;
+}
+
+.recruitment-table__month {
+    width: 3.2rem;
+    min-width: 3.2rem;
+    max-width: 3.2rem;
+}
+
+.recruitment-table__channel-name {
+    white-space: nowrap;
+    overflow: visible;
+    font-size: 0.66rem;
+    letter-spacing: -0.01em;
 }
 
 .recruitment-table__channel-name strong {
@@ -226,8 +273,25 @@ function formatNumber(value) {
         font-size: 0.55rem;
     }
 
-    .recruitment-table__channel {
-        width: 11rem;
+    .recruitment-col-channel {
+        width: 38%;
+    }
+
+    .recruitment-col-month,
+    .recruitment-table__month {
+        width: 2.65rem;
+        min-width: 2.65rem;
+        max-width: 2.65rem;
+    }
+
+    .recruitment-col-previous,
+    .recruitment-col-target,
+    .recruitment-col-average {
+        width: 4.1rem;
+    }
+
+    .recruitment-table__channel-name {
+        font-size: 0.58rem;
     }
 }
 </style>

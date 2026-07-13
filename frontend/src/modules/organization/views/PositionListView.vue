@@ -944,7 +944,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="hrms-list-page hrms-compact">
+    <section class="position-page hrms-list-page">
         <AppFilterBar :loading="positionStore.loading">
             <span class="app-filter-field app-filter-field--search position-search">
                 <i class="pi pi-search" />
@@ -1099,9 +1099,9 @@ onMounted(async () => {
                             style="min-width: 9rem"
                         >
                             <template #body="{ data }">
-                                <strong class="hrms-cell-primary">
+                                <span class="position-code">
                                     {{ data.code }}
-                                </strong>
+                                </span>
                             </template>
                         </Column>
 
@@ -1110,9 +1110,9 @@ onMounted(async () => {
                             style="min-width: 15rem"
                         >
                             <template #body="{ data }">
-                                <strong class="hrms-cell-primary hrms-cell-nowrap">
+                                <span class="hrms-cell-primary hrms-cell-nowrap">
                                     {{ data.title || "-" }}
-                                </strong>
+                                </span>
                             </template>
                         </Column>
 
@@ -1121,9 +1121,9 @@ onMounted(async () => {
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <strong class="hrms-cell-primary hrms-cell-nowrap">
+                                <span class="hrms-cell-primary hrms-cell-nowrap">
                                     {{ data.department?.name || "-" }}
-                                </strong>
+                                </span>
                             </template>
                         </Column>
 
@@ -1132,9 +1132,9 @@ onMounted(async () => {
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <strong class="hrms-cell-primary hrms-cell-nowrap">
+                                <span class="hrms-cell-primary hrms-cell-nowrap">
                                     {{ data.branch?.name || "-" }}
-                                </strong>
+                                </span>
                             </template>
                         </Column>
 
@@ -1143,12 +1143,12 @@ onMounted(async () => {
                             style="min-width: 14rem"
                         >
                             <template #body="{ data }">
-                                <strong
+                                <span
                                     v-if="data.reportsToPosition"
                                     class="hrms-cell-primary hrms-cell-nowrap"
                                 >
                                     {{ data.reportsToPosition.title }}
-                                </strong>
+                                </span>
 
                                 <span v-else class="hrms-cell-muted hrms-cell-nowrap">
                                     {{ t("organization.position.noReportsTo") }}
@@ -1651,26 +1651,38 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.position-search {
-    position: relative;
-    display: block;
-    width: min(100%, 15rem);
+.position-page {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--hrms-page-gap);
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
 }
 
-.position-search i {
+.position-search {
+    position: relative;
+    flex: 1 1 14rem;
+    min-width: 11rem;
+    max-width: 22rem;
+}
+
+.position-search > i {
     position: absolute;
-    z-index: 1;
     top: 50%;
-    left: 0.65rem;
+    left: 0.7rem;
+    z-index: 1;
+    transform: translateY(-50%);
     color: var(--hrms-text-muted);
     font-size: 0.72rem;
-    transform: translateY(-50%);
     pointer-events: none;
 }
 
-.position-search__input {
+.position-search :deep(.p-inputtext) {
     width: 100%;
-    padding-left: 1.9rem;
+    padding-left: 2rem;
+    border: 1px solid var(--hrms-border);
 }
 
 .position-filter-select {
@@ -1679,6 +1691,12 @@ onMounted(async () => {
 
 .position-status-field .position-filter-select {
     width: 9.5rem;
+}
+
+.position-code {
+    color: var(--hrms-primary);
+    font-size: 0.74rem;
+    font-weight: 400;
 }
 
 .position-checkbox-row {
@@ -1746,6 +1764,25 @@ onMounted(async () => {
 
 .position-import-result__errors h4 {
     margin: 0 0 0.65rem;
+}
+
+
+:deep(.p-datatable-thead > tr > th) {
+    font-weight: 800 !important;
+    text-align: center;
+    vertical-align: middle;
+}
+
+:deep(.p-datatable-tbody > tr > td) {
+    font-weight: 400 !important;
+    text-align: center;
+    vertical-align: middle;
+}
+
+:deep(.p-datatable-tbody > tr > td strong),
+:deep(.p-datatable-tbody > tr > td span),
+:deep(.p-datatable-tbody > tr > td div) {
+    font-weight: 400 !important;
 }
 
 @media (max-width: 900px) {

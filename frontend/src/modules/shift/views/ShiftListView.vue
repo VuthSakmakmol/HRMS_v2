@@ -4,7 +4,6 @@ import { useI18n } from "vue-i18n"
 import { useToast } from "primevue/usetoast"
 
 import Button from "primevue/button"
-import Card from "primevue/card"
 import Column from "primevue/column"
 import DataTable from "primevue/datatable"
 import Dialog from "primevue/dialog"
@@ -19,7 +18,6 @@ import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
 import { useModulePermissions } from "@/shared/auth/useModulePermissions.js"
 import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
-import AppModuleToolbar from "@/shared/components/page/AppModuleToolbar.vue"
 import AppTableActions from "@/shared/components/table/AppTableActions.vue"
 
 import { fetchBranchesLookup } from "@/modules/organization/services/branch.api.js"
@@ -873,44 +871,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="shift-page hrms-compact">
-        <AppModuleToolbar>
-            <Button
-                v-if="canImportShift"
-                severity="secondary"
-                outlined
-                icon="pi pi-download"
-                :loading="shiftStore.downloadingTemplate"
-                :label="t('organization.shift.downloadSample')"
-                @click="downloadSample"
-            />
-
-            <Button
-                v-if="canImportShift"
-                severity="secondary"
-                outlined
-                icon="pi pi-upload"
-                :label="t('organization.shift.importExcel')"
-                @click="openImportDialog"
-            />
-
-            <Button
-                v-if="canExportShift"
-                severity="secondary"
-                outlined
-                icon="pi pi-file-export"
-                :loading="shiftStore.exporting"
-                :label="t('organization.shift.exportExcel')"
-                @click="exportExcel"
-            />
-
-            <Button
-                v-if="canCreateShift"
-                icon="pi pi-plus"
-                :label="t('organization.shift.newShift')"
-                @click="openCreateDialog"
-            />
-        </AppModuleToolbar>
+    <section class="hrms-list-page hrms-compact">
 
         <AppFilterBar :loading="shiftStore.loading">
             <span class="app-filter-field app-filter-field--search shift-search">
@@ -991,14 +952,52 @@ onMounted(async () => {
                     :loading="shiftStore.loading"
                     @click="loadShifts"
                 />
+
+                <Button
+                    v-if="canImportShift"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-download"
+                    :loading="shiftStore.downloadingTemplate"
+                    :aria-label="t('organization.shift.downloadSample')"
+                    v-tooltip.top="t('organization.shift.downloadSample')"
+                    @click="downloadSample"
+                />
+
+                <Button
+                    v-if="canImportShift"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-upload"
+                    :aria-label="t('organization.shift.importExcel')"
+                    v-tooltip.top="t('organization.shift.importExcel')"
+                    @click="openImportDialog"
+                />
+
+                <Button
+                    v-if="canExportShift"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-file-export"
+                    :loading="shiftStore.exporting"
+                    :aria-label="t('organization.shift.exportExcel')"
+                    v-tooltip.top="t('organization.shift.exportExcel')"
+                    @click="exportExcel"
+                />
+
+                <Button
+                    v-if="canCreateShift"
+                    icon="pi pi-plus"
+                    :label="t('organization.shift.newShift')"
+                    @click="openCreateDialog"
+                />
             </template>
         </AppFilterBar>
 
-        <Card class="shift-card hrms-card">
-            <template #content>
-                <div class="shift-table-wrap">
+        <div class="hrms-list-card">
+            <div class="hrms-table-wrap">
                     <DataTable
-                        class="shift-table"
+                        class="hrms-standard-table hrms-standard-table--horizontal"
                         lazy
                         paginator
                         striped-rows
@@ -1025,9 +1024,9 @@ onMounted(async () => {
                             style="min-width: 8rem"
                         >
                             <template #body="{ data }">
-                                <strong class="shift-code">
+                                <span class="shift-code">
                                     {{ data.code }}
-                                </strong>
+                                </span>
                             </template>
                         </Column>
 
@@ -1037,7 +1036,7 @@ onMounted(async () => {
                         >
                             <template #body="{ data }">
                                 <div class="shift-name-cell">
-                                    <strong>{{ data.name }}</strong>
+                                    <span>{{ data.name }}</span>
                                     <span>{{ data.shortName || "-" }}</span>
                                 </div>
                             </template>
@@ -1049,9 +1048,9 @@ onMounted(async () => {
                         >
                             <template #body="{ data }">
                                 <div class="shift-muted-cell">
-                                    <strong>
+                                    <span>
                                         {{ data.branch?.name || "-" }}
-                                    </strong>
+                                    </span>
                                     <span>
                                         {{ data.branch?.code || "-" }}
                                     </span>
@@ -1065,9 +1064,9 @@ onMounted(async () => {
                         >
                             <template #body="{ data }">
                                 <div class="shift-time-cell">
-                                    <strong>
+                                    <span>
                                         {{ data.startTime }} - {{ data.endTime }}
-                                    </strong>
+                                    </span>
 
                                     <span v-if="data.isOvernight">
                                         {{ t("organization.shift.overnight") }}
@@ -1175,9 +1174,8 @@ onMounted(async () => {
                             </template>
                         </Column>
                     </DataTable>
-                </div>
-            </template>
-        </Card>
+            </div>
+        </div>
 
         <Dialog
             v-model:visible="dialogVisible"
@@ -1643,117 +1641,51 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.shift-page {
-    width: 100%;
-    display: grid;
-    gap: 1rem;
-}
-
-.shift-page__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.shift-page__header-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.shift-page__eyebrow {
-    display: inline-flex;
-    margin-bottom: 0.35rem;
-    color: var(--hrms-color-primary);
-    font-size: 0.76rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-.shift-page__header h2 {
-    margin: 0;
-    font-size: clamp(1.35rem, 2vw, 1.85rem);
-}
-
-.shift-page__header p {
-    max-width: 54rem;
-    margin: 0.45rem 0 0;
-    color: var(--hrms-text-muted);
-    font-size: 0.9rem;
-}
-
-.shift-card {
-    min-width: 0;
-}
-
-.shift-toolbar {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.85rem;
-}
-
-.shift-toolbar__filters {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    min-width: 0;
-}
-
-.shift-toolbar__actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
 .shift-search {
-    min-width: 16rem;
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    border: 1px solid var(--hrms-border-color);
-    border-radius: 0.85rem;
-    padding: 0 0.75rem;
-    background: var(--hrms-surface-ground);
+    position: relative;
+    display: block;
+    width: min(100%, 15rem);
 }
 
 .shift-search i {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: 0.65rem;
     color: var(--hrms-text-muted);
+    font-size: 0.72rem;
+    transform: translateY(-50%);
+    pointer-events: none;
 }
 
 .shift-search__input {
     width: 100%;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
+    padding-left: 1.9rem;
 }
 
-.shift-filter {
-    width: 12rem;
+.shift-filter-select {
+    width: 11.5rem;
 }
 
-.shift-status-filter {
-    width: 10rem;
-}
-
-.shift-table-wrap {
-    min-height: 34rem;
-    height: calc(100vh - 18rem);
+.shift-status-field .shift-filter-select {
+    width: 9.5rem;
 }
 
 .shift-code {
     color: var(--hrms-color-primary);
     font-size: 0.82rem;
+    font-weight: 400;
+}
+
+/* Table font weight: bold header only, normal data cells */
+:deep(.hrms-standard-table .p-datatable-thead > tr > th),
+:deep(.hrms-standard-table .p-datatable-thead > tr > th *) {
+    font-weight: 700 !important;
+}
+
+:deep(.hrms-standard-table .p-datatable-tbody > tr > td),
+:deep(.hrms-standard-table .p-datatable-tbody > tr > td *) {
+    font-weight: 400 !important;
 }
 
 .shift-name-cell,
@@ -1764,9 +1696,9 @@ onMounted(async () => {
     line-height: 1.25;
 }
 
-.shift-name-cell strong,
-.shift-muted-cell strong,
-.shift-time-cell strong {
+.shift-name-cell span,
+.shift-muted-cell span,
+.shift-time-cell span {
     font-size: 0.82rem;
 }
 
@@ -2087,4 +2019,13 @@ onMounted(async () => {
     }
 }
 
+
+@media (max-width: 900px) {
+    .shift-filter-select,
+    .shift-status-field .shift-filter-select,
+    .shift-search {
+        width: 100%;
+        max-width: none;
+    }
+}
 </style>

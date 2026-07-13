@@ -578,9 +578,9 @@ onMounted(() => {
                     style="min-width: 7rem"
                 >
                     <template #body="{ data }">
-                        <strong class="company-code">
+                        <span class="company-code">
                             {{ data.code }}
-                        </strong>
+                        </span>
                     </template>
                 </Column>
 
@@ -590,9 +590,9 @@ onMounted(() => {
                     style="min-width: 13rem"
                 >
                     <template #body="{ data }">
-                        <strong class="hrms-cell-primary">
+                        <span class="hrms-cell-primary">
                             {{ data.displayName || "-" }}
-                        </strong>
+                        </span>
                     </template>
                 </Column>
 
@@ -1043,7 +1043,7 @@ onMounted(() => {
 .company-code {
     color: var(--hrms-primary);
     font-size: 0.74rem;
-    font-weight: 800;
+    font-weight: 400;
 }
 
 .company-stacked-cell {
@@ -1187,8 +1187,15 @@ onMounted(() => {
 :deep(.p-datatable-tbody > tr > td) {
     padding: 0.45rem 0.5rem;
     border-color: var(--hrms-border);
+    font-weight: 400 !important;
     text-align: center;
     vertical-align: middle;
+}
+
+:deep(.p-datatable-tbody > tr > td strong),
+:deep(.p-datatable-tbody > tr > td span),
+:deep(.p-datatable-tbody > tr > td div) {
+    font-weight: 400 !important;
 }
 
 :deep(.p-datatable-tbody > tr:hover) {

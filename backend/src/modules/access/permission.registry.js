@@ -189,6 +189,13 @@ export const PERMISSION_REGISTRY = Object.freeze([
         "UPDATE",
         "ARCHIVE",
     ]),
+    ...permissionGroup("REPORT.HR_DASHBOARD_TARGET", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "ARCHIVE",
+    ]),
+
 
 
 

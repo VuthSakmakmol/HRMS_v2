@@ -246,6 +246,17 @@ const router = createRouter({
                     },
                 },
 
+                {
+                    path: "reports/hr-dashboard-targets",
+                    name: "report-hr-dashboard-targets",
+                    component: () =>
+                        import("@/modules/hrDashboardTarget/views/HrDashboardTargetListView.vue"),
+                    meta: {
+                        titleKey: "nav.hrDashboardTargets",
+                        permissionCode: "REPORT.HR_DASHBOARD_TARGET.VIEW",
+                    },
+                },
+
 
             ],
         },

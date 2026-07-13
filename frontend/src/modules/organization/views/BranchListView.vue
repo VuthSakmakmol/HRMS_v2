@@ -516,14 +516,13 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="branch-page hrms-list-page hrms-compact">
+    <section class="branch-page hrms-list-page">
         <AppFilterBar :loading="branchStore.loading">
             <span class="app-filter-field app-filter-field--search branch-search">
                 <i class="pi pi-search" />
 
                 <InputText
                     v-model="filters.search"
-                    class="branch-search__input"
                     :placeholder="t('organization.branch.searchPlaceholder')"
                     @keyup.enter="applyFilters"
                 />
@@ -611,9 +610,9 @@ onMounted(async () => {
                         style="width: 8rem; min-width: 8rem"
                     >
                         <template #body="{ data }">
-                            <strong class="hrms-cell-primary hrms-cell-primary--accent">
+                            <span class="branch-code">
                                 {{ data.code }}
-                            </strong>
+                            </span>
                         </template>
                     </Column>
 
@@ -622,9 +621,9 @@ onMounted(async () => {
                         style="width: 14rem; min-width: 14rem"
                     >
                         <template #body="{ data }">
-                            <strong class="hrms-cell-primary">
+                            <span class="hrms-cell-primary">
                                 {{ data.name || "-" }}
-                            </strong>
+                            </span>
                         </template>
                     </Column>
 
@@ -633,9 +632,9 @@ onMounted(async () => {
                         style="width: 14rem; min-width: 14rem"
                     >
                         <template #body="{ data }">
-                            <strong class="hrms-cell-primary">
+                            <span class="hrms-cell-primary">
                                 {{ data.company?.displayName || "-" }}
-                            </strong>
+                            </span>
                         </template>
                     </Column>
 
@@ -716,6 +715,7 @@ onMounted(async () => {
                     </Column>
 
                     <Column
+                        v-if="canUpdate || canArchive"
                         :header="t('common.actions')"
                         align-frozen="right"
                         frozen
@@ -969,37 +969,74 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.branch-search {
-    position: relative;
+.branch-page {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--hrms-page-gap);
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
 }
 
-.branch-search i {
+.branch-search {
+    position: relative;
+    flex: 1 1 14rem;
+    min-width: 11rem;
+    max-width: 22rem;
+}
+
+.branch-search > i {
     position: absolute;
-    z-index: 1;
     top: 50%;
     left: 0.7rem;
+    z-index: 1;
     transform: translateY(-50%);
     color: var(--hrms-text-muted);
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     pointer-events: none;
 }
 
-.branch-search__input {
+.branch-search :deep(.p-inputtext) {
     width: 100%;
     padding-left: 2rem;
+    border: 1px solid var(--hrms-border);
 }
 
 .branch-company-filter {
-    flex-basis: 15rem;
+    flex: 0 1 15rem;
+    min-width: 11rem;
+    max-width: 16rem;
 }
 
 .branch-status-filter {
-    flex-basis: 11rem;
+    flex: 0 1 10rem;
+    min-width: 8.5rem;
+    max-width: 11rem;
 }
 
 .branch-table-wrap {
     height: calc(100vh - 13.5rem);
     min-height: 25rem;
+}
+
+.branch-code {
+    color: var(--hrms-primary);
+    font-size: 0.74rem;
+    font-weight: 400;
+}
+
+.branch-page :deep(.p-datatable-thead > tr > th) {
+    font-weight: 700;
+}
+
+.branch-page :deep(.p-datatable-tbody > tr > td),
+.branch-page :deep(.p-datatable-tbody > tr > td *) {
+    font-weight: 400;
+}
+
+.branch-page :deep(.p-datatable-tbody .p-tag) {
+    font-weight: 400;
 }
 
 .branch-archive-text {
@@ -1010,6 +1047,15 @@ onMounted(async () => {
 }
 
 @media (max-width: 760px) {
+    .branch-search,
+    .branch-company-filter,
+    .branch-status-filter {
+        flex: 1 1 100%;
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+    }
+
     .branch-table-wrap {
         height: 32rem;
     }

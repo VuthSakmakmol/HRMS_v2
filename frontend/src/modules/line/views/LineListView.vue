@@ -4,7 +4,6 @@ import { useI18n } from "vue-i18n"
 import { useToast } from "primevue/usetoast"
 
 import Button from "primevue/button"
-import Card from "primevue/card"
 import Column from "primevue/column"
 import DataTable from "primevue/datatable"
 import Dialog from "primevue/dialog"
@@ -17,6 +16,7 @@ import Textarea from "primevue/textarea"
 
 import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
+import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
 
 import { fetchBranchesLookup } from "@/modules/organization/services/branch.api.js"
 import { fetchCompaniesLookup } from "@/modules/organization/services/company.api.js"
@@ -1050,141 +1050,91 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="line-page hrms-list-page hrms-compact">
-        <div class="line-page__header-actions line-page__header-actions--compact">
-            <Button
-                v-if="canImport"
-                severity="secondary"
-                outlined
-                icon="pi pi-download"
-                :loading="lineStore.downloadingTemplate"
-                :label="t('organization.line.downloadSample')"
-                @click="downloadSample"
-            />
+    <section class="hrms-list-page hrms-compact">
+        <AppFilterBar :loading="lineStore.loading">
+            <span class="app-filter-field app-filter-field--search line-search">
+                <i class="pi pi-search" />
 
-            <Button
-                v-if="canImport"
-                severity="secondary"
-                outlined
-                icon="pi pi-upload"
-                :label="t('organization.line.importExcel')"
-                @click="openImportDialog"
-            />
+                <InputText
+                    v-model="filters.search"
+                    class="line-search__input"
+                    :placeholder="t('organization.line.searchPlaceholder')"
+                    @keyup.enter="applyFilters"
+                />
+            </span>
 
-            <Button
-                v-if="canExport"
-                severity="secondary"
-                outlined
-                icon="pi pi-file-export"
-                :loading="lineStore.exporting"
-                :label="t('organization.line.exportExcel')"
-                @click="exportExcel"
-            />
+            <div class="app-filter-field">
+                <Select
+                    v-model="filters.companyId"
+                    class="line-filter-select"
+                    :options="companyFilterOptions"
+                    option-label="label"
+                    option-value="value"
+                    :loading="companyLoading"
+                    @change="onFilterCompanyChange"
+                />
+            </div>
 
-            <Button
-                v-if="canCreate"
-                icon="pi pi-plus"
-                :label="t('organization.line.newLine')"
-                @click="openCreateDialog"
-            />
-        </div>
+            <div class="app-filter-field">
+                <Select
+                    v-model="filters.branchId"
+                    class="line-filter-select"
+                    :options="branchFilterOptions"
+                    option-label="label"
+                    option-value="value"
+                    :loading="branchLoading"
+                    @change="onFilterBranchChange"
+                />
+            </div>
 
-        <Card class="line-card hrms-list-card">
-            <template #content>
-                <div class="line-toolbar">
-                    <div class="line-toolbar__filters">
-                        <span class="line-search">
-                            <i class="pi pi-search" />
+            <div class="app-filter-field">
+                <Select
+                    v-model="filters.departmentId"
+                    class="line-filter-select"
+                    :options="departmentFilterOptions"
+                    option-label="label"
+                    option-value="value"
+                    :loading="departmentLoading"
+                    @change="onFilterDepartmentChange"
+                />
+            </div>
 
-                            <InputText
-                                v-model="filters.search"
-                                class="line-search__input"
-                                :placeholder="
-                                    t('organization.line.searchPlaceholder')
-                                "
-                                @keyup.enter="applyFilters"
-                            />
-                        </span>
+            <div class="app-filter-field">
+                <Select
+                    v-model="filters.positionId"
+                    class="line-filter-select"
+                    :options="positionFilterOptions"
+                    option-label="label"
+                    option-value="value"
+                    :loading="positionLoading"
+                    @change="applyFilters"
+                />
+            </div>
 
-                        <Select
-                            v-model="filters.companyId"
-                            class="line-filter"
-                            :options="companyFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="companyLoading"
-                            @change="onFilterCompanyChange"
-                        />
+            <div class="app-filter-field line-status-field">
+                <Select
+                    v-model="filters.status"
+                    class="line-filter-select"
+                    :options="statusOptions"
+                    option-label="label"
+                    option-value="value"
+                    @change="applyFilters"
+                />
+            </div>
 
-                        <Select
-                            v-model="filters.branchId"
-                            class="line-filter"
-                            :options="branchFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="branchLoading"
-                            @change="onFilterBranchChange"
-                        />
+            <template #actions>
+                <Button icon="pi pi-filter" :label="t('common.apply')" @click="applyFilters" />
+                <Button severity="secondary" outlined icon="pi pi-times" :label="t('common.clear')" @click="clearFilters" />
+                <Button severity="secondary" outlined icon="pi pi-refresh" :aria-label="t('common.refresh')" :loading="lineStore.loading" @click="loadLines" />
+                <Button v-if="canImport" severity="secondary" outlined icon="pi pi-download" :loading="lineStore.downloadingTemplate" :aria-label="t('organization.line.downloadSample')" v-tooltip.top="t('organization.line.downloadSample')" @click="downloadSample" />
+                <Button v-if="canImport" severity="secondary" outlined icon="pi pi-upload" :aria-label="t('organization.line.importExcel')" v-tooltip.top="t('organization.line.importExcel')" @click="openImportDialog" />
+                <Button v-if="canExport" severity="secondary" outlined icon="pi pi-file-export" :loading="lineStore.exporting" :aria-label="t('organization.line.exportExcel')" v-tooltip.top="t('organization.line.exportExcel')" @click="exportExcel" />
+                <Button v-if="canCreate" icon="pi pi-plus" :label="t('organization.line.newLine')" @click="openCreateDialog" />
+            </template>
+        </AppFilterBar>
 
-                        <Select
-                            v-model="filters.departmentId"
-                            class="line-filter"
-                            :options="departmentFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="departmentLoading"
-                            @change="onFilterDepartmentChange"
-                        />
-
-                        <Select
-                            v-model="filters.positionId"
-                            class="line-filter"
-                            :options="positionFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :loading="positionLoading"
-                            @change="applyFilters"
-                        />
-
-                        <Select
-                            v-model="filters.status"
-                            class="line-status-filter"
-                            :options="statusOptions"
-                            option-label="label"
-                            option-value="value"
-                            @change="applyFilters"
-                        />
-                    </div>
-
-                    <div class="line-toolbar__actions">
-                        <Button
-                            size="small"
-                            icon="pi pi-filter"
-                            :label="t('common.apply')"
-                            @click="applyFilters"
-                        />
-
-                        <Button
-                            size="small"
-                            severity="secondary"
-                            outlined
-                            icon="pi pi-times"
-                            :label="t('common.clear')"
-                            @click="clearFilters"
-                        />
-
-                        <Button
-                            size="small"
-                            severity="secondary"
-                            outlined
-                            icon="pi pi-refresh"
-                            :label="t('common.refresh')"
-                            @click="loadLines"
-                        />
-                    </div>
-                </div>
-
-                <div class="line-table-wrap hrms-table-wrap">
+        <div class="hrms-list-card">
+            <div class="hrms-table-wrap">
                     <DataTable
                         class="hrms-standard-table hrms-standard-table--horizontal"
                         lazy
@@ -1213,7 +1163,7 @@ onMounted(async () => {
                             style="min-width: 9rem"
                         >
                             <template #body="{ data }">
-                                <strong class="line-code">
+                                <strong class="hrms-cell-primary hrms-cell-primary--accent">
                                     {{ data.code }}
                                 </strong>
                             </template>
@@ -1275,7 +1225,7 @@ onMounted(async () => {
                                     {{ data.leaderPosition.title }}
                                 </strong>
 
-                                <span v-else class="line-muted-text">
+                                <span v-else class="hrms-cell-muted">
                                     {{
                                         t(
                                             "organization.line.noLeaderPosition",
@@ -1304,7 +1254,7 @@ onMounted(async () => {
                             style="min-width: 11rem"
                         >
                             <template #body="{ data }">
-                                <span class="line-date">
+                                <span class="hrms-cell-muted">
                                     {{ formatDateTime(data.updatedAt) }}
                                 </span>
                             </template>
@@ -1355,9 +1305,8 @@ onMounted(async () => {
                             </template>
                         </Column>
                     </DataTable>
-                </div>
-            </template>
-        </Card>
+            </div>
+        </div>
 
         <Dialog
             v-model:visible="dialogVisible"
@@ -2082,6 +2031,31 @@ onMounted(async () => {
 :deep(.hrms-standard-table--horizontal .p-datatable-wrapper) {
     overflow-x: auto;
     overflow-y: auto;
+}
+
+.line-search {
+    width: min(100%, 20rem);
+}
+
+.line-search__input {
+    width: 100%;
+}
+
+.line-filter-select {
+    width: 12rem;
+    max-width: 100%;
+}
+
+.line-status-field .line-filter-select {
+    width: 10rem;
+}
+
+@media (max-width: 720px) {
+    .line-search,
+    .line-filter-select,
+    .line-status-field .line-filter-select {
+        width: 100%;
+    }
 }
 
 </style>

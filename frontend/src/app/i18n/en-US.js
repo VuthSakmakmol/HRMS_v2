@@ -11,22 +11,50 @@ export default {
         retry: "Retry",
         logout: "Logout",
         menu: "Menu",
+        all: "All",
+        active: "Active",
+        inactive: "Inactive",
+        archived: "Archived",
+        status: "Status",
+        remark: "Remark",
+        description: "Description",
         apply: "Apply",
         clear: "Clear",
         refresh: "Refresh",
         actions: "Actions",
         create: "Create",
+        created: "Created",
         edit: "Edit",
+        update: "Update",
+        updated: "Updated",
         archive: "Archive",
+        archivedAction: "Archived",
+        delete: "Delete",
         cancel: "Cancel",
         close: "Close",
         save: "Save",
+        saved: "Saved",
         search: "Search",
         note: "Note",
         success: "Success",
+        failed: "Failed",
+        loading: "Loading",
+        noData: "No data",
+        noRecords: "No records found",
+        somethingWentWrong: "Something went wrong.",
         next: "Next",
+        previous: "Previous",
         yes: "Yes",
-        no: "No"
+        no: "No",
+        required: "Required",
+        optional: "Optional",
+        select: "Select",
+        code: "Code",
+        name: "Name",
+        type: "Type",
+        date: "Date",
+        year: "Year",
+        month: "Month"
     },
     nav: {
         accessControl: "Access Control",
@@ -54,7 +82,8 @@ export default {
         attendanceRawScans: "Raw Scan Import",
         attendanceVerification: "Attendance Verification",
         hrDashboard: "HR Dashboard",
-        recruitmentChannels: "Recruitment Channels"
+        recruitmentChannels: "Recruitment Channels",
+        hrDashboardTargets: "Dashboard Targets"
     },
     attendance: {
         title: "Attendance Records",
@@ -207,7 +236,9 @@ export default {
             attendanceByLine: "Attendance by Line",
             manpower: "Manpower",
             recruitmentChannels: "Recruitment Channels",
-            movement: "Movement"
+        hrDashboardTargets: "Dashboard Targets",
+            movement: "Movement",
+            turnover: "Turnover"
         },
         general: {
             totalEmployees: "Total employees",
@@ -303,7 +334,21 @@ export default {
             attendanceRate: "Attendance Rate",
             line: "Line",
             noLineData: "No attendance line data for the selected period.",
-            chartAria: "Monthly attendance present, absent, and late chart"
+            chartAria: "Attendance dashboard chart",
+            totalView: "Total",
+            detailView: "Detail",
+            selectDetail: "Select detail",
+            detailType: "Detail",
+            totalAbsentPercent: "Absent",
+            targetLessThan: "Target <",
+            avg: "AVG",
+            codes: {
+                TOTAL: "Total Absent",
+                AL: "AL",
+                SP: "SP",
+                UL: "UL",
+                AB: "AB"
+            }
         },
         noData: "No dashboard data matched this filter.",
         recruitment: {
@@ -315,6 +360,52 @@ export default {
             noData: "No data",
             previousYearChart: "Hiring Source Breakdown – {year}",
             currentYearChart: "Hiring Source Breakdown – {year}"
+        },
+        turnover: {
+            turnover: "Turnover",
+            targetLessThan: "Target <",
+            avg: "AVG",
+            previousYear: "Previous year",
+            currentYear: "Current year",
+            exitCount: "Exit count",
+            averageHeadcount: "Average headcount",
+            turnoverRate: "Turnover rate"
+        }
+    },
+    hrDashboardTarget: {
+        title: "Dashboard Targets",
+        createTitle: "Create dashboard target",
+        editTitle: "Edit dashboard target",
+        archiveTitle: "Archive dashboard target",
+        archiveConfirm: "Archive this dashboard target? It will no longer be used by HR Dashboard.",
+        allMetrics: "All metrics",
+        allMonths: "All months",
+        wholeYear: "Whole year",
+        noChild: "No child / all children",
+        metric: "Metric",
+        year: "Year",
+        month: "Month",
+        targetRate: "Target rate",
+        scope: "Scope",
+        company: "Company",
+        branch: "Branch",
+        employeeType: "Employee type",
+        employeeTypeChild: "Employee type child",
+        department: "Department",
+        position: "Position",
+        line: "Line",
+        metrics: {
+            absenceRate: "Absence rate",
+            turnoverRate: "Turnover rate"
+        },
+        messages: {
+            loadOptionsFailed: "Failed to load setup data",
+            loadFailed: "Failed to load dashboard targets",
+            saveFailed: "Failed to save dashboard target",
+            archiveFailed: "Failed to archive dashboard target",
+            created: "Dashboard target created.",
+            updated: "Dashboard target updated.",
+            archived: "Dashboard target archived."
         }
     },
     auth: {
@@ -1166,6 +1257,18 @@ export default {
         authTokenRevoked: "Your session is no longer valid. Please sign in again.",
         authAccountUnavailable: "This account is unavailable. Please contact a system administrator.",
         permissionDenied: "You do not have permission to perform this action.",
+        report: {
+            hrDashboardTarget: {
+                invalidId: "Invalid dashboard target ID.",
+                notFound: "Dashboard target was not found.",
+                archived: "Archived dashboard target cannot be updated.",
+                duplicateScope: "A dashboard target already exists for this metric, period, and scope.",
+                invalidReference: "One or more selected references are invalid.",
+                referenceNotFound: "One or more selected references were not found or are archived.",
+                employeeTypeNotFound: "Employee type was not found or is archived.",
+                employeeTypeChildNotFound: "Employee type child was not found."
+            }
+        },
         location: {
             entityNotFound: "Location type was not found.",
             import: {

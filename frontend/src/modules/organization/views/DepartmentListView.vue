@@ -881,14 +881,13 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="hrms-list-page hrms-compact">
+    <section class="department-page hrms-list-page">
         <AppFilterBar :loading="departmentStore.loading">
             <span class="app-filter-field app-filter-field--search department-search">
                 <i class="pi pi-search" />
 
                 <InputText
                     v-model="filters.search"
-                    class="department-search__input"
                     :placeholder="t('organization.department.searchPlaceholder')"
                     @keyup.enter="applyFilters"
                 />
@@ -1029,9 +1028,9 @@ onMounted(async () => {
                             style="min-width: 8rem"
                         >
                             <template #body="{ data }">
-                                <strong class="hrms-cell-primary hrms-cell-primary--accent">
+                                <span class="department-code">
                                     {{ data.code }}
-                                </strong>
+                                </span>
                             </template>
                         </Column>
 
@@ -1042,9 +1041,9 @@ onMounted(async () => {
                             style="min-width: 14rem"
                         >
                             <template #body="{ data }">
-                                <strong class="hrms-cell-primary">
+                                <span>
                                     {{ data.name || "-" }}
-                                </strong>
+                                </span>
                             </template>
                         </Column>
 
@@ -1053,9 +1052,9 @@ onMounted(async () => {
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <strong class="hrms-cell-primary">
+                                <span>
                                     {{ data.company?.displayName || "-" }}
-                                </strong>
+                                </span>
                             </template>
                         </Column>
 
@@ -1064,9 +1063,9 @@ onMounted(async () => {
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <strong class="hrms-cell-primary">
+                                <span>
                                     {{ data.branch?.name || "-" }}
-                                </strong>
+                                </span>
                             </template>
                         </Column>
 
@@ -1075,12 +1074,9 @@ onMounted(async () => {
                             style="min-width: 13rem"
                         >
                             <template #body="{ data }">
-                                <strong
-                                    v-if="data.parentDepartment"
-                                    class="hrms-cell-primary"
-                                >
+                                <span v-if="data.parentDepartment">
                                     {{ data.parentDepartment.name }}
-                                </strong>
+                                </span>
 
                                 <span v-else class="hrms-cell-muted">
                                     {{ t("organization.department.noParent") }}
@@ -1499,11 +1495,46 @@ onMounted(async () => {
 
 <style scoped>
 .department-search {
-    width: min(100%, 20rem);
+    position: relative;
+    flex: 1 1 14rem;
+    min-width: 11rem;
+    max-width: 22rem;
 }
 
-.department-search__input {
+.department-search > i {
+    position: absolute;
+    top: 50%;
+    left: 0.7rem;
+    z-index: 1;
+    transform: translateY(-50%);
+    color: var(--hrms-text-muted);
+    font-size: 0.72rem;
+    pointer-events: none;
+}
+
+.department-search :deep(.p-inputtext) {
     width: 100%;
+    padding-left: 2rem;
+    border: 1px solid var(--hrms-border);
+}
+
+.department-code {
+    color: var(--hrms-color-primary);
+    font-weight: 400 !important;
+}
+
+.department-page :deep(.p-datatable-thead > tr > th) {
+    font-weight: 700 !important;
+}
+
+.department-page :deep(.p-datatable-tbody > tr > td),
+.department-page :deep(.p-datatable-tbody > tr > td *) {
+    font-weight: 400 !important;
+}
+
+.department-page :deep(.p-tag),
+.department-page :deep(.p-button) {
+    font-weight: 600 !important;
 }
 
 .department-filter-select {
