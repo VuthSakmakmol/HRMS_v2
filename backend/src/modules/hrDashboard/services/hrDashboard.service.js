@@ -92,16 +92,77 @@ const ABSENCE_DETAIL_OPTIONS = Object.freeze([
         label: "AB",
         name: "Absent",
     },
+    {
+        code: "SL",
+        label: "SL",
+        name: "Sick Leave",
+    },
+    {
+        code: "ML",
+        label: "ML",
+        name: "Maternity Leave",
+    },
 ])
 
 const ATTENDANCE_DETAIL_CODE_ALIASES = Object.freeze({
     ANNUAL_LEAVE: "AL",
+    ANNUAL: "AL",
+    AL: "AL",
     SPECIAL_PERMISSION: "SP",
     SPECIAL_LEAVE: "SP",
+    SPECIAL: "SP",
+    SP: "SP",
     UNPAID_LEAVE: "UL",
+    UNPAID: "UL",
+    UL: "UL",
     ABSENT: "AB",
     ABSENCE: "AB",
+    AB: "AB",
+    SICK_LEAVE: "SL",
+    SICK: "SL",
+    SL: "SL",
+    MATERNITY_LEAVE: "ML",
+    MATERNITY: "ML",
+    ML: "ML",
 })
+
+const ABSENCE_OVERALL_TYPES = Object.freeze([
+    {
+        code: "UL",
+        label: "Unpaid Leave",
+        showDay: false,
+        group: "absence",
+    },
+    {
+        code: "SL",
+        label: "Sick Leave",
+        showDay: true,
+        group: "absence",
+    },
+    {
+        code: "AB",
+        label: "Absent",
+        showDay: true,
+        group: "absence",
+    },
+    {
+        code: "AL",
+        label: "Annual Leave",
+        showDay: true,
+        group: "leave",
+    },
+    {
+        code: "ML",
+        label: "Maternity Leave",
+        showDay: true,
+        group: "leave",
+    },
+])
+
+const ABSENCE_EXCLUDED_FROM_WORKFORCE_RATE = new Set(["AL", "ML"])
+const ABSENCE_RATE_CODES = new Set(["UL", "SL", "SP", "AB", "AL", "ML"])
+const ABSENCE_RATE_EXCLUDING_ANNUAL_MATERNITY_CODES = new Set(["UL", "SL", "SP", "AB"])
+const TOP_ABSENT_DEPARTMENT_LIMIT = 15
 
 function toObjectId(value) {
     return value ? new mongoose.Types.ObjectId(value) : undefined
@@ -377,6 +438,12 @@ async function loadAttendanceRecords(query, startDate, endDate, employees) {
             "leaveCode",
             "leaveTypeCode",
             "correctionCode",
+            "dayValue",
+            "days",
+            "leaveDays",
+            "absenceDays",
+            "absentDays",
+            "durationDays",
         ])
         .lean()
 }
@@ -1059,7 +1126,322 @@ function isAttendanceExpectedWorkRecord(record = {}) {
 function isAbsenceRecord(record = {}) {
     const code = getAttendanceDetailCode(record)
 
-    return ["AL", "SP", "UL", "AB"].includes(code) || record.status === "ABSENT"
+    return ABSENCE_RATE_CODES.has(code) || record.status === "ABSENT"
+}
+
+function getAttendanceDayValue(record = {}) {
+    for (const field of [
+        "dayValue",
+        "days",
+        "leaveDays",
+        "absenceDays",
+        "absentDays",
+        "durationDays",
+    ]) {
+        const value = Number(record[field])
+
+        if (Number.isFinite(value) && value > 0) {
+            return value
+        }
+    }
+
+    return 1
+}
+
+function createAbsenceTypeValue() {
+    return {
+        day: 0,
+        rate: 0,
+    }
+}
+
+function createAbsenceTypesObject() {
+    return ABSENCE_OVERALL_TYPES.reduce((result, type) => {
+        result[type.code] = createAbsenceTypeValue()
+        return result
+    }, {})
+}
+
+function createAbsenceOverallRow({ key, label, rowType = "MONTH", year = null, month = null }) {
+    return {
+        key,
+        label,
+        rowType,
+        year,
+        month,
+        expected: 0,
+        absenceDay: 0,
+        absenceDayExcludingAnnualMaternity: 0,
+        absentRate: 0,
+        absentRateExcludingAnnualMaternity: 0,
+        types: createAbsenceTypesObject(),
+    }
+}
+
+function addRecordToAbsenceOverallRow(row, record = {}) {
+    if (isAttendanceExpectedWorkRecord(record)) {
+        row.expected += getAttendanceDayValue(record)
+    }
+
+    if (!isAbsenceRecord(record)) return
+
+    const rawCode = getAttendanceDetailCode(record)
+    const code = ABSENCE_RATE_CODES.has(rawCode) ? rawCode : "AB"
+    const dayValue = getAttendanceDayValue(record)
+
+    if (row.types[code]) {
+        row.types[code].day += dayValue
+    }
+
+    row.absenceDay += dayValue
+
+    if (!ABSENCE_EXCLUDED_FROM_WORKFORCE_RATE.has(code)) {
+        row.absenceDayExcludingAnnualMaternity += dayValue
+    }
+}
+
+function finalizeAbsenceOverallRow(row) {
+    for (const type of ABSENCE_OVERALL_TYPES) {
+        const value = row.types[type.code]
+        value.day = round(value.day, 1)
+        value.rate = row.expected > 0
+            ? round((value.day / row.expected) * 100, 2)
+            : 0
+    }
+
+    row.expected = round(row.expected, 1)
+    row.absenceDay = round(row.absenceDay, 1)
+    row.absenceDayExcludingAnnualMaternity = round(
+        row.absenceDayExcludingAnnualMaternity,
+        1,
+    )
+    row.absentRate = row.expected > 0
+        ? round((row.absenceDay / row.expected) * 100, 2)
+        : 0
+    row.absentRateExcludingAnnualMaternity = row.expected > 0
+        ? round((row.absenceDayExcludingAnnualMaternity / row.expected) * 100, 2)
+        : 0
+
+    return row
+}
+
+function buildAttendanceOverallRows({ records, selectedYear, periods }) {
+    const previousYear = selectedYear - 1
+    const previousRow = createAbsenceOverallRow({
+        key: String(previousYear),
+        label: String(previousYear),
+        rowType: "PREVIOUS_YEAR",
+        year: previousYear,
+    })
+    const currentYtdRow = createAbsenceOverallRow({
+        key: `YTD-${selectedYear}`,
+        label: `YTD-${selectedYear}`,
+        rowType: "CURRENT_YTD",
+        year: selectedYear,
+    })
+    const monthRows = periods
+        .filter((period) => period.year === selectedYear)
+        .map((period) =>
+            createAbsenceOverallRow({
+                key: period.key,
+                label: period.label,
+                rowType: "MONTH",
+                year: period.year,
+                month: period.month,
+            }),
+        )
+    const monthRowByKey = new Map(monthRows.map((row) => [row.key, row]))
+    const selectedYearKeys = new Set(monthRows.map((row) => row.key))
+
+    for (const record of records) {
+        const recordDate = new Date(record.attendanceDate)
+        const year = recordDate.getUTCFullYear()
+        const key = `${year}-${String(recordDate.getUTCMonth() + 1).padStart(2, "0")}`
+
+        if (year === previousYear) {
+            addRecordToAbsenceOverallRow(previousRow, record)
+        }
+
+        if (year === selectedYear && selectedYearKeys.has(key)) {
+            addRecordToAbsenceOverallRow(currentYtdRow, record)
+
+            const monthRow = monthRowByKey.get(key)
+
+            if (monthRow) {
+                addRecordToAbsenceOverallRow(monthRow, record)
+            }
+        }
+    }
+
+    return [previousRow, currentYtdRow, ...monthRows].map(finalizeAbsenceOverallRow)
+}
+
+function createTopAbsentMonthValue(period) {
+    return {
+        key: period.key,
+        year: period.year,
+        month: period.month,
+        label: period.label,
+        expected: 0,
+        absenceDay: 0,
+        absenceDayExcludingAnnualMaternity: 0,
+        absentRate: 0,
+        absentRateExcludingAnnualMaternity: 0,
+    }
+}
+
+function createTopAbsentDepartmentRow({ departmentId, department, periods }) {
+    return {
+        departmentId: departmentId || "UNASSIGNED",
+        departmentCode: department?.code || "-",
+        departmentName: department?.name || "Unassigned",
+        label: department?.code
+            ? `${department.code}--${department.name || ""}`.trim()
+            : department?.name || "Unassigned",
+        expected: 0,
+        absenceDay: 0,
+        absenceDayExcludingAnnualMaternity: 0,
+        absentRate: 0,
+        absentRateExcludingAnnualMaternity: 0,
+        months: periods.map(createTopAbsentMonthValue),
+    }
+}
+
+function addRecordToTopAbsentRow(row, record = {}) {
+    const recordDate = new Date(record.attendanceDate)
+    const key = `${recordDate.getUTCFullYear()}-${String(recordDate.getUTCMonth() + 1).padStart(2, "0")}`
+    const month = row.months.find((item) => item.key === key)
+    const expectedValue = isAttendanceExpectedWorkRecord(record)
+        ? getAttendanceDayValue(record)
+        : 0
+
+    if (expectedValue > 0) {
+        row.expected += expectedValue
+        if (month) month.expected += expectedValue
+    }
+
+    if (!isAbsenceRecord(record)) return
+
+    const rawCode = getAttendanceDetailCode(record)
+    const code = ABSENCE_RATE_CODES.has(rawCode) ? rawCode : "AB"
+    const dayValue = getAttendanceDayValue(record)
+
+    row.absenceDay += dayValue
+    if (month) month.absenceDay += dayValue
+
+    if (ABSENCE_RATE_EXCLUDING_ANNUAL_MATERNITY_CODES.has(code)) {
+        row.absenceDayExcludingAnnualMaternity += dayValue
+        if (month) month.absenceDayExcludingAnnualMaternity += dayValue
+    }
+}
+
+function finalizeTopAbsentDepartmentRow(row) {
+    for (const month of row.months) {
+        month.expected = round(month.expected, 1)
+        month.absenceDay = round(month.absenceDay, 1)
+        month.absenceDayExcludingAnnualMaternity = round(
+            month.absenceDayExcludingAnnualMaternity,
+            1,
+        )
+        month.absentRate = month.expected > 0
+            ? round((month.absenceDay / month.expected) * 100, 2)
+            : 0
+        month.absentRateExcludingAnnualMaternity = month.expected > 0
+            ? round((month.absenceDayExcludingAnnualMaternity / month.expected) * 100, 2)
+            : 0
+    }
+
+    row.expected = round(row.expected, 1)
+    row.absenceDay = round(row.absenceDay, 1)
+    row.absenceDayExcludingAnnualMaternity = round(
+        row.absenceDayExcludingAnnualMaternity,
+        1,
+    )
+    row.absentRate = row.expected > 0
+        ? round((row.absenceDay / row.expected) * 100, 2)
+        : 0
+    row.absentRateExcludingAnnualMaternity = row.expected > 0
+        ? round((row.absenceDayExcludingAnnualMaternity / row.expected) * 100, 2)
+        : 0
+
+    return row
+}
+
+function buildAttendanceTopAbsentDepartments({ records, periods, departments }) {
+    const departmentById = new Map(
+        departments.map((department) => [department.id || department._id?.toString?.(), department]),
+    )
+    const rowByDepartmentId = new Map()
+
+    for (const record of records) {
+        const departmentId = record.departmentId?.toString?.() || "UNASSIGNED"
+
+        if (!rowByDepartmentId.has(departmentId)) {
+            rowByDepartmentId.set(
+                departmentId,
+                createTopAbsentDepartmentRow({
+                    departmentId,
+                    department: departmentById.get(departmentId),
+                    periods,
+                }),
+            )
+        }
+
+        addRecordToTopAbsentRow(rowByDepartmentId.get(departmentId), record)
+    }
+
+    return [...rowByDepartmentId.values()]
+        .map(finalizeTopAbsentDepartmentRow)
+        .filter((row) => row.expected > 0)
+        .sort(
+            (a, b) =>
+                b.absentRateExcludingAnnualMaternity - a.absentRateExcludingAnnualMaternity ||
+                b.absentRate - a.absentRate ||
+                String(a.label).localeCompare(String(b.label)),
+        )
+        .slice(0, TOP_ABSENT_DEPARTMENT_LIMIT)
+}
+
+function buildAttendanceAbsenceTables({
+    records,
+    periods,
+    selectedYear,
+    departments,
+}) {
+    const currentYearPeriods = periods.filter(
+        (period) => period.year === selectedYear,
+    )
+    const currentYearKeys = new Set(currentYearPeriods.map((period) => period.key))
+    const currentYearRecords = records.filter((record) => {
+        const date = new Date(record.attendanceDate)
+        const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`
+
+        return currentYearKeys.has(key)
+    })
+
+    return {
+        overall: {
+            columns: ABSENCE_OVERALL_TYPES,
+            rows: buildAttendanceOverallRows({
+                records,
+                selectedYear,
+                periods: currentYearPeriods,
+            }),
+        },
+        topAbsentDepartments: {
+            periods: currentYearPeriods.map((period) => ({
+                key: period.key,
+                year: period.year,
+                month: period.month,
+                label: period.label,
+            })),
+            rows: buildAttendanceTopAbsentDepartments({
+                records: currentYearRecords,
+                periods: currentYearPeriods,
+                departments,
+            }),
+        },
+    }
 }
 
 function createAttendanceComparisonMonth({ year, month }) {
@@ -1919,6 +2301,12 @@ export async function getHrDashboard({ query }) {
         selectedLabel: selectedMetricLabel,
         targetRates: turnoverTargetRates,
     })
+    const attendanceAbsenceTables = buildAttendanceAbsenceTables({
+        records: attendanceComparisonRecords,
+        periods,
+        selectedYear,
+        departments: lookups.departments,
+    })
 
     const result = {
         filters: {
@@ -1957,6 +2345,8 @@ export async function getHrDashboard({ query }) {
             monthly: attendanceMonthly,
             byLine: buildAttendanceLineSummary({ records: attendanceRecords, lines }),
             absenceComparison: attendanceAbsenceComparison,
+            absenceOverall: attendanceAbsenceTables.overall,
+            topAbsentDepartments: attendanceAbsenceTables.topAbsentDepartments,
         },
         turnover: turnoverComparison,
         movement: buildMovementSeries({ movements, periods, query: cleanQuery }),

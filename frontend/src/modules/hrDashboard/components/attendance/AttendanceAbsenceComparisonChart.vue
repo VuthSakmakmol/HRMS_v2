@@ -57,7 +57,7 @@ const maxValue = computed(() => {
         Number(row.currentRate) || 0,
     ])
 
-    values.push(...visibleRows.value.map((row) => Number(row.targetRate) || Number(props.targetRate) || 0))
+    values.push(Number(props.targetRate) || 0)
 
     return Math.max(8, ...values) * 1.22
 })
@@ -75,22 +75,10 @@ const gridLines = computed(() =>
     }),
 )
 
-const targetPoints = computed(() =>
-    visibleRows.value
-        .map((row, index) => {
-            const targetRate = Number(row.targetRate) || Number(props.targetRate) || 0
-            const x = xFor(index)
-            const y = padding.top + chartHeight -
-                (targetRate / maxValue.value) * chartHeight
-
-            return `${x},${y}`
-        })
-        .join(" "),
+const targetY = computed(() =>
+    padding.top + chartHeight -
+        ((Number(props.targetRate) || 0) / maxValue.value) * chartHeight,
 )
-
-function targetRateFor(row) {
-    return Number(row.targetRate) || Number(props.targetRate) || 0
-}
 
 function safeT(key, fallback) {
     const translated = t(key)
@@ -154,10 +142,11 @@ function rowLabel(row) {
                 />
             </g>
 
-            <polyline
-                v-if="targetPoints"
-                :points="targetPoints"
-                fill="none"
+            <line
+                :x1="padding.left"
+                :x2="width - padding.right"
+                :y1="targetY"
+                :y2="targetY"
                 stroke="#ff0000"
                 stroke-width="2"
                 stroke-dasharray="4 4"
@@ -226,7 +215,7 @@ function rowLabel(row) {
                     text-anchor="middle"
                     class="attendance-absent-chart__value attendance-absent-chart__value--current"
                     :class="{
-                        'is-over-target': Number(row.currentRate) > targetRateFor(row),
+                        'is-over-target': Number(row.currentRate) > Number(targetRate),
                     }"
                 >
                     {{ formatPercent(row.currentRate) }}

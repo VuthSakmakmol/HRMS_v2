@@ -6,6 +6,7 @@ import Message from "primevue/message"
 import ProgressSpinner from "primevue/progressspinner"
 
 import AttendanceDashboardSection from "../components/attendance/AttendanceDashboardSection.vue"
+import AttendanceAbsenceDataSection from "../components/attendance/AttendanceAbsenceDataSection.vue"
 import DashboardFilterBar from "../components/shared/DashboardFilterBar.vue"
 import GeneralDataSection from "../components/general/GeneralDataSection.vue"
 import ManpowerSection from "../components/manpower/ManpowerSection.vue"
@@ -43,7 +44,7 @@ const hasDashboardData = computed(() => {
         [row.budget, row.roadmap, row.actual].some((value) => Number(value) > 0),
     )
 
-    const attendanceHasData = (data.attendance?.monthly || []).some((row) =>
+    const attendanceMonthlyHasData = (data.attendance?.monthly || []).some((row) =>
         [
             row.processed,
             row.present,
@@ -56,6 +57,21 @@ const hasDashboardData = computed(() => {
             row.restDay,
         ].some((value) => Number(value) > 0),
     )
+
+    const absenceChartHasData = (data.attendance?.absenceComparison?.rows || []).some((row) =>
+        [
+            row.previousRate,
+            row.currentRate,
+            row.previousCount,
+            row.currentCount,
+        ].some((value) => Number(value) !== 0),
+    )
+
+    const absenceTableHasData =
+        Boolean((data.attendance?.absenceOverall?.rows || []).length) ||
+        Boolean((data.attendance?.topAbsentDepartments?.rows || []).length)
+
+    const attendanceHasData = attendanceMonthlyHasData || absenceChartHasData || absenceTableHasData
 
     const recruitmentHasData = (data.recruitment?.rows || []).some((row) =>
         [row.previousTotal, row.currentTotal, row.targetPerMonth].some(
@@ -223,6 +239,11 @@ onMounted(async () => {
                     :title="safeT('hrDashboard.sections.attendanceDashboard', 'Attendance Dashboard')"
                     :data="dashboard.attendance || {}"
                     :selected-period-key="selectedPeriodKey"
+                />
+
+                <AttendanceAbsenceDataSection
+                    :title="safeT('hrDashboard.attendance.absentData', 'Absent Data')"
+                    :data="dashboard.attendance || {}"
                 />
 
                 <TurnoverDashboardSection

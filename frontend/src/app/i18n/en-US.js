@@ -333,6 +333,7 @@ export default {
             restDay: "Rest Day",
             attendanceRate: "Attendance Rate",
             line: "Line",
+            department: "Department",
             noLineData: "No attendance line data for the selected period.",
             chartAria: "Attendance dashboard chart",
             totalView: "Total",
@@ -342,12 +343,29 @@ export default {
             totalAbsentPercent: "Absent",
             targetLessThan: "Target <",
             avg: "AVG",
+            day: "Day",
+            selectedScope: "Selected",
+            absentData: "Absent Data",
+            absentRate: "Absent rate (%)",
+            absentRateWithoutAnnualMaternity: "Absent rate (%)-ANL&MA",
+            topAbsentTitle: "Top absent by department - {label}",
+            noAbsentData: "No absent data matched this filter.",
+            absenceTypes: {
+                UL: "Unpaid Leave",
+                SL: "Sick Leave",
+                SP: "Special Permission",
+                AB: "Absent",
+                AL: "Annual Leave",
+                ML: "Maternity Leave"
+            },
             codes: {
                 TOTAL: "Total Absent",
                 AL: "AL",
                 SP: "SP",
                 UL: "UL",
-                AB: "AB"
+                AB: "AB",
+                SL: "SL",
+                ML: "ML"
             }
         },
         noData: "No dashboard data matched this filter.",
