@@ -17,6 +17,7 @@ import Textarea from "primevue/textarea"
 import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
 import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
+import AppTableActions from "@/shared/components/table/AppTableActions.vue"
 
 import { fetchBranchesLookup } from "@/modules/organization/services/branch.api.js"
 import { fetchCompaniesLookup } from "@/modules/organization/services/company.api.js"
@@ -1050,7 +1051,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="hrms-list-page hrms-compact">
+    <section class="line-page hrms-list-page">
         <AppFilterBar :loading="lineStore.loading">
             <span class="app-filter-field app-filter-field--search line-search">
                 <i class="pi pi-search" />
@@ -1063,64 +1064,54 @@ onMounted(async () => {
                 />
             </span>
 
-            <div class="app-filter-field">
-                <Select
+            <Select
                     v-model="filters.companyId"
-                    class="line-filter-select"
+                    class="app-filter-field line-filter-select"
                     :options="companyFilterOptions"
                     option-label="label"
                     option-value="value"
                     :loading="companyLoading"
                     @change="onFilterCompanyChange"
-                />
-            </div>
+            />
 
-            <div class="app-filter-field">
-                <Select
+            <Select
                     v-model="filters.branchId"
-                    class="line-filter-select"
+                    class="app-filter-field line-filter-select"
                     :options="branchFilterOptions"
                     option-label="label"
                     option-value="value"
                     :loading="branchLoading"
                     @change="onFilterBranchChange"
-                />
-            </div>
+            />
 
-            <div class="app-filter-field">
-                <Select
+            <Select
                     v-model="filters.departmentId"
-                    class="line-filter-select"
+                    class="app-filter-field line-filter-select"
                     :options="departmentFilterOptions"
                     option-label="label"
                     option-value="value"
                     :loading="departmentLoading"
                     @change="onFilterDepartmentChange"
-                />
-            </div>
+            />
 
-            <div class="app-filter-field">
-                <Select
+            <Select
                     v-model="filters.positionId"
-                    class="line-filter-select"
+                    class="app-filter-field line-filter-select"
                     :options="positionFilterOptions"
                     option-label="label"
                     option-value="value"
                     :loading="positionLoading"
                     @change="applyFilters"
-                />
-            </div>
+            />
 
-            <div class="app-filter-field line-status-field">
-                <Select
+            <Select
                     v-model="filters.status"
-                    class="line-filter-select"
+                    class="app-filter-field line-status-filter"
                     :options="statusOptions"
                     option-label="label"
                     option-value="value"
                     @change="applyFilters"
-                />
-            </div>
+            />
 
             <template #actions>
                 <Button icon="pi pi-filter" :label="t('common.apply')" @click="applyFilters" />
@@ -1133,7 +1124,7 @@ onMounted(async () => {
             </template>
         </AppFilterBar>
 
-        <div class="hrms-list-card">
+        <div class="line-table-shell hrms-list-card">
             <div class="hrms-table-wrap">
                     <DataTable
                         class="hrms-standard-table hrms-standard-table--horizontal"
@@ -1267,41 +1258,32 @@ onMounted(async () => {
                             style="min-width: 10rem"
                         >
                             <template #body="{ data }">
-                                <div class="line-actions">
-                                    <Button
-                                        v-if="
-                                            canUpdate &&
-                                            data.status !== 'ARCHIVED'
-                                        "
-                                        size="small"
-                                        text
-                                        rounded
-                                        icon="pi pi-pencil"
-                                        :aria-label="t('common.edit')"
-                                        @click="openEditDialog(data)"
-                                    />
-
-                                    <Button
-                                        v-if="
-                                            canArchive &&
-                                            data.status !== 'ARCHIVED'
-                                        "
-                                        size="small"
-                                        text
-                                        rounded
-                                        severity="danger"
-                                        icon="pi pi-archive"
-                                        :aria-label="t('common.archive')"
-                                        @click="openArchiveDialog(data)"
-                                    />
-
-                                    <span
+                                <AppTableActions
+                                    :show-edit="
+                                        canUpdate &&
+                                        data.status !== 'ARCHIVED'
+                                    "
+                                    :show-archive="
+                                        canArchive &&
+                                        data.status !== 'ARCHIVED'
+                                    "
+                                    :edit-label="t('common.edit')"
+                                    :archive-label="t('common.archive')"
+                                    :disabled="
+                                        lineStore.saving || lineStore.archiving
+                                    "
+                                    @edit="openEditDialog(data)"
+                                    @archive="openArchiveDialog(data)"
+                                >
+                                    <template
                                         v-if="data.status === 'ARCHIVED'"
-                                        class="line-archived-text"
+                                        #after
                                     >
-                                        {{ t("organization.line.readOnly") }}
-                                    </span>
-                                </div>
+                                        <span class="line-read-only">
+                                            {{ t("organization.line.readOnly") }}
+                                        </span>
+                                    </template>
+                                </AppTableActions>
                             </template>
                         </Column>
                     </DataTable>
@@ -1528,7 +1510,7 @@ onMounted(async () => {
         <Dialog
             v-model:visible="archiveDialogVisible"
             modal
-            class="line-archive-dialog"
+            class="line-archive-dialog hrms-standard-dialog"
             :header="t('organization.line.archiveTitle')"
             :draggable="false"
         >
@@ -1561,7 +1543,7 @@ onMounted(async () => {
         <Dialog
             v-model:visible="importDialogVisible"
             modal
-            class="line-import-dialog"
+            class="line-import-dialog hrms-standard-dialog"
             :header="t('organization.line.importTitle')"
             :draggable="false"
             :closable="!lineStore.importing"
@@ -1618,7 +1600,7 @@ onMounted(async () => {
         <Dialog
             v-model:visible="importResultDialogVisible"
             modal
-            class="line-import-result-dialog"
+            class="line-import-result-dialog hrms-standard-dialog"
             :header="t('organization.line.importResultTitle')"
             :draggable="false"
         >
@@ -1688,332 +1670,230 @@ onMounted(async () => {
 
 <style scoped>
 .line-page {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--hrms-page-gap);
     width: 100%;
-    display: grid;
-    gap: 1rem;
-}
-
-.line-page__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.line-page__header-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.line-page__eyebrow {
-    display: inline-flex;
-    margin-bottom: 0.35rem;
-    color: var(--hrms-color-primary);
-    font-size: 0.76rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-.line-page__header h2 {
-    margin: 0;
-    font-size: clamp(1.35rem, 2vw, 1.85rem);
-}
-
-.line-page__header p {
-    max-width: 54rem;
-    margin: 0.45rem 0 0;
-    color: var(--hrms-text-muted);
-    font-size: 0.9rem;
-}
-
-.line-card {
     min-width: 0;
-}
-
-.line-toolbar {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.85rem;
-}
-
-.line-toolbar__filters {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    min-width: 0;
-}
-
-.line-toolbar__actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    min-height: 0;
 }
 
 .line-search {
-    min-width: 16rem;
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    border: 1px solid var(--hrms-border-color);
-    border-radius: 0.85rem;
-    padding: 0 0.75rem;
-    background: var(--hrms-surface-ground);
+    position: relative;
+    flex: 1 1 14rem;
+    min-width: 11rem;
+    max-width: 22rem;
 }
 
-.line-search i {
+.line-search > i {
+    position: absolute;
+    top: 50%;
+    left: 0.7rem;
+    z-index: 1;
+    transform: translateY(-50%);
     color: var(--hrms-text-muted);
+    font-size: 0.72rem;
+    pointer-events: none;
 }
 
-.line-search__input {
+.line-search :deep(.p-inputtext) {
     width: 100%;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
+    padding-left: 2rem;
+    border: 1px solid var(--hrms-border);
 }
 
-.line-filter {
-    width: 12rem;
+.line-filter-select {
+    flex: 0 1 11rem;
+    min-width: 9rem;
+    max-width: 12rem;
 }
 
 .line-status-filter {
-    width: 10rem;
+    flex: 0 1 9rem;
+    min-width: 8rem;
+    max-width: 10rem;
 }
 
-.line-table-wrap {
-    min-height: 34rem;
-    height: calc(100vh - 18rem);
-}
-
-.line-code {
-    color: var(--hrms-color-primary);
-    font-size: 0.82rem;
-}
-
-.line-name-cell,
-.line-muted-cell {
-    display: grid;
-    gap: 0.15rem;
-    line-height: 1.25;
-}
-
-.line-name-cell strong,
-.line-muted-cell strong {
-    font-size: 0.82rem;
-}
-
-.line-name-cell span,
-.line-muted-cell span,
-.line-muted-text,
-.line-date,
-.line-positions-text {
-    color: var(--hrms-text-muted);
-    font-size: 0.76rem;
-}
-
-.line-actions {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.15rem;
+.line-table-shell {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
     width: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--hrms-surface);
 }
 
-.line-archived-text {
+.line-positions-text {
+    display: block;
+    max-width: 18rem;
+    overflow: hidden;
     color: var(--hrms-text-muted);
-    font-size: 0.76rem;
+    font-size: 0.68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.line-read-only {
+    color: var(--hrms-text-muted);
+    font-size: 0.68rem;
+    white-space: nowrap;
 }
 
 .line-dialog {
-    width: min(60rem, calc(100vw - 2rem));
+    width: min(58rem, calc(100vw - 1.25rem));
+}
+
+.line-archive-dialog {
+    width: min(29rem, calc(100vw - 1.25rem));
+}
+
+.line-import-dialog,
+.line-import-result-dialog {
+    width: min(44rem, calc(100vw - 1.25rem));
 }
 
 .line-form {
     display: grid;
-    gap: 1rem;
+    gap: 0.65rem;
 }
 
 .line-form__section {
-    border: 1px solid var(--hrms-border-color);
-    border-radius: 1rem;
-    padding: 1rem;
-    background: var(--hrms-surface-ground);
+    display: grid;
+    gap: 0.55rem;
+    padding: 0.7rem;
+    background: var(--hrms-surface-muted);
+    border: 1px solid var(--hrms-border);
+    border-radius: var(--hrms-radius-md);
 }
 
 .line-form__section h3 {
-    margin: 0 0 0.85rem;
-    font-size: 0.95rem;
+    margin: 0;
+    color: var(--hrms-text);
+    font-size: 0.76rem;
+    font-weight: 800;
 }
 
 .line-form__grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.85rem;
+    gap: 0.55rem;
 }
 
 .line-field {
     display: grid;
-    gap: 0.35rem;
+    align-content: start;
+    gap: 0.25rem;
+    min-width: 0;
 }
 
 .line-field--wide {
-    grid-column: 1 / -1;
+    grid-column: span 2;
 }
 
 .line-field > span {
     color: var(--hrms-text-muted);
-    font-size: 0.76rem;
+    font-size: 0.68rem;
     font-weight: 700;
 }
 
 .line-field small {
-    color: var(--hrms-color-danger);
-    font-size: 0.72rem;
+    color: var(--hrms-danger);
+    font-size: 0.65rem;
 }
 
-.line-field--wide small {
-    color: var(--hrms-text-muted);
+.line-field :deep(.p-component),
+.line-field :deep(.p-inputtext),
+.line-field :deep(.p-select),
+.line-field :deep(.p-multiselect),
+.line-field :deep(.p-textarea) {
+    width: 100%;
 }
 
-.line-archive-dialog,
-.line-import-dialog,
-.line-import-result-dialog {
-    width: min(44rem, calc(100vw - 2rem));
-}
-
-.line-archive-text {
-    margin: 0;
-    color: var(--hrms-text-muted);
-}
-
-.line-import {
-    display: grid;
-    gap: 1rem;
-}
-
+.line-archive-text,
 .line-import p {
     margin: 0;
-    color: var(--hrms-text-muted);
+    color: var(--hrms-text);
+    font-size: 0.78rem;
+    line-height: 1.55;
+}
+
+.line-import,
+.line-import-result {
+    display: grid;
+    gap: 0.75rem;
 }
 
 .line-import__file {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.65rem 0.75rem;
-    border: 1px dashed var(--hrms-border-color);
-    border-radius: 0.85rem;
+    gap: 0.45rem;
+    padding: 0.6rem 0.7rem;
     color: var(--hrms-text-muted);
+    background: var(--hrms-surface-muted);
+    border: 1px dashed var(--hrms-border);
+    border-radius: var(--hrms-radius-md);
+    font-size: 0.72rem;
 }
 
 .line-import__progress {
     display: grid;
-    gap: 0.45rem;
+    gap: 0.35rem;
 }
 
 .line-import__progress span {
     color: var(--hrms-text-muted);
-    font-size: 0.78rem;
-}
-
-.line-import-result {
-    display: grid;
-    gap: 1rem;
+    font-size: 0.68rem;
 }
 
 .line-import-result__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.75rem;
+    gap: 0.55rem;
 }
 
 .line-import-result__grid div {
     display: grid;
-    gap: 0.25rem;
-    padding: 0.85rem;
-    border: 1px solid var(--hrms-border-color);
-    border-radius: 0.85rem;
-    background: var(--hrms-surface-ground);
+    gap: 0.2rem;
+    padding: 0.7rem;
+    text-align: center;
+    background: var(--hrms-surface-muted);
+    border: 1px solid var(--hrms-border);
+    border-radius: var(--hrms-radius-md);
 }
 
 .line-import-result__grid span {
     color: var(--hrms-text-muted);
-    font-size: 0.76rem;
+    font-size: 0.68rem;
 }
 
 .line-import-result__grid strong {
-    font-size: 1.35rem;
+    color: var(--hrms-text);
+    font-size: 1rem;
 }
 
 .line-import-result__errors {
     display: grid;
-    gap: 0.65rem;
+    gap: 0.55rem;
 }
 
 .line-import-result__errors h4 {
     margin: 0;
+    font-size: 0.76rem;
 }
 
-:deep(.p-datatable-thead > tr > th),
-:deep(.p-datatable-tbody > tr > td) {
-    text-align: center;
-    vertical-align: middle;
-    font-size: 0.78rem;
+:deep(.p-datatable) {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    font-size: 0.72rem;
 }
 
-@media (max-width: 1100px) {
-    .line-page__header,
-    .line-toolbar {
-        flex-direction: column;
-    }
-
-    .line-page__header-actions,
-    .line-toolbar__actions {
-        justify-content: flex-start;
-    }
-
-    .line-filter,
-    .line-status-filter {
-        width: min(100%, 14rem);
-    }
-
-    .line-form__grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 720px) {
-    .line-search,
-    .line-filter,
-    .line-status-filter {
-        width: 100%;
-        min-width: 0;
-    }
-
-    .line-form__grid,
-    .line-import-result__grid {
-        grid-template-columns: 1fr;
-    }
-
-    .line-table-wrap {
-        height: 32rem;
-    }
-}
-
-
-.line-page__header-actions--compact {
-    justify-content: flex-end;
-    padding: 0;
+:deep(.p-datatable-table-container) {
+    flex: 1 1 auto;
 }
 
 :deep(.hrms-standard-table--horizontal .p-datatable-table) {
@@ -2027,35 +1907,120 @@ onMounted(async () => {
     white-space: nowrap;
 }
 
-:deep(.hrms-standard-table--horizontal .p-datatable-table-container),
-:deep(.hrms-standard-table--horizontal .p-datatable-wrapper) {
-    overflow-x: auto;
+:deep(.p-datatable-thead > tr > th) {
+    padding: 0.55rem 0.5rem;
+    color: var(--hrms-text);
+    background: var(--hrms-surface-muted);
+    border-color: var(--hrms-border);
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-align: center;
+    vertical-align: middle;
+}
+
+:deep(.p-datatable-tbody > tr > td) {
+    padding: 0.45rem 0.5rem;
+    border-color: var(--hrms-border);
+    font-weight: 400 !important;
+    text-align: center;
+    vertical-align: middle;
+}
+
+:deep(.p-datatable-tbody > tr > td strong),
+:deep(.p-datatable-tbody > tr > td span),
+:deep(.p-datatable-tbody > tr > td div) {
+    font-weight: 400 !important;
+}
+
+:deep(.p-datatable-tbody > tr:hover) {
+    background: var(--hrms-surface-hover);
+}
+
+:deep(.p-paginator) {
+    min-height: 2.6rem;
+    padding: 0.35rem 0.5rem;
+    background: var(--hrms-surface);
+    border-top: 1px solid var(--hrms-border);
+}
+
+:deep(.p-tag) {
+    min-width: 4.7rem;
+    justify-content: center;
+    padding: 0.18rem 0.45rem;
+    font-size: 0.64rem;
+    font-weight: 800;
+}
+
+:deep(.p-dialog-header) {
+    padding: 0.75rem 0.9rem;
+    border-bottom: 1px solid var(--hrms-border);
+}
+
+:deep(.p-dialog-title) {
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+
+:deep(.p-dialog-content) {
+    max-height: min(72vh, 42rem);
+    padding: 0.75rem 0.9rem;
     overflow-y: auto;
 }
 
-.line-search {
-    width: min(100%, 20rem);
+:deep(.p-dialog-footer) {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 0.65rem 0.9rem;
+    background: var(--hrms-surface);
+    border-top: 1px solid var(--hrms-border);
 }
 
-.line-search__input {
-    width: 100%;
-}
-
-.line-filter-select {
-    width: 12rem;
-    max-width: 100%;
-}
-
-.line-status-field .line-filter-select {
-    width: 10rem;
-}
-
-@media (max-width: 720px) {
-    .line-search,
-    .line-filter-select,
-    .line-status-field .line-filter-select {
-        width: 100%;
+@media (max-width: 1100px) {
+    .line-filter-select {
+        flex-basis: 10rem;
+        min-width: 8.5rem;
     }
 }
 
+@media (max-width: 900px) {
+    .line-form__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .line-field--wide {
+        grid-column: 1 / -1;
+    }
+
+    .line-import-result__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .line-search,
+    .line-filter-select,
+    .line-status-filter {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .line-form__grid,
+    .line-import-result__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .line-field--wide {
+        grid-column: auto;
+    }
+
+    :deep(.p-dialog-footer) {
+        display: flex;
+    }
+
+    :deep(.p-dialog-footer .p-button) {
+        flex: 1 1 auto;
+    }
+}
 </style>

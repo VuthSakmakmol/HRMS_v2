@@ -28,6 +28,8 @@ export const attendanceListQuerySchema = z.object({
     departmentId: objectIdSchema.optional(),
     positionId: objectIdSchema.optional(),
     lineId: objectIdSchema.optional(),
+    verificationStatus: z.enum(["ALL", "VERIFIED", "NEEDS_REVIEW", "CORRECTED"]).default("ALL"),
+    issueCode: z.string().trim().max(80).optional(),
 })
 
 export const attendanceUpsertSchema = z.object({

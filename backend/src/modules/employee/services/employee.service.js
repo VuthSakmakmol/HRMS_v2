@@ -18,6 +18,8 @@ import Province from "../../location/models/Province.js"
 import District from "../../location/models/District.js"
 import Commune from "../../location/models/Commune.js"
 import Village from "../../location/models/Village.js"
+import RecruitmentChannel from "../../recruitmentChannel/models/RecruitmentChannel.js"
+import ExitReason from "../../exitReason/models/ExitReason.js"
 
 import Employee from "../models/Employee.js"
 import { resolveApprovalByAssignment } from "../../approval/services/approvalResolver.service.js"
@@ -62,8 +64,6 @@ function serializeEmployeeType(employeeType) {
         code: employeeType.code || employeeType.typeCode || "",
         name: employeeType.name || employeeType.typeName || employeeType.title || employeeType.displayName || "",
         shortName: employeeType.shortName || "",
-        dashboardCategory: employeeType.dashboardCategory || "CUSTOM",
-        positionAssignmentMode: employeeType.positionAssignmentMode || "SPECIFIC_POSITIONS",
         status: employeeType.status || employeeType.recordStatus || "",
     }
 }
@@ -80,6 +80,33 @@ function serializeEmployeeTypeChild(raw = {}) {
     }
 }
 
+function serializeExitReason(exitReason) {
+    if (!exitReason || typeof exitReason !== "object") return null
+
+    return {
+        id: exitReason._id?.toString?.() || exitReason.id,
+        companyId: exitReason.companyId?._id?.toString?.() || exitReason.companyId?.toString?.() || null,
+        branchId: exitReason.branchId?._id?.toString?.() || exitReason.branchId?.toString?.() || null,
+        code: exitReason.code || "",
+        name: exitReason.name || "",
+        shortName: exitReason.shortName || "",
+        status: exitReason.status || "",
+    }
+}
+
+function serializeRecruitmentChannel(recruitmentChannel) {
+    if (!recruitmentChannel || typeof recruitmentChannel !== "object") return null
+
+    return {
+        id: recruitmentChannel._id?.toString?.() || recruitmentChannel.id,
+        code: recruitmentChannel.code || "",
+        name: recruitmentChannel.name || "",
+        shortName: recruitmentChannel.shortName || "",
+        targetMonthly: Number(recruitmentChannel.targetMonthly || 0),
+        status: recruitmentChannel.status || "",
+    }
+}
+
 function toId(value) {
     return value?._id?.toString?.() || value?.id || value?.toString?.() || value || null
 }
@@ -91,83 +118,35 @@ function sameId(a, b) {
     return Boolean(left && right && left === right)
 }
 
-function childMatchesPayload(child, payload = {}) {
-    if (!child) return false
-
-    if (payload.employeeTypeChildId && sameId(payload.employeeTypeChildId, child._id || child.id)) {
-        return true
-    }
-
-    if (
-        payload.employeeTypeChildCode &&
-        String(payload.employeeTypeChildCode).toUpperCase() === String(child.code || "").toUpperCase()
-    ) {
-        return true
-    }
-
-    return false
-}
-
-function childAllowsPosition(child, positionId) {
-    if (!child || !positionId) return false
-
-    if (child.positionAssignmentMode === "ALL_POSITIONS") {
-        return true
-    }
-
-    const childPositionIds = Array.isArray(child.positionIds)
-        ? child.positionIds
-        : []
-
-    return childPositionIds.some((item) => sameId(item, positionId))
-}
-
-function buildEmployeeTypeMatch(employeeType, child = null) {
-    return {
-        employeeTypeId: toId(employeeType._id || employeeType.id),
-        employeeTypeChildId: child ? toId(child._id || child.id) : null,
-        employeeTypeChildCode: child?.code || "",
-        employeeTypeChildName: child?.name || "",
-    }
-}
-
-function findEmployeeTypePositionMatch(employeeType, positionId, payload = {}) {
+function findEmployeeTypePositionMatch(employeeType, positionId) {
     if (!employeeType || !positionId) return null
-
-    const children = Array.isArray(employeeType.children)
-        ? employeeType.children
-        : []
-
-    if (children.length > 0) {
-        const requestedChild = children.find((child) =>
-            childMatchesPayload(child, payload),
-        )
-
-        if (requestedChild) {
-            return childAllowsPosition(requestedChild, positionId)
-                ? buildEmployeeTypeMatch(employeeType, requestedChild)
-                : null
-        }
-
-        const matchedChild = children.find((child) =>
-            childAllowsPosition(child, positionId),
-        )
-
-        return matchedChild
-            ? buildEmployeeTypeMatch(employeeType, matchedChild)
-            : null
-    }
-
-    if (employeeType.positionAssignmentMode === "ALL_POSITIONS") {
-        return buildEmployeeTypeMatch(employeeType)
-    }
 
     const directPositionIds = Array.isArray(employeeType.positionIds)
         ? employeeType.positionIds
         : []
 
     if (directPositionIds.some((item) => sameId(item, positionId))) {
-        return buildEmployeeTypeMatch(employeeType)
+        return {
+            employeeTypeId: toId(employeeType._id || employeeType.id),
+            employeeTypeChildId: null,
+            employeeTypeChildCode: "",
+            employeeTypeChildName: "",
+        }
+    }
+
+    for (const child of employeeType.children || []) {
+        const childPositionIds = Array.isArray(child.positionIds)
+            ? child.positionIds
+            : []
+
+        if (childPositionIds.some((item) => sameId(item, positionId))) {
+            return {
+                employeeTypeId: toId(employeeType._id || employeeType.id),
+                employeeTypeChildId: toId(child._id || child.id),
+                employeeTypeChildCode: child.code || "",
+                employeeTypeChildName: child.name || "",
+            }
+        }
     }
 
     return null
@@ -209,7 +188,7 @@ async function resolveEmployeeTypeReporting(payload) {
         }
     }
 
-    const match = findEmployeeTypePositionMatch(employeeType, payload.positionId, payload)
+    const match = findEmployeeTypePositionMatch(employeeType, payload.positionId)
 
     if (!match) {
         throw new AppError({
@@ -236,6 +215,112 @@ async function resolveEmployeeTypeReporting(payload) {
     }
 
     return match
+}
+
+async function ensureExitReason({ exitReasonId, companyId, branchId }) {
+    if (!exitReasonId) return null
+
+    ensureObjectId(
+        exitReasonId,
+        "EMPLOYEE_EXIT_REASON_INVALID_ID",
+        "errors.employee.profile.exitReasonInvalidId",
+    )
+
+    const exitReason = await ExitReason.findOne({
+        _id: exitReasonId,
+        status: { $ne: "ARCHIVED" },
+    }).lean()
+
+    if (!exitReason) {
+        throw new AppError({
+            statusCode: 404,
+            code: "EMPLOYEE_EXIT_REASON_NOT_FOUND",
+            messageKey: "errors.employee.profile.exitReasonNotFound",
+            fields: {
+                exitReasonId: ["errors.employee.profile.exitReasonNotFound"],
+            },
+        })
+    }
+
+    const reasonCompanyId = toId(exitReason.companyId)
+    const reasonBranchId = toId(exitReason.branchId)
+
+    if (reasonCompanyId && !sameId(reasonCompanyId, companyId)) {
+        throw new AppError({
+            statusCode: 409,
+            code: "EMPLOYEE_EXIT_REASON_COMPANY_MISMATCH",
+            messageKey: "errors.employee.profile.exitReasonCompanyMismatch",
+            fields: {
+                exitReasonId: ["errors.employee.profile.exitReasonCompanyMismatch"],
+            },
+        })
+    }
+
+    if (reasonBranchId && !sameId(reasonBranchId, branchId)) {
+        throw new AppError({
+            statusCode: 409,
+            code: "EMPLOYEE_EXIT_REASON_BRANCH_MISMATCH",
+            messageKey: "errors.employee.profile.exitReasonBranchMismatch",
+            fields: {
+                exitReasonId: ["errors.employee.profile.exitReasonBranchMismatch"],
+            },
+        })
+    }
+
+    return exitReason
+}
+
+async function ensureRecruitmentChannel({ recruitmentChannelId, companyId, branchId }) {
+    if (!recruitmentChannelId) return null
+
+    ensureObjectId(
+        recruitmentChannelId,
+        "RECRUITMENT_CHANNEL_INVALID_ID",
+        "errors.employee.profile.recruitmentChannelInvalidId",
+    )
+
+    const recruitmentChannel = await RecruitmentChannel.findOne({
+        _id: recruitmentChannelId,
+        status: { $ne: "ARCHIVED" },
+    }).lean()
+
+    if (!recruitmentChannel) {
+        throw new AppError({
+            statusCode: 404,
+            code: "RECRUITMENT_CHANNEL_NOT_FOUND",
+            messageKey: "errors.employee.profile.recruitmentChannelNotFound",
+            fields: {
+                recruitmentChannelId: ["errors.employee.profile.recruitmentChannelNotFound"],
+            },
+        })
+    }
+
+    const channelCompanyId = toId(recruitmentChannel.companyId)
+    const channelBranchId = toId(recruitmentChannel.branchId)
+
+    if (channelCompanyId && !sameId(channelCompanyId, companyId)) {
+        throw new AppError({
+            statusCode: 409,
+            code: "RECRUITMENT_CHANNEL_COMPANY_MISMATCH",
+            messageKey: "errors.employee.profile.recruitmentChannelCompanyMismatch",
+            fields: {
+                recruitmentChannelId: ["errors.employee.profile.recruitmentChannelCompanyMismatch"],
+            },
+        })
+    }
+
+    if (channelBranchId && !sameId(channelBranchId, branchId)) {
+        throw new AppError({
+            statusCode: 409,
+            code: "RECRUITMENT_CHANNEL_BRANCH_MISMATCH",
+            messageKey: "errors.employee.profile.recruitmentChannelBranchMismatch",
+            fields: {
+                recruitmentChannelId: ["errors.employee.profile.recruitmentChannelBranchMismatch"],
+            },
+        })
+    }
+
+    return recruitmentChannel
 }
 
 async function ensureEmployeeType(employeeTypeId) {
@@ -428,6 +513,10 @@ export function serializeEmployee(employee) {
         remark: raw.remark || "",
         documents: raw.documents || {},
         sourceOfHiring: raw.sourceOfHiring || "",
+        recruitmentChannelId: raw.recruitmentChannelId?._id?.toString?.() || raw.recruitmentChannelId?.id || raw.recruitmentChannelId?.toString?.() || null,
+        recruitmentChannel: serializeRecruitmentChannel(raw.recruitmentChannelId),
+        exitReasonId: raw.exitReasonId?._id?.toString?.() || raw.exitReasonId?.id || raw.exitReasonId?.toString?.() || null,
+        exitReason: serializeExitReason(raw.exitReasonId),
         introducerEmployeeId: raw.introducerEmployeeId?._id?.toString?.() || raw.introducerEmployeeId?.id || raw.introducerEmployeeId?.toString?.() || null,
         introducerEmployee: raw.introducerEmployeeId && typeof raw.introducerEmployeeId === "object" ? {
             id: raw.introducerEmployeeId._id?.toString?.() || raw.introducerEmployeeId.id,
@@ -458,6 +547,8 @@ function employeePopulate(query) {
         .populate({ path: "positionId", select: "companyId branchId departmentId code title shortName level isManager status" })
         .populate({ path: "lineId", select: "companyId branchId departmentId code name shortName allowedPositionIds leaderPositionId status" })
         .populate({ path: "shiftId", select: "companyId branchId code name shortName startTime endTime workingMinutes isOvernight status" })
+        .populate({ path: "recruitmentChannelId", select: "companyId branchId code name shortName targetMonthly status" })
+        .populate({ path: "exitReasonId", select: "companyId branchId code name shortName status" })
         .populate({ path: "introducerEmployeeId", select: "employeeCode displayName englishFirstName englishLastName khmerFirstName khmerLastName recordStatus" })
         .populate({ path: "employeeTypeId", select: "code name typeCode typeName title displayName shortName status recordStatus" })
         .populate({ path: "approvalPolicyId", select: "code name moduleKey status" })
@@ -640,7 +731,7 @@ export async function listEmployees({ query, user }) {
     if (cached) return cached
 
     const filter = { ...getEmployeeScopeFilter(user), ...buildSearchFilter(query.search) }
-    for (const key of ["companyId", "branchId", "departmentId", "positionId", "lineId", "shiftId", "employeeTypeId", "employeeTypeChildId"]) {
+    for (const key of ["companyId", "branchId", "departmentId", "positionId", "lineId", "shiftId", "employeeTypeId", "employeeTypeChildId", "recruitmentChannelId", "exitReasonId"]) {
         if (query[key]) filter[key] = query[key]
     }
     if (query.employmentStatus !== "ALL") filter.employmentStatus = query.employmentStatus
@@ -678,12 +769,26 @@ export async function createEmployee({ payload, user }) {
     await validateAssignment(payload, user)
     await validateAddresses(payload)
     const employeeTypeReporting = await resolveEmployeeTypeReporting(payload)
+    const recruitmentChannel = await ensureRecruitmentChannel({
+        recruitmentChannelId: payload.recruitmentChannelId,
+        companyId: payload.companyId,
+        branchId: payload.branchId,
+    })
+    const exitReason = await ensureExitReason({
+        exitReasonId: payload.exitReasonId,
+        companyId: payload.companyId,
+        branchId: payload.branchId,
+    })
     ensureResignStatus({ ...payload, employmentStatus: payload.employmentStatus || "WORKING" })
 
     try {
         const employee = await Employee.create({
             ...buildEmployeePayload(payload, user.accountId),
             ...employeeTypeReporting,
+            recruitmentChannelId: recruitmentChannel?._id || null,
+            sourceOfHiring: recruitmentChannel ? recruitmentChannel.name : payload.sourceOfHiring || "",
+            exitReasonId: exitReason?._id || null,
+            resignReason: exitReason ? exitReason.name : payload.resignReason || "",
             displayName: buildDisplayName(payload),
             employmentStatus: payload.employmentStatus || "WORKING",
             gender: payload.gender || "UNKNOWN",
@@ -726,12 +831,26 @@ export async function updateEmployee({ employeeId, payload, user }) {
     await validateAssignment(merged, user)
     await validateAddresses(payload)
     const employeeTypeReporting = await resolveEmployeeTypeReporting(merged)
+    const recruitmentChannel = await ensureRecruitmentChannel({
+        recruitmentChannelId: merged.recruitmentChannelId,
+        companyId: merged.companyId,
+        branchId: merged.branchId,
+    })
+    const exitReason = await ensureExitReason({
+        exitReasonId: merged.exitReasonId,
+        companyId: merged.companyId,
+        branchId: merged.branchId,
+    })
     ensureResignStatus({ ...merged, employmentStatus: merged.employmentStatus || "WORKING" })
 
     try {
         const updatePayload = {
             ...buildEmployeePayload(payload, user.accountId),
             ...employeeTypeReporting,
+            recruitmentChannelId: recruitmentChannel?._id || null,
+            sourceOfHiring: recruitmentChannel ? recruitmentChannel.name : payload.sourceOfHiring || "",
+            exitReasonId: exitReason?._id || null,
+            resignReason: exitReason ? exitReason.name : payload.resignReason || "",
         }
 
         const updated = await Employee.findByIdAndUpdate(existing._id, { $set: updatePayload }, { new: true, runValidators: true, context: "query" }).lean()

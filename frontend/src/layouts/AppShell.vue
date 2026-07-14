@@ -234,6 +234,14 @@ const navGroups = computed(() => {
                     permissionCode: "REPORT.HR_DASHBOARD_TARGET.VIEW",
                 },
 
+                {
+                    labelKey: "nav.exitReasons",
+                    icon: "pi pi-sign-out",
+                    to: { name: "organization-exit-reasons" },
+                    permissionCode: "ORGANIZATION.EXIT_REASON.VIEW",
+                },
+
+
             ],
         },
 

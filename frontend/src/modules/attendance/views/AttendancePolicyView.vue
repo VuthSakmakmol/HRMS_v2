@@ -4,24 +4,25 @@ import { useI18n } from "vue-i18n"
 import { useToast } from "primevue/usetoast"
 
 import Button from "primevue/button"
-import Card from "primevue/card"
-import Checkbox from "primevue/checkbox"
 import Column from "primevue/column"
 import DataTable from "primevue/datatable"
 import Dialog from "primevue/dialog"
-import InputNumber from "primevue/inputnumber"
 import InputText from "primevue/inputtext"
 import Select from "primevue/select"
 import Tag from "primevue/tag"
 
+import { useAuthStore } from "@/app/stores/auth.store.js"
 import { fetchBranchesLookup } from "@/modules/organization/services/branch.api.js"
 import { fetchCompaniesLookup } from "@/modules/organization/services/company.api.js"
-import { useAuthStore } from "@/app/stores/auth.store.js"
+import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
+import AppTableActions from "@/shared/components/table/AppTableActions.vue"
+import AttendancePolicyForm from "../components/AttendancePolicyForm.vue"
 import {
     createAttendancePolicy,
     fetchAttendancePolicies,
     updateAttendancePolicy,
 } from "../services/attendance.api.js"
+import "../styles/attendance-enterprise.css"
 
 const { t } = useI18n()
 const toast = useToast()
@@ -35,39 +36,60 @@ const items = ref([])
 const companies = ref([])
 const branches = ref([])
 
-const form = reactive({
+const filters = reactive({
+    search: "",
+    status: "ALL",
     companyId: null,
-    branchId: null,
-    name: "",
-    code: "",
-    graceInMinutes: 0,
-    graceOutMinutes: 0,
-    minimumWorkedMinutes: 0,
-    lateRoundUnitMinutes: 1,
-    lateRoundMethod: "CEIL",
-    earlyLeaveRoundUnitMinutes: 1,
-    earlyLeaveRoundMethod: "CEIL",
-    autoGenerateAbsent: true,
-    treatSundayAsRestDay: true,
-    status: "ACTIVE",
 })
+
+const form = reactive(createEmptyForm())
 
 const canCreate = computed(() =>
     authStore.hasPermission("ATTENDANCE.POLICY.CREATE"),
 )
+
 const canUpdate = computed(() =>
     authStore.hasPermission("ATTENDANCE.POLICY.UPDATE"),
 )
 
-const roundMethods = [
-    { label: "Floor", value: "FLOOR" },
-    { label: "Ceil", value: "CEIL" },
-    { label: "Nearest", value: "NEAREST" },
+const statusOptions = [
+    { label: "All statuses", value: "ALL" },
+    { label: "Active", value: "ACTIVE" },
+    { label: "Inactive", value: "INACTIVE" },
 ]
 
-function resetForm() {
-    selectedId.value = null
-    Object.assign(form, {
+const dialogTitle = computed(() =>
+    selectedId.value ? t("attendance.policy.edit") : t("attendance.policy.add"),
+)
+
+const filteredItems = computed(() => {
+    const search = filters.search.trim().toLowerCase()
+
+    return items.value.filter((item) => {
+        if (filters.status !== "ALL" && item.status !== filters.status) {
+            return false
+        }
+
+        const companyId = item.companyId?.id || item.companyId
+        if (filters.companyId && companyId !== filters.companyId) {
+            return false
+        }
+
+        if (!search) {
+            return true
+        }
+
+        return [
+            item.code,
+            item.name,
+            item.companyId?.displayName,
+            item.branchId?.name,
+        ].some((value) => String(value || "").toLowerCase().includes(search))
+    })
+})
+
+function createEmptyForm() {
+    return {
         companyId: null,
         branchId: null,
         name: "",
@@ -82,7 +104,18 @@ function resetForm() {
         autoGenerateAbsent: true,
         treatSundayAsRestDay: true,
         status: "ACTIVE",
-    })
+    }
+}
+
+function resetForm() {
+    selectedId.value = null
+    Object.assign(form, createEmptyForm())
+}
+
+function resetFilters() {
+    filters.search = ""
+    filters.status = "ALL"
+    filters.companyId = null
 }
 
 function openCreate() {
@@ -95,33 +128,35 @@ function openEdit(item) {
     Object.assign(form, {
         companyId: item.companyId?.id || item.companyId,
         branchId: item.branchId?.id || item.branchId || null,
-        name: item.name,
-        code: item.code,
-        graceInMinutes: item.graceInMinutes,
-        graceOutMinutes: item.graceOutMinutes,
-        minimumWorkedMinutes: item.minimumWorkedMinutes,
-        lateRoundUnitMinutes: item.lateRoundUnitMinutes,
-        lateRoundMethod: item.lateRoundMethod,
-        earlyLeaveRoundUnitMinutes: item.earlyLeaveRoundUnitMinutes,
-        earlyLeaveRoundMethod: item.earlyLeaveRoundMethod,
-        autoGenerateAbsent: item.autoGenerateAbsent,
-        treatSundayAsRestDay: item.treatSundayAsRestDay,
-        status: item.status,
+        name: item.name || "",
+        code: item.code || "",
+        graceInMinutes: Number(item.graceInMinutes || 0),
+        graceOutMinutes: Number(item.graceOutMinutes || 0),
+        minimumWorkedMinutes: Number(item.minimumWorkedMinutes || 0),
+        lateRoundUnitMinutes: Number(item.lateRoundUnitMinutes || 1),
+        lateRoundMethod: item.lateRoundMethod || "CEIL",
+        earlyLeaveRoundUnitMinutes: Number(item.earlyLeaveRoundUnitMinutes || 1),
+        earlyLeaveRoundMethod: item.earlyLeaveRoundMethod || "CEIL",
+        autoGenerateAbsent: Boolean(item.autoGenerateAbsent),
+        treatSundayAsRestDay: Boolean(item.treatSundayAsRestDay),
+        status: item.status || "ACTIVE",
     })
     dialogVisible.value = true
 }
 
 async function loadLookups() {
     const [companyResult, branchResult] = await Promise.all([
-        fetchCompaniesLookup({ page: 1, limit: 100, status: "ACTIVE" }),
-        fetchBranchesLookup({ page: 1, limit: 100, status: "ACTIVE" }),
+        fetchCompaniesLookup({ page: 1, limit: 500, status: "ACTIVE" }),
+        fetchBranchesLookup({ page: 1, limit: 1000, status: "ACTIVE" }),
     ])
+
     companies.value = companyResult || []
     branches.value = branchResult || []
 }
 
 async function loadItems() {
     loading.value = true
+
     try {
         items.value = await fetchAttendancePolicies({ status: "ALL" })
     } finally {
@@ -131,15 +166,22 @@ async function loadItems() {
 
 async function save() {
     saving.value = true
+
     try {
-        const payload = { ...form }
+        const payload = {
+            ...form,
+            branchId: form.branchId || null,
+        }
+
         if (selectedId.value) {
             await updateAttendancePolicy(selectedId.value, payload)
         } else {
             await createAttendancePolicy(payload)
         }
+
         dialogVisible.value = false
         await loadItems()
+
         toast.add({
             severity: "success",
             summary: t("common.success"),
@@ -157,38 +199,102 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="page-shell">
-        <div class="page-header">
-            <div>
-                <h1>{{ t("attendance.policy.title") }}</h1>
-                <p>{{ t("attendance.policy.description") }}</p>
-            </div>
-            <Button
-                v-if="canCreate"
-                icon="pi pi-plus"
-                :label="t('attendance.policy.add')"
-                @click="openCreate"
+    <section class="attendance-enterprise-page hrms-list-page">
+        <AppFilterBar :loading="loading">
+            <InputText
+                v-model.trim="filters.search"
+                class="app-filter-field app-filter-field--search"
+                placeholder="Search code, name, company or branch"
             />
-        </div>
 
-        <Card>
-            <template #content>
-                <DataTable :value="items" :loading="loading" scrollable striped-rows>
-                    <Column field="code" :header="t('common.code')" />
-                    <Column field="name" :header="t('common.name')" />
-                    <Column :header="t('organization.company.title')">
+            <Select
+                v-model="filters.companyId"
+                class="app-filter-field"
+                :options="companies"
+                option-label="displayName"
+                option-value="id"
+                placeholder="All companies"
+                filter
+                show-clear
+            />
+
+            <Select
+                v-model="filters.status"
+                class="app-filter-field"
+                :options="statusOptions"
+                option-label="label"
+                option-value="value"
+            />
+
+            <template #actions>
+                <Button
+                    icon="pi pi-filter-slash"
+                    severity="secondary"
+                    outlined
+                    @click="resetFilters"
+                />
+                <Button
+                    v-if="canCreate"
+                    icon="pi pi-plus"
+                    :label="t('attendance.policy.add')"
+                    @click="openCreate"
+                />
+            </template>
+        </AppFilterBar>
+
+        <section class="hrms-list-card">
+            <div class="hrms-table-wrap">
+                <DataTable
+                    :value="filteredItems"
+                    :loading="loading"
+                    data-key="id"
+                    scrollable
+                    striped-rows
+                    paginator
+                    :rows="20"
+                    :rows-per-page-options="[20, 50, 100]"
+                    class="hrms-standard-table hrms-standard-table--horizontal"
+                    current-page-report-template="{first}-{last} / {totalRecords}"
+                    paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                >
+                    <template #empty>
+                        <div class="hrms-empty-state">No attendance policies found.</div>
+                    </template>
+
+                    <Column field="code" :header="t('common.code')" style="min-width: 8rem" />
+                    <Column field="name" :header="t('common.name')" style="min-width: 12rem" />
+
+                    <Column :header="t('organization.company.title')" style="min-width: 12rem">
                         <template #body="{ data }">
                             {{ data.companyId?.displayName || "-" }}
                         </template>
                     </Column>
-                    <Column :header="t('organization.branch.title')">
+
+                    <Column :header="t('organization.branch.title')" style="min-width: 10rem">
                         <template #body="{ data }">
                             {{ data.branchId?.name || t("common.all") }}
                         </template>
                     </Column>
-                    <Column field="graceInMinutes" :header="t('attendance.policy.graceIn')" />
-                    <Column field="graceOutMinutes" :header="t('attendance.policy.graceOut')" />
-                    <Column :header="t('common.status')">
+
+                    <Column :header="t('attendance.policy.graceIn')" style="min-width: 8rem">
+                        <template #body="{ data }">
+                            {{ data.graceInMinutes || 0 }}
+                        </template>
+                    </Column>
+
+                    <Column :header="t('attendance.policy.graceOut')" style="min-width: 8rem">
+                        <template #body="{ data }">
+                            {{ data.graceOutMinutes || 0 }}
+                        </template>
+                    </Column>
+
+                    <Column :header="t('attendance.policy.minimumWorked')" style="min-width: 9rem">
+                        <template #body="{ data }">
+                            {{ data.minimumWorkedMinutes || 0 }}
+                        </template>
+                    </Column>
+
+                    <Column :header="t('common.status')" style="min-width: 7rem">
                         <template #body="{ data }">
                             <Tag
                                 :value="data.status"
@@ -196,245 +302,50 @@ onMounted(async () => {
                             />
                         </template>
                     </Column>
-                    <Column v-if="canUpdate" :header="t('common.actions')">
+
+                    <Column
+                        v-if="canUpdate"
+                        :header="t('common.actions')"
+                        style="min-width: 5rem"
+                    >
                         <template #body="{ data }">
-                            <Button
-                                icon="pi pi-pencil"
-                                text
-                                rounded
-                                @click="openEdit(data)"
+                            <AppTableActions
+                                :can-edit="canUpdate"
+                                :edit-label="t('common.edit')"
+                                @edit="openEdit(data)"
                             />
                         </template>
                     </Column>
                 </DataTable>
-            </template>
-        </Card>
+            </div>
+        </section>
 
         <Dialog
             v-model:visible="dialogVisible"
             modal
-            :header="selectedId ? t('attendance.policy.edit') : t('attendance.policy.add')"
-            class="policy-dialog"
+            :header="dialogTitle"
+            class="hrms-standard-dialog"
         >
-            <div class="form-grid">
-                <div class="form-field">
-                    <label for="policyCompany">{{ t("organization.company.title") }}</label>
-                    <Select
-                        id="policyCompany"
-                        v-model="form.companyId"
-                        :options="companies"
-                        option-label="displayName"
-                        option-value="id"
-                        :placeholder="t('organization.company.title')"
-                        filter
-                    />
-                </div>
-
-                <div class="form-field">
-                    <label for="policyBranch">{{ t("organization.branch.title") }}</label>
-                    <Select
-                        id="policyBranch"
-                        v-model="form.branchId"
-                        :options="branches"
-                        option-label="name"
-                        option-value="id"
-                        :placeholder="t('organization.branch.title')"
-                        filter
-                        show-clear
-                    />
-                </div>
-
-                <div class="form-field">
-                    <label for="policyCode">{{ t("common.code") }}</label>
-                    <InputText
-                        id="policyCode"
-                        v-model.trim="form.code"
-                        :placeholder="t('common.code')"
-                    />
-                </div>
-
-                <div class="form-field">
-                    <label for="policyName">{{ t("common.name") }}</label>
-                    <InputText
-                        id="policyName"
-                        v-model.trim="form.name"
-                        :placeholder="t('common.name')"
-                    />
-                </div>
-
-                <div class="form-field">
-                    <label for="graceInMinutes">{{ t("attendance.policy.graceIn") }}</label>
-                    <InputNumber
-                        input-id="graceInMinutes"
-                        v-model="form.graceInMinutes"
-                        :min="0"
-                        :use-grouping="false"
-                        :placeholder="t('attendance.policy.graceIn')"
-                    />
-                </div>
-
-                <div class="form-field">
-                    <label for="graceOutMinutes">{{ t("attendance.policy.graceOut") }}</label>
-                    <InputNumber
-                        input-id="graceOutMinutes"
-                        v-model="form.graceOutMinutes"
-                        :min="0"
-                        :use-grouping="false"
-                        :placeholder="t('attendance.policy.graceOut')"
-                    />
-                </div>
-
-                <div class="form-field">
-                    <label for="minimumWorkedMinutes">{{ t("attendance.policy.minimumWorked") }}</label>
-                    <InputNumber
-                        input-id="minimumWorkedMinutes"
-                        v-model="form.minimumWorkedMinutes"
-                        :min="0"
-                        :use-grouping="false"
-                        :placeholder="t('attendance.policy.minimumWorked')"
-                    />
-                </div>
-
-                <div class="form-field">
-                    <label for="lateRoundUnitMinutes">{{ t("attendance.policy.lateRoundUnit") }}</label>
-                    <InputNumber
-                        input-id="lateRoundUnitMinutes"
-                        v-model="form.lateRoundUnitMinutes"
-                        :min="1"
-                        :use-grouping="false"
-                        :placeholder="t('attendance.policy.lateRoundUnit')"
-                    />
-                </div>
-
-                <div class="form-field">
-                    <label for="lateRoundMethod">Late Round Method</label>
-                    <Select
-                        id="lateRoundMethod"
-                        v-model="form.lateRoundMethod"
-                        :options="roundMethods"
-                        option-label="label"
-                        option-value="value"
-                        placeholder="Late Round Method"
-                    />
-                </div>
-
-                <div class="form-field">
-                    <label for="earlyLeaveRoundUnitMinutes">{{ t("attendance.policy.earlyRoundUnit") }}</label>
-                    <InputNumber
-                        input-id="earlyLeaveRoundUnitMinutes"
-                        v-model="form.earlyLeaveRoundUnitMinutes"
-                        :min="1"
-                        :use-grouping="false"
-                        :placeholder="t('attendance.policy.earlyRoundUnit')"
-                    />
-                </div>
-
-                <div class="form-field">
-                    <label for="earlyLeaveRoundMethod">Early Leave Round Method</label>
-                    <Select
-                        id="earlyLeaveRoundMethod"
-                        v-model="form.earlyLeaveRoundMethod"
-                        :options="roundMethods"
-                        option-label="label"
-                        option-value="value"
-                        placeholder="Early Leave Round Method"
-                    />
-                </div>
-
-                <div class="form-field">
-                    <label for="policyStatus">{{ t("common.status") }}</label>
-                    <Select
-                        id="policyStatus"
-                        v-model="form.status"
-                        :options="[
-                            { label: 'ACTIVE', value: 'ACTIVE' },
-                            { label: 'INACTIVE', value: 'INACTIVE' },
-                        ]"
-                        option-label="label"
-                        option-value="value"
-                        :placeholder="t('common.status')"
-                    />
-                </div>
-            </div>
-
-            <div class="check-row">
-                <Checkbox v-model="form.autoGenerateAbsent" binary input-id="autoAbsent" />
-                <label for="autoAbsent">{{ t("attendance.policy.autoAbsent") }}</label>
-            </div>
-            <div class="check-row">
-                <Checkbox v-model="form.treatSundayAsRestDay" binary input-id="sundayRest" />
-                <label for="sundayRest">{{ t("attendance.policy.sundayRest") }}</label>
-            </div>
+            <AttendancePolicyForm
+                v-model="form"
+                :companies="companies"
+                :branches="branches"
+            />
 
             <template #footer>
-                <Button :label="t('common.cancel')" severity="secondary" text @click="dialogVisible = false" />
-                <Button :label="t('common.save')" :loading="saving" @click="save" />
+                <Button
+                    :label="t('common.cancel')"
+                    severity="secondary"
+                    outlined
+                    @click="dialogVisible = false"
+                />
+                <Button
+                    :label="t('common.save')"
+                    icon="pi pi-check"
+                    :loading="saving"
+                    @click="save"
+                />
             </template>
         </Dialog>
     </section>
 </template>
-
-<style scoped>
-.page-shell {
-    display: grid;
-    gap: 1rem;
-}
-
-.page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.page-header h1 {
-    margin: 0;
-}
-
-.page-header p {
-    margin: 0.35rem 0 0;
-    color: var(--text-color-secondary);
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.85rem 1rem;
-}
-
-.form-field {
-    display: grid;
-    min-width: 0;
-    gap: 0.38rem;
-}
-
-.form-field > label {
-    color: var(--text-color);
-    font-size: 0.78rem;
-    font-weight: 600;
-    line-height: 1.2;
-}
-
-.form-field :deep(.p-inputtext),
-.form-field :deep(.p-inputnumber),
-.form-field :deep(.p-select) {
-    width: 100%;
-}
-
-.check-row {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    margin-top: 0.85rem;
-}
-
-:deep(.policy-dialog) {
-    width: min(760px, 95vw);
-}
-
-@media (max-width: 640px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>

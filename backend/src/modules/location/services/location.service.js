@@ -33,7 +33,7 @@ const ENTITY_CONFIG = Object.freeze({
         parentFields: ["countryId"],
         childModel: District,
         childName: "districts",
-        searchFields: ["code", "name", "shortName", "description"],
+        searchFields: ["code", "name", "description"],
         populate: [
             {
                 path: "countryId",
@@ -50,7 +50,7 @@ const ENTITY_CONFIG = Object.freeze({
         parentFields: ["countryId", "provinceId"],
         childModel: Commune,
         childName: "communes",
-        searchFields: ["code", "name", "shortName", "description"],
+        searchFields: ["code", "name", "description"],
         populate: [
             {
                 path: "countryId",
@@ -58,7 +58,7 @@ const ENTITY_CONFIG = Object.freeze({
             },
             {
                 path: "provinceId",
-                select: "countryId code name shortName status",
+                select: "countryId code name status",
             },
         ],
         sort: { name: 1, code: 1 },
@@ -71,7 +71,7 @@ const ENTITY_CONFIG = Object.freeze({
         parentFields: ["countryId", "provinceId", "districtId"],
         childModel: Village,
         childName: "villages",
-        searchFields: ["code", "name", "shortName", "description"],
+        searchFields: ["code", "name", "description"],
         populate: [
             {
                 path: "countryId",
@@ -79,11 +79,11 @@ const ENTITY_CONFIG = Object.freeze({
             },
             {
                 path: "provinceId",
-                select: "countryId code name shortName status",
+                select: "countryId code name status",
             },
             {
                 path: "districtId",
-                select: "countryId provinceId code name shortName status",
+                select: "countryId provinceId code name status",
             },
         ],
         sort: { name: 1, code: 1 },
@@ -96,7 +96,7 @@ const ENTITY_CONFIG = Object.freeze({
         parentFields: ["countryId", "provinceId", "districtId", "communeId"],
         childModel: null,
         childName: "children",
-        searchFields: ["code", "name", "shortName", "description"],
+        searchFields: ["code", "name", "description"],
         populate: [
             {
                 path: "countryId",
@@ -104,15 +104,15 @@ const ENTITY_CONFIG = Object.freeze({
             },
             {
                 path: "provinceId",
-                select: "countryId code name shortName status",
+                select: "countryId code name status",
             },
             {
                 path: "districtId",
-                select: "countryId provinceId code name shortName status",
+                select: "countryId provinceId code name status",
             },
             {
                 path: "communeId",
-                select: "countryId provinceId districtId code name shortName status",
+                select: "countryId provinceId districtId code name status",
             },
         ],
         sort: { name: 1, code: 1 },
@@ -196,7 +196,6 @@ function serializeProvince(province) {
         countryId: toId(province.countryId),
         code: province.code,
         name: province.name,
-        shortName: province.shortName || "",
         status: province.status,
     }
 }
@@ -212,7 +211,6 @@ function serializeDistrict(district) {
         provinceId: toId(district.provinceId),
         code: district.code,
         name: district.name,
-        shortName: district.shortName || "",
         status: district.status,
     }
 }
@@ -229,7 +227,6 @@ function serializeCommune(commune) {
         districtId: toId(commune.districtId),
         code: commune.code,
         name: commune.name,
-        shortName: commune.shortName || "",
         status: commune.status,
     }
 }
@@ -271,7 +268,6 @@ function serializeLocation(entity, item) {
         commune,
         code: raw.code,
         name: raw.name,
-        shortName: raw.shortName || "",
         nationality: raw.nationality || "",
         phoneCode: raw.phoneCode || "",
         description: raw.description || "",
@@ -289,7 +285,6 @@ function serializeLocation(entity, item) {
         delete serialized.province
         delete serialized.district
         delete serialized.commune
-        delete serialized.shortName
     }
 
     return serialized
@@ -307,7 +302,6 @@ function buildUpdatePayload(payload, accountId) {
         "communeId",
         "code",
         "name",
-        "shortName",
         "nationality",
         "phoneCode",
         "description",
@@ -545,7 +539,6 @@ export async function lookupLocations({ entity, query }) {
                 id: location.id,
                 code: location.code,
                 name: location.name,
-                shortName: location.shortName || "",
                 countryId: location.countryId || null,
                 provinceId: location.provinceId || null,
                 districtId: location.districtId || null,

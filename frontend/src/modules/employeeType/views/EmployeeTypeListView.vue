@@ -15,6 +15,8 @@ import Tag from "primevue/tag"
 import Textarea from "primevue/textarea"
 
 import { useAuthStore } from "@/app/stores/auth.store.js"
+import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
+import AppTableActions from "@/shared/components/table/AppTableActions.vue"
 import { fetchCompaniesLookup } from "@/modules/organization/services/company.api.js"
 import { fetchPositionsLookup } from "@/modules/organization/services/position.api.js"
 
@@ -257,6 +259,14 @@ async function loadEmployeeTypes(extra = {}) {
     })
 }
 
+function clearFilters() {
+    filters.search = ""
+    filters.companyId = ""
+    filters.dashboardCategory = "ALL"
+    filters.status = "ALL"
+    loadEmployeeTypes({ page: 1 })
+}
+
 function openCreateDialog() {
     resetForm()
     form.companyId = filters.companyId || ""
@@ -353,196 +363,250 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="employee-type-page hrms-compact">
-        <div class="employee-type-toolbar">
-            <InputText
-                v-model="filters.search"
-                class="employee-type-search"
-                placeholder="Search code, name, or child group"
-                @keyup.enter="loadEmployeeTypes()"
-            />
+    <section class="employee-type-page hrms-list-page">
+        <AppFilterBar :loading="employeeTypeStore.loading">
+            <span class="app-filter-field app-filter-field--search employee-type-search">
+                <i class="pi pi-search" />
+
+                <InputText
+                    v-model="filters.search"
+                    placeholder="Search code, name, or child group"
+                    @keyup.enter="loadEmployeeTypes({ page: 1 })"
+                />
+            </span>
 
             <Select
                 v-model="filters.companyId"
+                class="app-filter-field employee-type-filter"
                 :options="companyFilterOptions"
                 option-label="label"
                 option-value="value"
-                class="employee-type-filter"
                 :loading="companyLoading"
-                @update:model-value="loadEmployeeTypes()"
+                @change="loadEmployeeTypes({ page: 1 })"
             />
 
             <Select
                 v-model="filters.dashboardCategory"
+                class="app-filter-field employee-type-filter"
                 :options="dashboardCategoryFilterOptions"
                 option-label="label"
                 option-value="value"
-                class="employee-type-filter"
-                @update:model-value="loadEmployeeTypes()"
+                @change="loadEmployeeTypes({ page: 1 })"
             />
 
             <Select
                 v-model="filters.status"
+                class="app-filter-field employee-type-filter"
                 :options="STATUS_OPTIONS"
                 option-label="label"
                 option-value="value"
-                class="employee-type-filter"
-                @update:model-value="loadEmployeeTypes()"
+                @change="loadEmployeeTypes({ page: 1 })"
             />
 
-            <Button
-                icon="pi pi-filter"
-                label="Apply"
-                :loading="employeeTypeStore.loading"
-                @click="loadEmployeeTypes()"
-            />
+            <template #actions>
+                <Button
+                    icon="pi pi-filter"
+                    label="Apply"
+                    :loading="employeeTypeStore.loading"
+                    @click="loadEmployeeTypes({ page: 1 })"
+                />
 
-            <Button
-                v-if="canImport"
-                icon="pi pi-download"
-                label="Sample"
-                severity="secondary"
-                outlined
-                :loading="employeeTypeStore.downloadingTemplate"
-                @click="downloadTemplate"
-            />
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-times"
+                    label="Clear"
+                    :disabled="employeeTypeStore.loading"
+                    @click="clearFilters"
+                />
 
-            <Button
-                v-if="canImport"
-                icon="pi pi-upload"
-                label="Import"
-                severity="secondary"
-                outlined
-                @click="importDialogVisible = true"
-            />
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-refresh"
+                    aria-label="Refresh"
+                    :loading="employeeTypeStore.loading"
+                    @click="loadEmployeeTypes({ page: employeeTypeStore.pagination.page })"
+                />
 
-            <Button
-                v-if="canExport"
-                icon="pi pi-file-export"
-                label="Export"
-                severity="secondary"
-                outlined
-                :loading="employeeTypeStore.exporting"
-                @click="exportData"
-            />
+                <Button
+                    v-if="canImport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-download"
+                    aria-label="Download sample"
+                    v-tooltip.top="'Download sample'"
+                    :loading="employeeTypeStore.downloadingTemplate"
+                    @click="downloadTemplate"
+                />
 
-            <Button
-                v-if="canCreate"
-                icon="pi pi-plus"
-                label="Create"
-                @click="openCreateDialog"
-            />
-        </div>
+                <Button
+                    v-if="canImport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-upload"
+                    aria-label="Import Excel"
+                    v-tooltip.top="'Import Excel'"
+                    @click="importDialogVisible = true"
+                />
 
-        <DataTable
-            :value="employeeTypeStore.items"
-            :loading="employeeTypeStore.loading"
-            data-key="id"
-            size="small"
-            striped-rows
-            paginator
-            lazy
-            :rows="employeeTypeStore.pagination.limit"
-            :total-records="employeeTypeStore.pagination.total"
-            :first="(employeeTypeStore.pagination.page - 1) * employeeTypeStore.pagination.limit"
-            @page="loadEmployeeTypes({ page: $event.page + 1 })"
-        >
-            <Column
-                field="code"
-                header="Code"
-                style="width: 9rem"
-            />
+                <Button
+                    v-if="canExport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-file-export"
+                    aria-label="Export Excel"
+                    v-tooltip.top="'Export Excel'"
+                    :loading="employeeTypeStore.exporting"
+                    @click="exportData"
+                />
 
-            <Column
-                field="name"
-                header="Name"
-                style="min-width: 12rem"
-            />
+                <Button
+                    v-if="canCreate"
+                    icon="pi pi-plus"
+                    label="Create"
+                    :disabled="employeeTypeStore.loading"
+                    @click="openCreateDialog"
+                />
+            </template>
+        </AppFilterBar>
 
-            <Column header="Dashboard group">
-                <template #body="{ data }">
-                    <Tag
-                        :value="categoryLabel(data.dashboardCategory)"
-                        :severity="categorySeverity(data.dashboardCategory)"
-                    />
-                </template>
-            </Column>
-
-            <Column header="Assignment">
-                <template #body="{ data }">
-                    <span v-if="hasChildren(data)">
-                        Child groups
-                    </span>
-                    <span v-else>
-                        {{ assignmentModeLabel(data.positionAssignmentMode) }}
-                    </span>
-                </template>
-            </Column>
-
-            <Column header="Positions">
-                <template #body="{ data }">
-                    {{ positionCountLabel(data) }}
-                </template>
-            </Column>
-
-            <Column header="Children">
-                <template #body="{ data }">
-                    <div
-                        v-if="hasChildren(data)"
-                        class="child-chip-list"
+        <div class="employee-type-table-shell hrms-list-card">
+            <div class="hrms-table-wrap">
+                <DataTable
+                    class="hrms-standard-table hrms-standard-table--horizontal"
+                    lazy
+                    paginator
+                    striped-rows
+                    data-key="id"
+                    size="small"
+                    scrollable
+                    scroll-height="flex"
+                    :value="employeeTypeStore.items"
+                    :loading="employeeTypeStore.loading"
+                    :rows="employeeTypeStore.pagination.limit"
+                    :total-records="employeeTypeStore.pagination.total"
+                    :first="(employeeTypeStore.pagination.page - 1) * employeeTypeStore.pagination.limit"
+                    :rows-per-page-options="[10, 20, 50, 100]"
+                    @page="loadEmployeeTypes({ page: $event.page + 1, limit: $event.rows })"
+                >
+                    <Column
+                        header="No"
+                        style="width: 4.5rem; min-width: 4.5rem"
                     >
-                        <Tag
-                            v-for="child in data.children"
-                            :key="child.id || child.code"
-                            :value="`${child.code} (${categoryLabel(child.dashboardCategory)})`"
-                            :severity="categorySeverity(child.dashboardCategory)"
-                        />
-                    </div>
-                    <span v-else>-</span>
-                </template>
-            </Column>
+                        <template #body="{ index }">
+                            {{
+                                (employeeTypeStore.pagination.page - 1) *
+                                    employeeTypeStore.pagination.limit +
+                                index +
+                                1
+                            }}
+                        </template>
+                    </Column>
 
-            <Column header="Status" style="width: 7rem">
-                <template #body="{ data }">
-                    <Tag
-                        :value="data.status"
-                        :severity="data.status === 'ACTIVE' ? 'success' : data.status === 'ARCHIVED' ? 'danger' : 'warning'"
-                    />
-                </template>
-            </Column>
+                    <Column
+                        field="code"
+                        header="Code"
+                        frozen
+                        style="min-width: 8rem"
+                    >
+                        <template #body="{ data }">
+                            <span class="hrms-cell-primary hrms-cell-primary--accent">
+                                {{ data.code || "-" }}
+                            </span>
+                        </template>
+                    </Column>
 
-            <Column header="Actions" style="width: 8rem">
-                <template #body="{ data }">
-                    <div class="row-actions">
-                        <Button
-                            v-if="canUpdate && data.status !== 'ARCHIVED'"
-                            icon="pi pi-pencil"
-                            text
-                            rounded
-                            @click="openEditDialog(data)"
-                        />
-                        <Button
-                            v-if="canArchive && data.status !== 'ARCHIVED'"
-                            icon="pi pi-trash"
-                            text
-                            rounded
-                            severity="danger"
-                            @click="confirmArchive(data)"
-                        />
-                    </div>
-                </template>
-            </Column>
-        </DataTable>
+                    <Column
+                        field="name"
+                        header="Name"
+                        style="min-width: 12rem"
+                    >
+                        <template #body="{ data }">
+                            <span class="hrms-cell-primary">
+                                {{ data.name || "-" }}
+                            </span>
+                        </template>
+                    </Column>
+
+                    <Column header="Dashboard group" style="min-width: 12rem">
+                        <template #body="{ data }">
+                            <Tag
+                                :value="categoryLabel(data.dashboardCategory)"
+                                :severity="categorySeverity(data.dashboardCategory)"
+                            />
+                        </template>
+                    </Column>
+
+                    <Column header="Assignment" style="min-width: 11rem">
+                        <template #body="{ data }">
+                            <span class="hrms-cell-muted">
+                                {{ hasChildren(data) ? "Child groups" : assignmentModeLabel(data.positionAssignmentMode) }}
+                            </span>
+                        </template>
+                    </Column>
+
+                    <Column header="Positions" style="min-width: 7rem">
+                        <template #body="{ data }">
+                            {{ positionCountLabel(data) }}
+                        </template>
+                    </Column>
+
+                    <Column header="Children" style="min-width: 15rem">
+                        <template #body="{ data }">
+                            <div v-if="hasChildren(data)" class="child-chip-list">
+                                <Tag
+                                    v-for="child in data.children"
+                                    :key="child.id || child.code"
+                                    :value="`${child.code} (${categoryLabel(child.dashboardCategory)})`"
+                                    :severity="categorySeverity(child.dashboardCategory)"
+                                />
+                            </div>
+                            <span v-else class="hrms-cell-muted">-</span>
+                        </template>
+                    </Column>
+
+                    <Column header="Status" style="min-width: 8rem">
+                        <template #body="{ data }">
+                            <Tag
+                                :value="data.status"
+                                :severity="data.status === 'ACTIVE' ? 'success' : data.status === 'ARCHIVED' ? 'danger' : 'warning'"
+                            />
+                        </template>
+                    </Column>
+
+                    <Column
+                        v-if="canUpdate || canArchive"
+                        header="Actions"
+                        frozen
+                        align-frozen="right"
+                        style="min-width: 6.5rem"
+                    >
+                        <template #body="{ data }">
+                            <AppTableActions
+                                :can-edit="canUpdate && data.status !== 'ARCHIVED'"
+                                :can-archive="canArchive && data.status !== 'ARCHIVED'"
+                                edit-label="Edit"
+                                archive-label="Archive"
+                                :disabled="employeeTypeStore.saving || employeeTypeStore.archiving"
+                                @edit="openEditDialog(data)"
+                                @archive="confirmArchive(data)"
+                            />
+                        </template>
+                    </Column>
+                </DataTable>
+            </div>
+        </div>
 
         <Dialog
             v-model:visible="dialogVisible"
             modal
             :header="dialogTitle"
-            class="employee-type-dialog"
+            class="employee-type-dialog hrms-standard-dialog"
             :style="{ width: 'min(980px, 96vw)' }"
         >
-            <div class="employee-type-form">
-                <div class="form-grid">
+            <div class="employee-type-form hrms-dialog-form">
+                <div class="form-grid hrms-form-grid">
                     <label>
                         Company
                         <Select
@@ -634,7 +698,7 @@ onMounted(async () => {
 
                 <div
                     v-if="form.structureMode === 'DIRECT'"
-                    class="assignment-box"
+                    class="assignment-box hrms-form-section"
                 >
                     <div class="assignment-box__title">
                         Direct position assignment
@@ -660,7 +724,7 @@ onMounted(async () => {
 
                 <div
                     v-else
-                    class="assignment-box"
+                    class="assignment-box hrms-form-section"
                 >
                     <div class="assignment-box__header">
                         <div>
@@ -780,7 +844,7 @@ onMounted(async () => {
             v-model:visible="archiveDialogVisible"
             modal
             header="Archive Employee Type"
-            :style="{ width: 'min(420px, 94vw)' }"
+            class="hrms-standard-dialog--small"
         >
             <p>
                 Archive {{ archiveCandidate?.code }} - {{ archiveCandidate?.name }}?
@@ -805,7 +869,7 @@ onMounted(async () => {
             v-model:visible="importDialogVisible"
             modal
             header="Import Employee Types"
-            :style="{ width: 'min(520px, 94vw)' }"
+            class="hrms-standard-dialog--small"
         >
             <FileUpload
                 mode="basic"
@@ -841,7 +905,7 @@ onMounted(async () => {
             v-model:visible="importResultDialogVisible"
             modal
             header="Import Result"
-            :style="{ width: 'min(760px, 96vw)' }"
+            class="hrms-standard-dialog"
         >
             <div v-if="employeeTypeStore.importSummary" class="import-summary">
                 <strong>Total: {{ employeeTypeStore.importSummary.totalRows }}</strong>
@@ -864,37 +928,66 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+/* Match the Company table typography:
+   headers are emphasized, while row values remain normal weight. */
+:deep(.hrms-standard-table .p-datatable-thead > tr > th) {
+    font-weight: 700;
+}
+
+:deep(.hrms-standard-table .p-datatable-tbody > tr > td),
+:deep(.hrms-standard-table .hrms-cell-primary),
+:deep(.hrms-standard-table .hrms-cell-primary--accent),
+:deep(.hrms-standard-table .hrms-cell-muted),
+:deep(.hrms-standard-table .p-tag) {
+    font-weight: 400;
+}
+
 .employee-type-page {
-    display: grid;
-    gap: 0.75rem;
     min-width: 0;
 }
 
-.employee-type-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.45rem;
+.employee-type-search {
+    position: relative;
+    flex: 1 1 14rem;
+    min-width: 11rem;
+    max-width: 22rem;
 }
 
-.employee-type-search {
-    flex: 1 1 16rem;
-    min-width: 12rem;
+.employee-type-search > i {
+    position: absolute;
+    top: 50%;
+    left: 0.7rem;
+    z-index: 1;
+    transform: translateY(-50%);
+    color: var(--hrms-text-muted);
+    font-size: 0.72rem;
+    pointer-events: none;
+}
+
+.employee-type-search :deep(.p-inputtext) {
+    width: 100%;
+    padding-left: 2rem;
+    border: 1px solid var(--hrms-border);
 }
 
 .employee-type-filter {
-    flex: 0 1 14rem;
-    min-width: 11rem;
+    flex: 0 1 12rem;
+    min-width: 10rem;
+    max-width: 14rem;
 }
 
-.row-actions {
-    display: inline-flex;
-    gap: 0.2rem;
+:deep(.app-filter-bar__fields) {
+    flex-wrap: nowrap;
+}
+
+:deep(.app-filter-bar__actions) {
+    flex-wrap: nowrap;
 }
 
 .child-chip-list {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 0.25rem;
 }
 
@@ -915,17 +1008,13 @@ onMounted(async () => {
     display: grid;
     gap: 0.28rem;
     color: var(--hrms-text-muted);
-    font-size: 0.72rem;
+    font-size: var(--hrms-font-size-sm);
     font-weight: 700;
 }
 
 .assignment-box {
     display: grid;
     gap: 0.6rem;
-    padding: 0.75rem;
-    border: 1px solid var(--hrms-border);
-    border-radius: 0.85rem;
-    background: var(--hrms-surface-muted);
 }
 
 .assignment-box__header {
@@ -937,14 +1026,14 @@ onMounted(async () => {
 
 .assignment-box__title {
     color: var(--hrms-text);
-    font-size: 0.85rem;
+    font-size: var(--hrms-font-size-md);
     font-weight: 900;
 }
 
 .assignment-help {
     margin: 0.2rem 0 0;
     color: var(--hrms-text-muted);
-    font-size: 0.72rem;
+    font-size: var(--hrms-font-size-sm);
 }
 
 .child-editor {
@@ -952,7 +1041,7 @@ onMounted(async () => {
     gap: 0.55rem;
     padding: 0.65rem;
     border: 1px solid var(--hrms-border);
-    border-radius: 0.7rem;
+    border-radius: var(--hrms-radius-md);
     background: var(--hrms-surface);
 }
 
@@ -961,6 +1050,7 @@ onMounted(async () => {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.5rem;
     margin-bottom: 0.75rem;
+    text-align: center;
 }
 
 .w-full {
@@ -969,6 +1059,13 @@ onMounted(async () => {
 
 .mt-3 {
     margin-top: 0.75rem;
+}
+
+@media (max-width: 1100px) {
+    :deep(.app-filter-bar__fields),
+    :deep(.app-filter-bar__actions) {
+        flex-wrap: wrap;
+    }
 }
 
 @media (max-width: 860px) {

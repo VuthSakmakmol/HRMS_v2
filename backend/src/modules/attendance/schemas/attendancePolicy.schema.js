@@ -23,6 +23,8 @@ export const attendancePolicyPayloadSchema = z.object({
     autoGenerateAbsent: z.boolean().default(true),
     treatSundayAsRestDay: z.boolean().default(true),
     status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
+    effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+    effectiveTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 })
 
 export const attendancePolicyIdParamSchema = z.object({

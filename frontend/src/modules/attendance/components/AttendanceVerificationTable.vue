@@ -14,8 +14,8 @@ const props = defineProps({
     },
 })
 
-function severity(status) {
-    if (["PRESENT", "HOLIDAY", "REST_DAY"].includes(status)) {
+function statusSeverity(status) {
+    if (status === "PRESENT") {
         return "success"
     }
 
@@ -23,21 +23,42 @@ function severity(status) {
         return "warn"
     }
 
-    return "danger"
+    if (["MISSING_IN", "MISSING_OUT", "ABSENT"].includes(status)) {
+        return "danger"
+    }
+
+    return "info"
 }
 </script>
 
 <template>
-    <DataTable :value="props.items" :loading="props.loading" scrollable>
-        <Column field="employeeCode" header="Employee ID" />
-        <Column field="employeeName" header="Employee" />
-        <Column field="attendanceDate" header="Date" />
-        <Column field="firstInAt" header="First In" />
-        <Column field="lastOutAt" header="Last Out" />
-        <Column field="status" header="Status">
-            <template #body="{ data }">
-                <Tag :value="data.status" :severity="severity(data.status)" />
+    <div class="hrms-table-wrap">
+        <DataTable
+            :value="props.items"
+            :loading="props.loading"
+            scrollable
+            striped-rows
+            class="hrms-standard-table hrms-standard-table--horizontal"
+            data-key="id"
+        >
+            <template #empty>
+                <div class="hrms-empty-state">No attendance records found.</div>
             </template>
-        </Column>
-    </DataTable>
+
+            <Column field="employeeCode" header="Employee ID" style="min-width: 8rem" />
+            <Column field="employeeName" header="Employee" style="min-width: 12rem" />
+            <Column field="attendanceDate" header="Date" style="min-width: 7rem" />
+            <Column field="firstInAt" header="First In" style="min-width: 7rem" />
+            <Column field="lastOutAt" header="Last Out" style="min-width: 7rem" />
+            <Column field="status" header="Status" style="min-width: 8rem">
+                <template #body="{ data }">
+                    <Tag
+                        class="attendance-table-status"
+                        :value="data.status"
+                        :severity="statusSeverity(data.status)"
+                    />
+                </template>
+            </Column>
+        </DataTable>
+    </div>
 </template>

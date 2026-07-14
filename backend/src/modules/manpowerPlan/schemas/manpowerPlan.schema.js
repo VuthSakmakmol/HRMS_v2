@@ -1,4 +1,3 @@
-
 import { z } from "zod"
 
 const objectIdSchema = z.string().trim().regex(/^[0-9a-fA-F]{24}$/, {
@@ -23,7 +22,7 @@ const optionalTextSchema = (max = 500) =>
 
 const yearSchema = z.coerce.number().int().min(2000).max(2100)
 const monthSchema = z.coerce.number().int().min(1).max(12)
-const targetSchema = z.coerce.number().min(0).max(1000000)
+const targetSchema = z.coerce.number().int().min(0).max(1000000)
 
 export const manpowerPlanIdParamSchema = z.object({
     manpowerPlanId: objectIdSchema,
@@ -71,3 +70,37 @@ export const manpowerPlanUpdateSchema = manpowerPlanCreateSchema
     .refine((value) => Object.keys(value).length > 0, {
         message: "At least one field is required.",
     })
+
+export const manpowerPlanGridQuerySchema = z.object({
+    companyId: objectIdSchema,
+    branchId: objectIdSchema,
+    year: yearSchema,
+    month: monthSchema,
+    employeeTypeId: objectIdSchema.optional(),
+    employeeTypeChildId: objectIdSchema.optional(),
+})
+
+const manpowerPlanBatchRowSchema = z.object({
+    id: objectIdSchema.optional(),
+    departmentId: objectIdSchema,
+    positionId: objectIdSchema,
+    lineId: nullableObjectIdSchema.optional(),
+    shiftId: nullableObjectIdSchema.optional(),
+    employeeTypeId: nullableObjectIdSchema.optional(),
+    employeeTypeChildId: nullableObjectIdSchema.optional(),
+    employeeTypeChildCode: optionalTextSchema(30),
+    employeeTypeChildName: optionalTextSchema(120),
+    targetBudget: targetSchema.default(0),
+    targetRoadmap: targetSchema.default(0),
+    remark: optionalTextSchema(500),
+    status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
+    archive: z.coerce.boolean().optional().default(false),
+})
+
+export const manpowerPlanBatchSaveSchema = z.object({
+    companyId: objectIdSchema,
+    branchId: objectIdSchema,
+    year: yearSchema,
+    month: monthSchema,
+    rows: z.array(manpowerPlanBatchRowSchema).min(1).max(5000),
+})

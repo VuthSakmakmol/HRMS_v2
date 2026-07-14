@@ -6,6 +6,7 @@ import Employee from "../../employee/models/Employee.js"
 import EmployeeMovement from "../../employeeMovement/models/EmployeeMovement.js"
 import RecruitmentChannel from "../../recruitmentChannel/models/RecruitmentChannel.js"
 import EmployeeType from "../../employeeType/models/EmployeeType.js"
+import ExitReason from "../../exitReason/models/ExitReason.js"
 import Line from "../../line/models/Line.js"
 import ManpowerPlan from "../../manpowerPlan/models/ManpowerPlan.js"
 import HrDashboardTarget from "../../hrDashboardTarget/models/HrDashboardTarget.js"
@@ -163,6 +164,28 @@ const ABSENCE_EXCLUDED_FROM_WORKFORCE_RATE = new Set(["AL", "ML"])
 const ABSENCE_RATE_CODES = new Set(["UL", "SL", "SP", "AB", "AL", "ML"])
 const ABSENCE_RATE_EXCLUDING_ANNUAL_MATERNITY_CODES = new Set(["UL", "SL", "SP", "AB"])
 const TOP_ABSENT_DEPARTMENT_LIMIT = 15
+
+const GENERAL_WORKFORCE_CATEGORY_KEYS = Object.freeze({
+    DIRECT_LABOR: "DIRECT_LABOR",
+    INDIRECT_LABOR: "INDIRECT_LABOR",
+    RD_MARKETING: "RD_MARKETING",
+})
+
+const GENERAL_WORKFORCE_DEPARTMENT_KEYWORDS = Object.freeze([
+    "MERCHANDISING",
+    "MERCHANDISE",
+    "MARKETING",
+    "MKT",
+    "RD MKT",
+    "R D MKT",
+    "R D",
+])
+
+const GENERAL_WORKFORCE_DIRECT_KEYWORDS = Object.freeze([
+    "SEWER",
+    "SEWING",
+    "JUMPER",
+])
 
 function toObjectId(value) {
     return value ? new mongoose.Types.ObjectId(value) : undefined
@@ -348,6 +371,8 @@ async function loadEmployees(query) {
             "employeeTypeChildName",
             "sourceOfHiring",
             "recruitmentChannelId",
+            "exitReasonId",
+            "resignReason",
         ])
         .lean()
 }
@@ -1853,6 +1878,136 @@ function summarizeEmployeesForGeneralData({ employees, selectedDate }) {
     }
 }
 
+function normalizeDashboardText(value) {
+    return String(value || "")
+        .trim()
+        .replace(/[^a-zA-Z0-9]+/g, " ")
+        .replace(/\s+/g, " ")
+        .toUpperCase()
+}
+
+function findLookupById(items = [], id) {
+    const stringId = toOptionalStringId(id)
+
+    if (!stringId) return null
+
+    return items.find((item) => item.id === stringId) || null
+}
+
+function getEmployeeTypeOptionForEmployee(employee = {}, lookups = {}) {
+    const employeeTypeId = toOptionalStringId(employee.employeeTypeId)
+
+    if (!employeeTypeId) return null
+
+    if (employee.employeeTypeChildCode) {
+        const childKey = `CHILD:${employeeTypeId}:${employee.employeeTypeChildCode}`
+        const childOption = lookups.employeeTypes?.find((item) => item.key === childKey)
+
+        if (childOption) return childOption
+    }
+
+    const parentKey = `TYPE:${employeeTypeId}`
+
+    return lookups.employeeTypes?.find((item) => item.key === parentKey) || null
+}
+
+function lookupTextMatchesKeywords(item = {}, keywords = []) {
+    const text = normalizeDashboardText([
+        item.code,
+        item.name,
+        item.label,
+        item.title,
+    ].filter(Boolean).join(" "))
+
+    return keywords.some((keyword) => text.includes(keyword))
+}
+
+function isEmployeeInMerchandisingDepartment(employee = {}, lookups = {}) {
+    const department = findLookupById(lookups.departments, employee.departmentId)
+
+    return lookupTextMatchesKeywords(
+        department,
+        GENERAL_WORKFORCE_DEPARTMENT_KEYWORDS,
+    )
+}
+
+function isDirectLaborEmployee(employee = {}, lookups = {}) {
+    const employeeTypeOption = getEmployeeTypeOptionForEmployee(employee, lookups)
+
+    if (employeeTypeOption?.dashboardCategory === "BLUE_COLLAR_SEWER") {
+        return true
+    }
+
+    const position = findLookupById(lookups.positions, employee.positionId)
+
+    return lookupTextMatchesKeywords(
+        position,
+        GENERAL_WORKFORCE_DIRECT_KEYWORDS,
+    )
+}
+
+function buildGeneralWorkforceCategoryBreakdown({
+    employees,
+    selectedDate,
+    selectedPeriod,
+    lookups,
+}) {
+    const activeEmployees = employees.filter((employee) =>
+        employeeWasActiveOn(employee, selectedDate),
+    )
+    const counts = {
+        [GENERAL_WORKFORCE_CATEGORY_KEYS.DIRECT_LABOR]: 0,
+        [GENERAL_WORKFORCE_CATEGORY_KEYS.INDIRECT_LABOR]: 0,
+        [GENERAL_WORKFORCE_CATEGORY_KEYS.RD_MARKETING]: 0,
+    }
+
+    for (const employee of activeEmployees) {
+        if (isEmployeeInMerchandisingDepartment(employee, lookups)) {
+            counts[GENERAL_WORKFORCE_CATEGORY_KEYS.RD_MARKETING] += 1
+            continue
+        }
+
+        if (isDirectLaborEmployee(employee, lookups)) {
+            counts[GENERAL_WORKFORCE_CATEGORY_KEYS.DIRECT_LABOR] += 1
+            continue
+        }
+
+        counts[GENERAL_WORKFORCE_CATEGORY_KEYS.INDIRECT_LABOR] += 1
+    }
+
+    const rows = [
+        {
+            key: GENERAL_WORKFORCE_CATEGORY_KEYS.DIRECT_LABOR,
+            category: "Direct Labor (DL)",
+            department: "Sewer + Jumper",
+            count: counts[GENERAL_WORKFORCE_CATEGORY_KEYS.DIRECT_LABOR],
+            highlight: false,
+        },
+        {
+            key: GENERAL_WORKFORCE_CATEGORY_KEYS.INDIRECT_LABOR,
+            category: "Indirect Labor (IDL)",
+            department: "All except DL & Merchandising",
+            count: counts[GENERAL_WORKFORCE_CATEGORY_KEYS.INDIRECT_LABOR],
+            highlight: false,
+        },
+        {
+            key: GENERAL_WORKFORCE_CATEGORY_KEYS.RD_MARKETING,
+            category: "RD& MKT",
+            department: "Merchandising",
+            count: counts[GENERAL_WORKFORCE_CATEGORY_KEYS.RD_MARKETING],
+            highlight: true,
+        },
+    ]
+
+    const total = rows.reduce((sum, row) => sum + (Number(row.count) || 0), 0)
+
+    return {
+        monthLabel: selectedPeriod?.label || "Selected",
+        rows,
+        total,
+    }
+}
+
 function findPeriodRow(rows = [], periodKey) {
     return rows.find((row) => row.key === periodKey) || null
 }
@@ -1864,6 +2019,120 @@ function getBudgetValue(row) {
     const roadmap = Number(row.roadmap) || 0
 
     return budget > 0 ? budget : roadmap
+}
+
+
+function getExitReasonLabel(employee, exitReasonById) {
+    const exitReasonId = employee.exitReasonId?.toString?.() || employee.exitReasonId || null
+
+    if (exitReasonId && exitReasonById.has(exitReasonId)) {
+        const reason = exitReasonById.get(exitReasonId)
+        return reason.name || reason.code || "Unknown"
+    }
+
+    const legacyReason = String(employee.resignReason || "").trim()
+
+    return legacyReason || "Unknown"
+}
+
+function isExitEmployee(employee, startDate, endDate) {
+    if (!employee?.resignDate) return false
+    if (!EXIT_TYPES.has(employee.employmentStatus)) return false
+
+    const resignDate = new Date(employee.resignDate)
+
+    return resignDate >= startDate && resignDate <= endDate
+}
+
+function serviceBucketFromYears(years) {
+    if (years < 0.25) return "LT_3M"
+    if (years < 0.5) return "M3_6M"
+    if (years < 0.75) return "M6_9M"
+    if (years < 1) return "M9_12M"
+    if (years < 3) return "Y1_3Y"
+    if (years < 5) return "Y3_5Y"
+    if (years < 10) return "Y5_10Y"
+    return "Y10_20Y"
+}
+
+function buildExitReasonRows({ exitEmployees, exitReasons }) {
+    const exitReasonById = new Map(
+        exitReasons.map((reason) => [reason._id.toString(), reason]),
+    )
+    const countByLabel = new Map()
+
+    for (const reason of exitReasons) {
+        countByLabel.set(reason.name || reason.code || "Unknown", 0)
+    }
+
+    for (const employee of exitEmployees) {
+        const label = getExitReasonLabel(employee, exitReasonById)
+        countByLabel.set(label, (countByLabel.get(label) || 0) + 1)
+    }
+
+    const total = exitEmployees.length
+
+    return [...countByLabel.entries()]
+        .map(([label, count]) => ({
+            label,
+            count,
+            rate: total > 0 ? round((count / total) * 100, 2) : 0,
+        }))
+        .sort((a, b) => b.rate - a.rate || b.count - a.count || a.label.localeCompare(b.label))
+}
+
+function buildServicePeriodRows(exitEmployees = []) {
+    const buckets = [
+        { key: "LT_3M", label: "<3 M", count: 0 },
+        { key: "M3_6M", label: "3<6 M", count: 0 },
+        { key: "M6_9M", label: "6<9 M", count: 0 },
+        { key: "M9_12M", label: "9<12 M", count: 0 },
+        { key: "Y1_3Y", label: "1<3 Y", count: 0 },
+        { key: "Y3_5Y", label: "3<5 Y", count: 0 },
+        { key: "Y5_10Y", label: "5<10 Y", count: 0 },
+        { key: "Y10_20Y", label: "10<20 Y", count: 0 },
+    ]
+    const bucketByKey = new Map(buckets.map((bucket) => [bucket.key, bucket]))
+
+    for (const employee of exitEmployees) {
+        const serviceYears = calculateYears(
+            employee.joinDate,
+            employee.resignDate ? new Date(employee.resignDate) : new Date(),
+        )
+
+        if (!Number.isFinite(serviceYears)) continue
+
+        const bucket = bucketByKey.get(serviceBucketFromYears(serviceYears))
+
+        if (bucket) bucket.count += 1
+    }
+
+    const total = exitEmployees.length
+
+    return buckets.map((bucket) => ({
+        ...bucket,
+        rate: total > 0 ? round((bucket.count / total) * 100, 2) : 0,
+    }))
+}
+
+function buildExitAnalysisDashboard({ employees, exitReasons, startDate, endDate, selectedYear, selectedLabel }) {
+    const exitEmployees = employees.filter((employee) =>
+        isExitEmployee(employee, startDate, endDate),
+    )
+
+    return {
+        selectedLabel,
+        selectedYear,
+        totalExits: exitEmployees.length,
+        exitReasons: {
+            title: `Exit Reasons-${selectedLabel} ${selectedYear}`,
+            rows: buildExitReasonRows({ exitEmployees, exitReasons }),
+        },
+        servicePeriods: {
+            title: `Period of Service-${selectedLabel}- ${selectedYear}`,
+            rows: buildServicePeriodRows(exitEmployees),
+        },
+    }
 }
 
 function buildIndirectDirectRatio({
@@ -1907,6 +2176,7 @@ function buildGeneralData({
     selectedPeriod,
     totalManpower,
     selectedManpower,
+    lookups,
 }) {
     const totalSummary = summarizeEmployeesForGeneralData({
         employees: totalEmployees,
@@ -1938,6 +2208,12 @@ function buildGeneralData({
             totalManpower,
             selectedManpower,
             selectedPeriodKey,
+        }),
+        workforceCategory: buildGeneralWorkforceCategoryBreakdown({
+            employees: selectedEmployees,
+            selectedDate,
+            selectedPeriod,
+            lookups,
         }),
     }
 }
@@ -2103,6 +2379,23 @@ function buildGeneralTotalQuery(query = {}) {
     }
 }
 
+
+async function loadExitReasons(query = {}) {
+    return ExitReason.find({
+        status: "ACTIVE",
+        $or: [
+            { companyId: null, branchId: null },
+            ...(query.companyId ? [{ companyId: toObjectId(query.companyId), branchId: null }] : []),
+            ...(query.companyId && query.branchId
+                ? [{ companyId: toObjectId(query.companyId), branchId: toObjectId(query.branchId) }]
+                : []),
+        ],
+    })
+        .select(["code", "name", "shortName", "companyId", "branchId", "sortOrder"])
+        .sort({ sortOrder: 1, name: 1 })
+        .lean()
+}
+
 export async function getHrDashboardLookups({ query }) {
     const cacheKey = `hr-dashboard:lookups:${JSON.stringify(query)}`
     const cachedResult = getCache(cacheKey)
@@ -2225,6 +2518,7 @@ export async function getHrDashboard({ query }) {
         turnoverMovements,
         recruitmentChannels,
         dashboardTargets,
+        exitReasons,
         lines,
     ] = await Promise.all([
             loadEmployees(cleanQuery),
@@ -2235,6 +2529,7 @@ export async function getHrDashboard({ query }) {
             loadMovements(cleanQuery, monthStart(startDate.getUTCFullYear() - 1, 1), monthEnd(startDate.getUTCFullYear(), 12)),
             loadRecruitmentChannels(cleanQuery),
             loadDashboardTargets(cleanQuery, startDate.getUTCFullYear()),
+            loadExitReasons(cleanQuery),
             Line.find({
                 status: "ACTIVE",
                 ...(cleanQuery.companyId ? { companyId: toObjectId(cleanQuery.companyId) } : {}),
@@ -2331,6 +2626,7 @@ export async function getHrDashboard({ query }) {
             selectedPeriod,
             totalManpower,
             selectedManpower: manpower,
+            lookups,
         }),
         manpower,
         recruitment: buildRecruitmentChannelDashboard({
@@ -2348,6 +2644,14 @@ export async function getHrDashboard({ query }) {
             absenceOverall: attendanceAbsenceTables.overall,
             topAbsentDepartments: attendanceAbsenceTables.topAbsentDepartments,
         },
+        exitAnalysis: buildExitAnalysisDashboard({
+            employees,
+            exitReasons,
+            startDate,
+            endDate,
+            selectedYear,
+            selectedLabel: selectedMetricLabel,
+        }),
         turnover: turnoverComparison,
         movement: buildMovementSeries({ movements, periods, query: cleanQuery }),
     }

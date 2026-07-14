@@ -13,6 +13,7 @@ import ManpowerSection from "../components/manpower/ManpowerSection.vue"
 import MovementSection from "../components/movement/MovementSection.vue"
 import RecruitmentChannelSection from "../components/recruitment/RecruitmentChannelSection.vue"
 import TurnoverDashboardSection from "../components/turnover/TurnoverDashboardSection.vue"
+import ExitAnalysisSection from "../components/exitAnalysis/ExitAnalysisSection.vue"
 import { useHrDashboardStore } from "../stores/hrDashboard.store.js"
 
 const { t } = useI18n()
@@ -79,6 +80,10 @@ const hasDashboardData = computed(() => {
         ),
     )
 
+    const exitAnalysisHasData =
+        (data.exitAnalysis?.exitReasons?.rows || []).some((row) => Number(row.count || 0) > 0) ||
+        (data.exitAnalysis?.servicePeriods?.rows || []).some((row) => Number(row.count || 0) > 0)
+
     const turnoverHasData = (data.turnover?.rows || []).some((row) =>
         [row.previousCount, row.currentCount, row.previousRate, row.currentRate].some(
             (value) => Number(value) !== 0,
@@ -89,7 +94,7 @@ const hasDashboardData = computed(() => {
         [row.in, row.out, row.balance].some((value) => Number(value) !== 0),
     )
 
-    return generalHasData || manpowerHasData || attendanceHasData || recruitmentHasData || turnoverHasData || movementHasData
+    return generalHasData || manpowerHasData || attendanceHasData || recruitmentHasData || exitAnalysisHasData || turnoverHasData || movementHasData
 })
 const showNoDataMessage = computed(() =>
     Boolean(dashboardStore.dashboard) &&
@@ -244,6 +249,11 @@ onMounted(async () => {
                 <AttendanceAbsenceDataSection
                     :title="safeT('hrDashboard.attendance.absentData', 'Absent Data')"
                     :data="dashboard.attendance || {}"
+                />
+
+                <ExitAnalysisSection
+                    :title="safeT('hrDashboard.sections.exitAnalysis', 'Exit Analysis')"
+                    :data="dashboard.exitAnalysis || {}"
                 />
 
                 <TurnoverDashboardSection

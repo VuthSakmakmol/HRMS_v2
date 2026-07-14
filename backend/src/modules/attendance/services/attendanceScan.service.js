@@ -2,6 +2,7 @@ import crypto from "node:crypto"
 import ExcelJS from "exceljs"
 
 import AttendanceRawScan from "../models/AttendanceRawScan.js"
+import { endOfBusinessDay, startOfBusinessDay } from "../utils/attendanceDate.util.js"
 
 function normalizeDirection(value) {
     const normalized = String(value || "").trim().toUpperCase()
@@ -113,8 +114,8 @@ export async function importRawScans({ buffer, user }) {
 }
 
 export async function listRawScans({ query }) {
-    const start = new Date(`${query.dateFrom}T00:00:00.000`)
-    const end = new Date(`${query.dateTo}T23:59:59.999`)
+    const start = startOfBusinessDay(query.dateFrom)
+    const end = endOfBusinessDay(query.dateTo)
     const filter = {
         scannedAt: {
             $gte: start,

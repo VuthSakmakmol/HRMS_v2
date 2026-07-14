@@ -28,6 +28,7 @@ import attendanceScanRoutes from "./modules/attendance/routes/attendanceScan.rou
 import attendanceVerificationRoutes from "./modules/attendance/routes/attendanceVerification.routes.js"
 import recruitmentChannelRoutes from "./modules/recruitmentChannel/routes/recruitmentChannel.routes.js"
 import hrDashboardTargetRoutes from "./modules/hrDashboardTarget/routes/hrDashboardTarget.routes.js"
+import exitReasonRoutes from "./modules/exitReason/routes/exitReason.routes.js"
 
 
 import { AppError } from "./shared/errors/AppError.js"
@@ -108,6 +109,7 @@ app.use("/api/v1/attendance/scans", attendanceScanRoutes)
 app.use("/api/v1/attendance/verification", attendanceVerificationRoutes)
 app.use("/api/v1/organization/recruitment-channels", recruitmentChannelRoutes)
 app.use("/api/v1/reports/hr-dashboard-targets", hrDashboardTargetRoutes)
+app.use("/api/v1/organization/exit-reasons", exitReasonRoutes)
 
 app.use(notFound)
 app.use(errorHandler)

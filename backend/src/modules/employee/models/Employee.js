@@ -28,6 +28,34 @@ if (!mongoose.models.EmployeeType) {
     mongoose.model("EmployeeType", employeeTypeFallbackSchema)
 }
 
+// Recruitment Channel is a separate setup module.
+// This fallback keeps Employee populate working even when app startup order changes.
+if (!mongoose.models.RecruitmentChannel) {
+    const recruitmentChannelFallbackSchema = new Schema(
+        {},
+        {
+            collection: "recruitment_channels",
+            strict: false,
+            versionKey: false,
+        },
+    )
+
+    mongoose.model("RecruitmentChannel", recruitmentChannelFallbackSchema)
+}
+
+if (!mongoose.models.ExitReason) {
+    const exitReasonFallbackSchema = new Schema(
+        {},
+        {
+            collection: "exit_reasons",
+            strict: false,
+            versionKey: false,
+        },
+    )
+
+    mongoose.model("ExitReason", exitReasonFallbackSchema)
+}
+
 const addressSchema = new Schema(
     {
         countryId: { type: Schema.Types.ObjectId, ref: "Country", default: null },
@@ -133,6 +161,11 @@ const employeeSchema = new Schema(
         },
         resignDate: { type: Date, default: null },
         resignReason: { type: String, trim: true, maxlength: 240, set: normalizeText, default: "" },
+        exitReasonId: {
+            type: Schema.Types.ObjectId,
+            ref: "ExitReason",
+            default: null,
+        },
         remark: { type: String, trim: true, maxlength: 1000, set: normalizeText, default: "" },
 
         documents: { type: documentSchema, default: () => ({}) },
@@ -194,13 +227,11 @@ employeeSchema.index({ employeeCode: 1 }, { unique: true, name: "uq_employee_cod
 employeeSchema.index({ companyId: 1, branchId: 1, departmentId: 1, positionId: 1, lineId: 1, recordStatus: 1 }, { name: "idx_employee_assignment_status" })
 employeeSchema.index({ employmentStatus: 1, recordStatus: 1 }, { name: "idx_employee_employment_status" })
 employeeSchema.index({ employeeTypeId: 1, recordStatus: 1 }, { name: "idx_employee_type_status" })
+employeeSchema.index({ recruitmentChannelId: 1, joinDate: 1, recordStatus: 1 }, { name: "idx_employee_recruitment_channel_join_status" })
+employeeSchema.index({ exitReasonId: 1, resignDate: 1, employmentStatus: 1, recordStatus: 1 }, { name: "idx_employee_exit_reason_status" })
 employeeSchema.index({ employeeTypeId: 1, employeeTypeChildId: 1, recordStatus: 1 }, { name: "idx_employee_type_child_status" })
 employeeSchema.index({ joinDate: 1, resignDate: 1, employmentStatus: 1, recordStatus: 1 }, { name: "idx_employee_report_active_dates" })
 employeeSchema.index({ englishFirstName: "text", englishLastName: "text", khmerFirstName: "text", khmerLastName: "text", employeeCode: "text", phoneNumber: "text" }, { name: "idx_employee_search_text" })
-employeeSchema.index(
-    { recruitmentChannelId: 1, joinDate: 1, recordStatus: 1 },
-    { name: "idx_employee_recruitment_channel_join_status" },
-)
 
 employeeSchema.set("toJSON", {
     virtuals: true,

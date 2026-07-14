@@ -1032,7 +1032,6 @@ export default {
             codePlaceholder: "Example: KSP",
             name: "Name",
             namePlaceholder: "Enter location name",
-            shortName: "Short Name",
             nationality: "Nationality",
             phoneCode: "Phone Code",
             descriptionLabel: "Description",

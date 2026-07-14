@@ -48,7 +48,6 @@ const optionalTextSchema = (max) =>
 const baseCreateFields = {
     code: normalizedCodeSchema,
     name: normalizedTextSchema(2, 160),
-    shortName: optionalTextSchema(80),
     description: optionalTextSchema(500),
     status: z.enum(LOCATION_UPDATE_STATUSES).optional(),
 }
@@ -56,7 +55,6 @@ const baseCreateFields = {
 const baseUpdateFields = {
     code: normalizedCodeSchema.optional(),
     name: normalizedTextSchema(2, 160).optional(),
-    shortName: optionalTextSchema(80),
     description: optionalTextSchema(500),
     status: z.enum(LOCATION_UPDATE_STATUSES).optional(),
 }

@@ -195,6 +195,12 @@ export const PERMISSION_REGISTRY = Object.freeze([
         "UPDATE",
         "ARCHIVE",
     ]),
+    ...permissionGroup("ORGANIZATION.EXIT_REASON", [
+        "VIEW",
+        "CREATE",
+        "UPDATE",
+        "ARCHIVE",
+    ]),
 
 
 

@@ -122,6 +122,8 @@ export const employeeListQuerySchema = z.object({
     shiftId: objectIdSchema.optional(),
     employeeTypeId: objectIdSchema.optional(),
     employeeTypeChildId: objectIdSchema.optional(),
+    exitReasonId: objectIdSchema.optional(),
+    recruitmentChannelId: objectIdSchema.optional(),
     employmentStatus: z.enum(["ALL", ...employmentStatuses]).default("ALL"),
     recordStatus: z.enum(["ALL", "ACTIVE", "INACTIVE", "ARCHIVED"]).default("ACTIVE"),
 })
@@ -169,10 +171,12 @@ export const employeeCreateSchema = z.object({
     employmentStatus: z.enum(employmentStatuses).optional(),
     resignDate: optionalDateSchema.optional(),
     resignReason: optionalTextSchema(240),
+    exitReasonId: nullableObjectIdSchema.optional(),
     remark: optionalTextSchema(1000),
 
     documents: documentsSchema,
     sourceOfHiring: optionalTextSchema(160),
+    recruitmentChannelId: nullableObjectIdSchema.optional(),
     introducerEmployeeId: nullableObjectIdSchema.optional(),
     employeeTypeId: nullableObjectIdSchema.optional(),
     employeeTypeChildId: nullableObjectIdSchema.optional(),

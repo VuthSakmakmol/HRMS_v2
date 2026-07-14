@@ -5,219 +5,24 @@ import Shift from "../../shift/models/Shift.js"
 import { resolveCalendarDay } from "../../calendar/services/calendar.service.js"
 import { resolveAttendancePolicy } from "./attendancePolicy.service.js"
 import { invalidateAttendanceCaches } from "./attendance.service.js"
-
-function dateKey(date) {
-    return new Date(date).toISOString().slice(0, 10)
-}
-
-function startOfDate(value) {
-    return new Date(`${value}T00:00:00.000`)
-}
-
-function endOfDate(value) {
-    return new Date(`${value}T23:59:59.999`)
-}
-
-function addDays(value, amount) {
-    const date = startOfDate(value)
-    date.setDate(date.getDate() + amount)
-    return date
-}
-
-function combineDateAndTime(day, time, addOneDay = false) {
-    const result = startOfDate(day)
-    const [hour, minute] = time.split(":").map(Number)
-    result.setHours(hour, minute, 0, 0)
-
-    if (addOneDay) {
-        result.setDate(result.getDate() + 1)
-    }
-
-    return result
-}
-
-function roundMinutes(value, unit, method) {
-    if (value <= 0) {
-        return 0
-    }
-
-    const ratio = value / Math.max(1, unit)
-
-    if (method === "FLOOR") {
-        return Math.floor(ratio) * unit
-    }
-
-    if (method === "NEAREST") {
-        return Math.round(ratio) * unit
-    }
-
-    return Math.ceil(ratio) * unit
-}
-
-function calculateWorkingResult({ workDate, scans, shift, policy }) {
-    if (scans.length === 0) {
-        return {
-            firstInAt: null,
-            lastOutAt: null,
-            workedMinutes: 0,
-            lateMinutes: 0,
-            earlyLeaveMinutes: 0,
-            status: "ABSENT",
-            verificationStatus: "VERIFIED",
-        }
-    }
-
-    const ordered = [...scans].sort(
-        (left, right) => new Date(left.scannedAt) - new Date(right.scannedAt),
-    )
-    const explicitIn = ordered.find((scan) => scan.direction === "IN")
-    const explicitOut = [...ordered]
-        .reverse()
-        .find((scan) => scan.direction === "OUT")
-
-    const firstInAt = explicitIn?.scannedAt || ordered[0]?.scannedAt || null
-    const lastOutAt =
-        explicitOut?.scannedAt ||
-        (ordered.length > 1 ? ordered[ordered.length - 1].scannedAt : null)
-
-    if (!firstInAt) {
-        return {
-            firstInAt: null,
-            lastOutAt,
-            workedMinutes: 0,
-            lateMinutes: 0,
-            earlyLeaveMinutes: 0,
-            status: "MISSING_IN",
-            verificationStatus: "NEEDS_REVIEW",
-        }
-    }
-
-    if (!lastOutAt || new Date(lastOutAt).getTime() === new Date(firstInAt).getTime()) {
-        return {
-            firstInAt,
-            lastOutAt: null,
-            workedMinutes: 0,
-            lateMinutes: 0,
-            earlyLeaveMinutes: 0,
-            status: "MISSING_OUT",
-            verificationStatus: "NEEDS_REVIEW",
-        }
-    }
-
-    const scheduledStart = combineDateAndTime(workDate, shift.startTime)
-    const scheduledEnd = combineDateAndTime(
-        workDate,
-        shift.endTime,
-        Boolean(shift.isOvernight),
-    )
-    const effectiveGraceIn = policy?.graceInMinutes ?? shift.graceInMinutes ?? 0
-    const effectiveGraceOut = policy?.graceOutMinutes ?? shift.graceOutMinutes ?? 0
-    const lateThreshold = new Date(
-        scheduledStart.getTime() + effectiveGraceIn * 60_000,
-    )
-    const earlyThreshold = new Date(
-        scheduledEnd.getTime() - effectiveGraceOut * 60_000,
-    )
-
-    const rawLate =
-        new Date(firstInAt) > lateThreshold
-            ? Math.round((new Date(firstInAt) - scheduledStart) / 60_000)
-            : 0
-    const rawEarly =
-        new Date(lastOutAt) < earlyThreshold
-            ? Math.round((scheduledEnd - new Date(lastOutAt)) / 60_000)
-            : 0
-
-    const lateMinutes = roundMinutes(
-        rawLate,
-        policy?.lateRoundUnitMinutes || 1,
-        policy?.lateRoundMethod || "CEIL",
-    )
-    const earlyLeaveMinutes = roundMinutes(
-        rawEarly,
-        policy?.earlyLeaveRoundUnitMinutes || 1,
-        policy?.earlyLeaveRoundMethod || "CEIL",
-    )
-    const workedMinutes = Math.max(
-        0,
-        Math.round((new Date(lastOutAt) - new Date(firstInAt)) / 60_000),
-    )
-
-    let status = "PRESENT"
-
-    if (lateMinutes > 0 && earlyLeaveMinutes > 0) {
-        status = "LATE_AND_EARLY_LEAVE"
-    } else if (lateMinutes > 0) {
-        status = "LATE"
-    } else if (earlyLeaveMinutes > 0) {
-        status = "EARLY_LEAVE"
-    }
-
-    if (
-        policy?.minimumWorkedMinutes > 0 &&
-        workedMinutes < policy.minimumWorkedMinutes
-    ) {
-        status = "PRESENT"
-    }
-
-    return {
-        firstInAt,
-        lastOutAt,
-        workedMinutes,
-        lateMinutes,
-        earlyLeaveMinutes,
-        status,
-        verificationStatus:
-            policy?.minimumWorkedMinutes > 0 &&
-            workedMinutes < policy.minimumWorkedMinutes
-                ? "NEEDS_REVIEW"
-                : "VERIFIED",
-    }
-}
-
-async function resolveDayType({ workDate, employee, policy, user, calendarCache }) {
-    const key = `${dateKey(workDate)}:${employee.companyId}:${employee.branchId}`
-    const cached = calendarCache.get(key)
-
-    if (cached) {
-        return cached
-    }
-
-    const calendarDay = await resolveCalendarDay({
-        query: {
-            date: dateKey(workDate),
-            companyId: employee.companyId?.toString?.() || employee.companyId,
-            branchId: employee.branchId?.toString?.() || employee.branchId,
-        },
-        user,
-    })
-
-    let dayType = "WORKING_DAY"
-
-    if (["HOLIDAY", "CLOSED_DAY"].includes(calendarDay.dayType)) {
-        dayType = "HOLIDAY"
-    } else if (calendarDay.dayType === "WEEKEND" || calendarDay.isWorkingDay === false) {
-        dayType = "REST_DAY"
-    } else if (policy?.treatSundayAsRestDay && new Date(workDate).getDay() === 0) {
-        dayType = "REST_DAY"
-    }
-
-    calendarCache.set(key, dayType)
-
-    return dayType
-}
+import { buildShiftSchedule, calculateAttendanceResult } from "./attendanceCalculation.service.js"
+import {
+    businessWeekday,
+    endOfBusinessDay,
+    enumerateBusinessDates,
+    startOfBusinessDay,
+} from "../utils/attendanceDate.util.js"
 
 function buildEmployeeFilter(payload) {
     const filter = {
         recordStatus: "ACTIVE",
         employmentStatus: "WORKING",
-        joinDate: { $lte: endOfDate(payload.dateTo) },
+        joinDate: { $lte: endOfBusinessDay(payload.dateTo) },
         $or: [
             { resignDate: null },
-            { resignDate: { $gte: startOfDate(payload.dateFrom) } },
+            { resignDate: { $gte: startOfBusinessDay(payload.dateFrom) } },
         ],
     }
-
     for (const field of [
         "companyId",
         "branchId",
@@ -226,40 +31,122 @@ function buildEmployeeFilter(payload) {
         "lineId",
         "employeeTypeId",
     ]) {
-        if (payload[field]) {
-            filter[field] = payload[field]
-        }
+        if (payload[field]) filter[field] = payload[field]
     }
-
     return filter
+}
+
+function policySnapshot(policy) {
+    if (!policy) return {}
+    return {
+        policyId: policy._id,
+        name: policy.name,
+        code: policy.code,
+        graceInMinutes: policy.graceInMinutes,
+        graceOutMinutes: policy.graceOutMinutes,
+        minimumWorkedMinutes: policy.minimumWorkedMinutes,
+        lateRoundUnitMinutes: policy.lateRoundUnitMinutes,
+        lateRoundMethod: policy.lateRoundMethod,
+        earlyLeaveRoundUnitMinutes: policy.earlyLeaveRoundUnitMinutes,
+        earlyLeaveRoundMethod: policy.earlyLeaveRoundMethod,
+        autoGenerateAbsent: policy.autoGenerateAbsent,
+        treatSundayAsRestDay: policy.treatSundayAsRestDay,
+    }
+}
+
+async function resolveDayType({ workDate, employee, policy, user, cache }) {
+    const key = `${workDate}:${employee.companyId}:${employee.branchId || ""}`
+    if (cache.has(key)) return cache.get(key)
+
+    const calendarDay = await resolveCalendarDay({
+        query: {
+            date: workDate,
+            companyId: String(employee.companyId),
+            branchId: employee.branchId ? String(employee.branchId) : undefined,
+        },
+        user,
+    })
+
+    let dayType = "WORKING_DAY"
+    if (calendarDay.dayType === "CLOSED_DAY") dayType = "CLOSED_DAY"
+    else if (calendarDay.dayType === "HOLIDAY") dayType = "HOLIDAY"
+    else if (calendarDay.dayType === "WEEKEND" || calendarDay.isWorkingDay === false) dayType = "REST_DAY"
+    else if (policy?.treatSundayAsRestDay && businessWeekday(workDate) === 0) dayType = "REST_DAY"
+
+    cache.set(key, dayType)
+    return dayType
+}
+
+function belongsToEmploymentPeriod(employee, workDate) {
+    const start = startOfBusinessDay(workDate)
+    const end = endOfBusinessDay(workDate)
+    if (employee.joinDate && new Date(employee.joinDate) > end) return false
+    if (employee.resignDate && new Date(employee.resignDate) < start) return false
+    return true
+}
+
+function updateSummary(summary, calculated) {
+    if (!calculated) {
+        summary.skippedCount += 1
+        return
+    }
+    if (calculated.dayType === "HOLIDAY" || calculated.dayType === "CLOSED_DAY") summary.holidayCount += 1
+    if (calculated.dayType === "REST_DAY") summary.restDayCount += 1
+    if (calculated.status === "ABSENT") summary.absentCount += 1
+    else if (["REST_DAY", "HOLIDAY"].includes(calculated.status)) {
+        // already counted by day type
+    } else if (calculated.verificationStatus === "NEEDS_REVIEW") summary.reviewCount += 1
+    else summary.presentCount += 1
 }
 
 export async function verifyAttendanceRange({ payload, user }) {
     const employees = await Employee.find(buildEmployeeFilter(payload)).lean()
-    const shiftIds = [...new Set(employees.map((employee) => String(employee.shiftId)))]
-    const shifts = await Shift.find({ _id: { $in: shiftIds } }).lean()
+    const shiftIds = [...new Set(employees.map((employee) => String(employee.shiftId)).filter(Boolean))]
+    const shifts = await Shift.find({ _id: { $in: shiftIds }, status: "ACTIVE" }).lean()
     const shiftMap = new Map(shifts.map((shift) => [String(shift._id), shift]))
-
-    const scanStart = addDays(payload.dateFrom, -1)
-    const scanEnd = endOfDate(dateKey(addDays(payload.dateTo, 1)))
+    const dates = enumerateBusinessDates(payload.dateFrom, payload.dateTo)
     const employeeCodes = employees.map((employee) => employee.employeeCode)
+
+    let earliestScanAt = startOfBusinessDay(payload.dateFrom)
+    let latestScanAt = endOfBusinessDay(payload.dateTo)
+    for (const shift of shifts) {
+        const firstWindow = buildShiftSchedule({ workDate: payload.dateFrom, shift })
+        const lastWindow = buildShiftSchedule({ workDate: payload.dateTo, shift })
+        if (firstWindow.scanWindowStartAt < earliestScanAt) earliestScanAt = firstWindow.scanWindowStartAt
+        if (lastWindow.scanWindowEndAt > latestScanAt) latestScanAt = lastWindow.scanWindowEndAt
+    }
+
     const scans = await AttendanceRawScan.find({
         employeeCode: { $in: employeeCodes },
-        scannedAt: {
-            $gte: scanStart,
-            $lte: scanEnd,
-        },
+        scannedAt: { $gte: earliestScanAt, $lte: latestScanAt },
     })
-        .sort({ scannedAt: 1 })
+        .sort({ employeeCode: 1, scannedAt: 1 })
         .lean()
 
     const scansByEmployee = new Map()
-
     for (const scan of scans) {
         const list = scansByEmployee.get(scan.employeeCode) || []
         list.push(scan)
         scansByEmployee.set(scan.employeeCode, list)
     }
+
+    const protectedRecords = payload.overwriteCorrected
+        ? []
+        : await AttendanceRecord.find({
+              employeeId: { $in: employees.map((employee) => employee._id) },
+              attendanceDate: {
+                  $gte: startOfBusinessDay(payload.dateFrom),
+                  $lte: endOfBusinessDay(payload.dateTo),
+              },
+              verificationStatus: "CORRECTED",
+          })
+              .select("employeeId attendanceDate")
+              .lean()
+    const protectedKeys = new Set(
+        protectedRecords.map(
+            (record) => `${record.employeeId}:${record.attendanceDate.toISOString()}`,
+        ),
+    )
 
     const policyCache = new Map()
     const calendarCache = new Map()
@@ -267,48 +154,45 @@ export async function verifyAttendanceRange({ payload, user }) {
     const summary = {
         employeeCount: employees.length,
         processedCount: 0,
+        createdOrUpdatedCount: 0,
+        protectedCorrectedCount: 0,
         presentCount: 0,
         absentCount: 0,
         restDayCount: 0,
         holidayCount: 0,
         reviewCount: 0,
+        missingShiftCount: 0,
         skippedCount: 0,
     }
 
-    for (
-        let cursor = startOfDate(payload.dateFrom);
-        cursor <= endOfDate(payload.dateTo);
-        cursor = addDays(dateKey(cursor), 1)
-    ) {
-        const workDate = new Date(cursor)
-        const dayStart = startOfDate(dateKey(workDate))
-        const dayEnd = endOfDate(dateKey(addDays(dateKey(workDate), 1)))
+    for (const workDate of dates) {
+        const attendanceDate = startOfBusinessDay(workDate)
 
         for (const employee of employees) {
-            if (employee.joinDate && new Date(employee.joinDate) > dayEnd) {
-                summary.skippedCount += 1
-                continue
-            }
-
-            if (employee.resignDate && new Date(employee.resignDate) < dayStart) {
+            if (!belongsToEmploymentPeriod(employee, workDate)) {
                 summary.skippedCount += 1
                 continue
             }
 
             const shift = shiftMap.get(String(employee.shiftId))
-
             if (!shift) {
-                summary.skippedCount += 1
+                summary.missingShiftCount += 1
                 continue
             }
 
-            const policyKey = `${employee.companyId}:${employee.branchId}`
-            let policy = policyCache.get(policyKey)
+            const protectedKey = `${employee._id}:${attendanceDate.toISOString()}`
+            if (protectedKeys.has(protectedKey)) {
+                summary.protectedCorrectedCount += 1
+                continue
+            }
 
+            const policyKey = `${employee.companyId}:${employee.branchId || ""}:${workDate}`
+            let policy = policyCache.get(policyKey)
             if (policy === undefined) {
                 policy = await resolveAttendancePolicy({
                     companyId: employee.companyId,
                     branchId: employee.branchId,
+                    workDate: attendanceDate,
                 })
                 policyCache.set(policyKey, policy || null)
             }
@@ -318,71 +202,29 @@ export async function verifyAttendanceRange({ payload, user }) {
                 employee,
                 policy,
                 user,
-                calendarCache,
+                cache: calendarCache,
             })
+            const schedule = buildShiftSchedule({ workDate, shift })
             const employeeScans = (scansByEmployee.get(employee.employeeCode) || []).filter(
-                (scan) => scan.scannedAt >= dayStart && scan.scannedAt <= dayEnd,
+                (scan) =>
+                    new Date(scan.scannedAt) >= schedule.scanWindowStartAt &&
+                    new Date(scan.scannedAt) <= schedule.scanWindowEndAt,
             )
+            const calculated = calculateAttendanceResult({
+                workDate,
+                shift,
+                policy,
+                dayType,
+                scans: employeeScans,
+            })
 
-            let calculated
-
-            if (dayType === "HOLIDAY") {
-                calculated = {
-                    firstInAt: employeeScans[0]?.scannedAt || null,
-                    lastOutAt:
-                        employeeScans.length > 1
-                            ? employeeScans[employeeScans.length - 1].scannedAt
-                            : null,
-                    workedMinutes: 0,
-                    lateMinutes: 0,
-                    earlyLeaveMinutes: 0,
-                    status: "HOLIDAY",
-                    verificationStatus: "VERIFIED",
-                }
-                summary.holidayCount += 1
-            } else if (dayType === "REST_DAY") {
-                calculated = {
-                    firstInAt: employeeScans[0]?.scannedAt || null,
-                    lastOutAt:
-                        employeeScans.length > 1
-                            ? employeeScans[employeeScans.length - 1].scannedAt
-                            : null,
-                    workedMinutes: 0,
-                    lateMinutes: 0,
-                    earlyLeaveMinutes: 0,
-                    status: "REST_DAY",
-                    verificationStatus: "VERIFIED",
-                }
-                summary.restDayCount += 1
-            } else {
-                calculated = calculateWorkingResult({
-                    workDate,
-                    scans: employeeScans,
-                    shift,
-                    policy,
-                })
-
-                if (calculated.status === "ABSENT") {
-                    summary.absentCount += 1
-                } else if (calculated.verificationStatus === "NEEDS_REVIEW") {
-                    summary.reviewCount += 1
-                } else {
-                    summary.presentCount += 1
-                }
-            }
-
-            const filter = {
-                employeeId: employee._id,
-                attendanceDate: dayStart,
-            }
-
-            if (!payload.overwriteCorrected) {
-                filter.verificationStatus = { $ne: "CORRECTED" }
-            }
+            summary.processedCount += 1
+            updateSummary(summary, calculated)
+            if (!calculated) continue
 
             operations.push({
                 updateOne: {
-                    filter,
+                    filter: { employeeId: employee._id, attendanceDate },
                     update: {
                         $set: {
                             employeeCode: employee.employeeCode,
@@ -392,8 +234,10 @@ export async function verifyAttendanceRange({ payload, user }) {
                             positionId: employee.positionId,
                             lineId: employee.lineId,
                             shiftId: employee.shiftId,
-                            attendanceDate: dayStart,
+                            attendanceDate,
                             source: "MACHINE_SYNC",
+                            policySnapshot: policySnapshot(policy),
+                            calculationVersion: "ATTENDANCE_ENGINE_V2",
                             updatedByAccountId: user.accountId,
                             ...calculated,
                         },
@@ -405,7 +249,7 @@ export async function verifyAttendanceRange({ payload, user }) {
                     upsert: true,
                 },
             })
-            summary.processedCount += 1
+            summary.createdOrUpdatedCount += 1
         }
     }
 
@@ -416,6 +260,5 @@ export async function verifyAttendanceRange({ payload, user }) {
     }
 
     invalidateAttendanceCaches()
-
     return summary
 }

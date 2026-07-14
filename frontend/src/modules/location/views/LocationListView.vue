@@ -4,7 +4,6 @@ import { useI18n } from "vue-i18n"
 import { useToast } from "primevue/usetoast"
 
 import Button from "primevue/button"
-import Card from "primevue/card"
 import Column from "primevue/column"
 import DataTable from "primevue/datatable"
 import Dialog from "primevue/dialog"
@@ -17,7 +16,6 @@ import Textarea from "primevue/textarea"
 import { useAuthStore } from "@/app/stores/auth.store.js"
 import { useUiStore } from "@/app/stores/ui.store.js"
 import AppFilterBar from "@/shared/components/filter/AppFilterBar.vue"
-import AppModuleToolbar from "@/shared/components/page/AppModuleToolbar.vue"
 import AppTableActions from "@/shared/components/table/AppTableActions.vue"
 
 import { fetchLocations } from "../services/location.api.js"
@@ -325,7 +323,6 @@ function createEmptyForm() {
         communeId: "",
         code: "",
         name: "",
-        shortName: "",
         nationality: "",
         phoneCode: "",
         description: "",
@@ -526,7 +523,6 @@ function openEditDialog(location) {
         communeId: location.communeId || "",
         code: location.code || "",
         name: location.name || "",
-        shortName: location.shortName || "",
         nationality: location.nationality || "",
         phoneCode: location.phoneCode || "",
         description: location.description || "",
@@ -557,8 +553,6 @@ function buildPayload() {
     }
 
     payload.countryId = form.countryId
-    payload.shortName = form.shortName || ""
-
     if (needsProvince.value) {
         payload.provinceId = form.provinceId
     }
@@ -750,6 +744,11 @@ async function goToPage(page) {
     await loadLocationItems(page)
 }
 
+function onPage(event) {
+    locationStore.pagination.limit = event.rows
+    loadLocationItems(event.page + 1)
+}
+
 watch(activeEntity, async () => {
     resetObject(filters, createEmptyFilters())
     locationStore.items = []
@@ -828,45 +827,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="location-page hrms-compact">
-        <AppModuleToolbar>
-            <Button
-                v-if="canImport"
-                icon="pi pi-download"
-                :label="t('organization.location.downloadSample')"
-                outlined
-                severity="secondary"
-                :loading="locationStore.downloadingTemplate"
-                @click="downloadSample"
-            />
-
-            <Button
-                v-if="canImport"
-                icon="pi pi-upload"
-                :label="t('organization.location.importExcel')"
-                outlined
-                severity="secondary"
-                @click="openImportDialog"
-            />
-
-            <Button
-                v-if="canExport"
-                icon="pi pi-file-excel"
-                :label="t('organization.location.exportExcel')"
-                outlined
-                severity="secondary"
-                :loading="locationStore.exporting"
-                @click="exportExcel"
-            />
-
-            <Button
-                v-if="canCreate"
-                icon="pi pi-plus"
-                :label="t('organization.location.newLocation', { entity: activeEntityLabel })"
-                @click="openCreateDialog"
-            />
-        </AppModuleToolbar>
-
+    <section class="location-page hrms-list-page">
         <div class="location-page__tabs">
             <button
                 v-for="tab in entityTabs"
@@ -883,128 +844,177 @@ onMounted(async () => {
             </button>
         </div>
 
-        <Card class="location-card hrms-card">
-            <template #content>
-                <AppFilterBar :loading="locationStore.loading">
-                    <span class="app-filter-field app-filter-field--search location-search">
-                        <i class="pi pi-search" />
-                        <InputText
-                            v-model="filters.search"
-                            class="location-search__input"
-                            :placeholder="t('organization.location.searchPlaceholder')"
-                            @keyup.enter="applyFilters"
-                        />
-                    </span>
+        <AppFilterBar
+            class="location-filter-bar"
+            :loading="locationStore.loading"
+        >
+            <span class="app-filter-field app-filter-field--search location-search">
+                <i class="pi pi-search" />
 
-                    <div v-if="!isCountryEntity" class="app-filter-field">
-                        <Select
-                            v-model="filters.countryId"
-                            class="location-filter-select"
-                            :options="countryFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :placeholder="t('organization.location.selectCountry')"
-                            filter
-                            :loading="lookupLoading"
-                            @change="resetFilterParents('countryId')"
-                        />
-                    </div>
+                <InputText
+                    v-model="filters.search"
+                    :placeholder="t('organization.location.searchPlaceholder')"
+                    @keyup.enter="applyFilters"
+                />
+            </span>
 
-                    <div v-if="needsProvince" class="app-filter-field">
-                        <Select
-                            v-model="filters.provinceId"
-                            class="location-filter-select"
-                            :options="provinceFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :placeholder="t('organization.location.selectProvince')"
-                            filter
-                            :loading="lookupLoading"
-                            @change="resetFilterParents('provinceId')"
-                        />
-                    </div>
+            <Select
+                v-if="!isCountryEntity"
+                v-model="filters.countryId"
+                class="app-filter-field location-filter"
+                :options="countryFilterOptions"
+                option-label="label"
+                option-value="value"
+                :placeholder="t('organization.location.selectCountry')"
+                filter
+                :loading="lookupLoading"
+                @change="resetFilterParents('countryId')"
+            />
 
-                    <div v-if="needsDistrict" class="app-filter-field">
-                        <Select
-                            v-model="filters.districtId"
-                            class="location-filter-select"
-                            :options="districtFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :placeholder="t('organization.location.selectDistrict')"
-                            filter
-                            :loading="lookupLoading"
-                            @change="resetFilterParents('districtId')"
-                        />
-                    </div>
+            <Select
+                v-if="needsProvince"
+                v-model="filters.provinceId"
+                class="app-filter-field location-filter"
+                :options="provinceFilterOptions"
+                option-label="label"
+                option-value="value"
+                :placeholder="t('organization.location.selectProvince')"
+                filter
+                :loading="lookupLoading"
+                @change="resetFilterParents('provinceId')"
+            />
 
-                    <div v-if="needsCommune" class="app-filter-field">
-                        <Select
-                            v-model="filters.communeId"
-                            class="location-filter-select"
-                            :options="communeFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                            :placeholder="t('organization.location.selectCommune')"
-                            filter
-                            :loading="lookupLoading"
-                        />
-                    </div>
+            <Select
+                v-if="needsDistrict"
+                v-model="filters.districtId"
+                class="app-filter-field location-filter"
+                :options="districtFilterOptions"
+                option-label="label"
+                option-value="value"
+                :placeholder="t('organization.location.selectDistrict')"
+                filter
+                :loading="lookupLoading"
+                @change="resetFilterParents('districtId')"
+            />
 
-                    <div class="app-filter-field location-status-field">
-                        <Select
-                            v-model="filters.status"
-                            class="location-filter-select"
-                            :options="statusFilterOptions"
-                            option-label="label"
-                            option-value="value"
-                        />
-                    </div>
+            <Select
+                v-if="needsCommune"
+                v-model="filters.communeId"
+                class="app-filter-field location-filter"
+                :options="communeFilterOptions"
+                option-label="label"
+                option-value="value"
+                :placeholder="t('organization.location.selectCommune')"
+                filter
+                :loading="lookupLoading"
+            />
 
-                    <template #actions>
-                        <Button
-                            icon="pi pi-filter"
-                            :label="t('common.apply')"
-                            :loading="locationStore.loading"
-                            @click="applyFilters"
-                        />
+            <Select
+                v-model="filters.status"
+                class="app-filter-field location-filter location-status-filter"
+                :options="statusFilterOptions"
+                option-label="label"
+                option-value="value"
+            />
 
-                        <Button
-                            icon="pi pi-times"
-                            :label="t('common.clear')"
-                            outlined
-                            severity="secondary"
-                            @click="clearFilters"
-                        />
-
-                        <Button
-                            icon="pi pi-refresh"
-                            outlined
-                            severity="secondary"
-                            :aria-label="t('common.refresh')"
-                            :loading="locationStore.loading"
-                            @click="loadLocationItems(locationStore.pagination.page)"
-                        />
-                    </template>
-                </AppFilterBar>
-
-                <DataTable
-                    :value="locationStore.items"
-                    data-key="id"
+            <template #actions>
+                <Button
+                    icon="pi pi-filter"
+                    :label="t('common.apply')"
                     :loading="locationStore.loading"
-                    :empty-message="emptyMessage"
-                    responsive-layout="scroll"
-                    size="small"
+                    @click="applyFilters"
+                />
+
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-times"
+                    :aria-label="t('common.clear')"
+                    v-tooltip.top="t('common.clear')"
+                    :disabled="locationStore.loading"
+                    @click="clearFilters"
+                />
+
+                <Button
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-refresh"
+                    :aria-label="t('common.refresh')"
+                    v-tooltip.top="t('common.refresh')"
+                    :loading="locationStore.loading"
+                    @click="loadLocationItems(locationStore.pagination.page)"
+                />
+
+                <Button
+                    v-if="canImport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-download"
+                    :aria-label="t('organization.location.downloadSample')"
+                    v-tooltip.top="t('organization.location.downloadSample')"
+                    :loading="locationStore.downloadingTemplate"
+                    @click="downloadSample"
+                />
+
+                <Button
+                    v-if="canImport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-upload"
+                    :aria-label="t('organization.location.importExcel')"
+                    v-tooltip.top="t('organization.location.importExcel')"
+                    @click="openImportDialog"
+                />
+
+                <Button
+                    v-if="canExport"
+                    severity="secondary"
+                    outlined
+                    icon="pi pi-file-excel"
+                    :aria-label="t('organization.location.exportExcel')"
+                    v-tooltip.top="t('organization.location.exportExcel')"
+                    :loading="locationStore.exporting"
+                    @click="exportExcel"
+                />
+
+                <Button
+                    v-if="canCreate"
+                    icon="pi pi-plus"
+                    :label="t('organization.location.newLocation', { entity: activeEntityLabel })"
+                    :disabled="locationStore.loading"
+                    @click="openCreateDialog"
+                />
+            </template>
+        </AppFilterBar>
+
+        <div class="location-table-shell hrms-list-card">
+            <div class="hrms-table-wrap">
+                <DataTable
+                    class="hrms-standard-table hrms-standard-table--horizontal"
+                    lazy
+                    paginator
                     striped-rows
-                    class="location-table"
+                    data-key="id"
+                    size="small"
+                    scrollable
+                    scroll-height="flex"
+                    :value="locationStore.items"
+                    :loading="locationStore.loading"
+                    :rows="locationStore.pagination.limit"
+                    :first="(locationStore.pagination.page - 1) * locationStore.pagination.limit"
+                    :total-records="locationStore.pagination.total"
+                    :rows-per-page-options="[10, 20, 50, 100]"
+                    :empty-message="emptyMessage"
+                    @page="onPage"
                 >
                     <Column
                         field="code"
                         :header="t('organization.location.code')"
-                        style="width: 10rem"
+                        frozen
+                        style="min-width: 8rem"
                     >
-                        <template #body="slotProps">
-                            <strong>{{ slotProps.data.code }}</strong>
+                        <template #body="{ data }">
+                            <span class="hrms-cell-primary--accent">{{ data.code }}</span>
                         </template>
                     </Column>
 
@@ -1013,16 +1023,8 @@ onMounted(async () => {
                         :header="t('organization.location.name')"
                         style="min-width: 14rem"
                     >
-                        <template #body="slotProps">
-                            <div class="location-name-cell">
-                                <strong>{{ slotProps.data.name }}</strong>
-                                <span v-if="slotProps.data.shortName">
-                                    {{ slotProps.data.shortName }}
-                                </span>
-                                <span v-if="isCountryEntity && slotProps.data.nationality">
-                                    {{ slotProps.data.nationality }}
-                                </span>
-                            </div>
+                        <template #body="{ data }">
+                            <span class="location-name-only">{{ data.name || "-" }}</span>
                         </template>
                     </Column>
 
@@ -1031,9 +1033,8 @@ onMounted(async () => {
                         :header="t('organization.location.country')"
                         style="min-width: 12rem"
                     >
-                        <template #body="slotProps">
-                            <span>{{ slotProps.data.country?.name || '-' }}</span>
-                            <small>{{ slotProps.data.country?.code || '' }}</small>
+                        <template #body="{ data }">
+                            <span class="location-name-only">{{ data.country?.name || "-" }}</span>
                         </template>
                     </Column>
 
@@ -1042,9 +1043,8 @@ onMounted(async () => {
                         :header="t('organization.location.province')"
                         style="min-width: 12rem"
                     >
-                        <template #body="slotProps">
-                            <span>{{ slotProps.data.province?.name || '-' }}</span>
-                            <small>{{ slotProps.data.province?.code || '' }}</small>
+                        <template #body="{ data }">
+                            <span class="location-name-only">{{ data.province?.name || "-" }}</span>
                         </template>
                     </Column>
 
@@ -1053,9 +1053,8 @@ onMounted(async () => {
                         :header="t('organization.location.district')"
                         style="min-width: 12rem"
                     >
-                        <template #body="slotProps">
-                            <span>{{ slotProps.data.district?.name || '-' }}</span>
-                            <small>{{ slotProps.data.district?.code || '' }}</small>
+                        <template #body="{ data }">
+                            <span class="location-name-only">{{ data.district?.name || "-" }}</span>
                         </template>
                     </Column>
 
@@ -1064,9 +1063,8 @@ onMounted(async () => {
                         :header="t('organization.location.commune')"
                         style="min-width: 12rem"
                     >
-                        <template #body="slotProps">
-                            <span>{{ slotProps.data.commune?.name || '-' }}</span>
-                            <small>{{ slotProps.data.commune?.code || '' }}</small>
+                        <template #body="{ data }">
+                            <span class="location-name-only">{{ data.commune?.name || "-" }}</span>
                         </template>
                     </Column>
 
@@ -1074,71 +1072,44 @@ onMounted(async () => {
                         v-if="isCountryEntity"
                         field="phoneCode"
                         :header="t('organization.location.phoneCode')"
-                        style="width: 9rem"
+                        style="min-width: 8rem"
                     />
 
                     <Column
                         field="status"
                         :header="t('organization.location.status')"
-                        style="width: 8rem"
+                        style="min-width: 8rem"
                     >
-                        <template #body="slotProps">
+                        <template #body="{ data }">
                             <Tag
-                                :severity="getStatusSeverity(slotProps.data.status)"
-                                :value="getStatusLabel(slotProps.data.status)"
+                                :severity="getStatusSeverity(data.status)"
+                                :value="getStatusLabel(data.status)"
                             />
                         </template>
                     </Column>
 
                     <Column
+                        v-if="canUpdate || canArchive"
                         :header="t('common.actions')"
-                        style="width: 8rem"
+                        align-frozen="right"
+                        frozen
+                        style="min-width: 6.5rem"
                     >
-                        <template #body="slotProps">
+                        <template #body="{ data }">
                             <AppTableActions
-                                :can-edit="canUpdate && slotProps.data.status !== 'ARCHIVED'"
-                                :can-archive="canArchive && slotProps.data.status !== 'ARCHIVED'"
+                                :can-edit="canUpdate && data.status !== 'ARCHIVED'"
+                                :can-archive="canArchive && data.status !== 'ARCHIVED'"
                                 :edit-label="t('common.edit')"
                                 :archive-label="t('common.archive')"
-                                @edit="openEditDialog(slotProps.data)"
-                                @archive="openArchiveDialog(slotProps.data)"
+                                :disabled="locationStore.saving || locationStore.archiving"
+                                @edit="openEditDialog(data)"
+                                @archive="openArchiveDialog(data)"
                             />
                         </template>
                     </Column>
                 </DataTable>
-
-                <div class="location-pagination">
-                    <span>
-                        {{
-                            t("organization.location.pagination", {
-                                page: locationStore.pagination.page,
-                                totalPages: locationStore.pagination.totalPages,
-                                total: locationStore.pagination.total,
-                            })
-                        }}
-                    </span>
-
-                    <div>
-                        <Button
-                            icon="pi pi-chevron-left"
-                            outlined
-                            severity="secondary"
-                            size="small"
-                            :disabled="locationStore.pagination.page <= 1"
-                            @click="goToPage(locationStore.pagination.page - 1)"
-                        />
-                        <Button
-                            icon="pi pi-chevron-right"
-                            outlined
-                            severity="secondary"
-                            size="small"
-                            :disabled="locationStore.pagination.page >= locationStore.pagination.totalPages"
-                            @click="goToPage(locationStore.pagination.page + 1)"
-                        />
-                    </div>
-                </div>
-            </template>
-        </Card>
+            </div>
+        </div>
 
         <Dialog
             v-model:visible="dialogVisible"
@@ -1251,13 +1222,6 @@ onMounted(async () => {
                     </small>
                 </label>
 
-                <label
-                    v-if="!isCountryEntity"
-                    class="location-field"
-                >
-                    <span>{{ t("organization.location.shortName") }}</span>
-                    <InputText v-model="form.shortName" />
-                </label>
 
                 <label
                     v-if="isCountryEntity"
@@ -1885,6 +1849,216 @@ onMounted(async () => {
 @media (max-width: 480px) {
     .location-page__tabs {
         grid-template-columns: 1fr;
+    }
+}
+
+
+
+/* Company-standard list alignment and typography. */
+.location-page {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    width: 100%;
+}
+
+.location-page__tabs {
+    display: flex;
+    gap: 0.35rem;
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+}
+
+.location-page__tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 2rem;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--hrms-border);
+    border-radius: var(--hrms-radius-md);
+    background: var(--hrms-surface);
+    color: var(--hrms-text-muted);
+    font: inherit;
+    font-size: var(--hrms-font-size-sm);
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.location-page__tab--active {
+    border-color: var(--p-primary-color);
+    background: color-mix(in srgb, var(--p-primary-color) 10%, white);
+    color: var(--p-primary-color);
+}
+
+.location-search {
+    position: relative;
+    flex: 1 1 14rem;
+    min-width: 11rem;
+    max-width: 22rem;
+}
+
+.location-search > i {
+    position: absolute;
+    top: 50%;
+    left: 0.7rem;
+    z-index: 1;
+    transform: translateY(-50%);
+    color: var(--hrms-text-muted);
+    font-size: 0.72rem;
+    pointer-events: none;
+}
+
+.location-search :deep(.p-inputtext) {
+    width: 100%;
+    padding-left: 2rem;
+}
+
+.location-filter {
+    flex: 0 1 11rem;
+    min-width: 9.5rem;
+    max-width: 13rem;
+}
+
+.location-status-filter {
+    max-width: 10rem;
+}
+
+:deep(.app-filter-bar__fields),
+:deep(.app-filter-bar__actions) {
+    flex-wrap: nowrap;
+}
+
+:deep(.hrms-standard-table .p-datatable-thead > tr > th) {
+    font-weight: 700;
+}
+
+:deep(.hrms-standard-table .p-datatable-tbody > tr > td),
+:deep(.hrms-standard-table .hrms-cell-primary),
+:deep(.hrms-standard-table .hrms-cell-primary--accent),
+:deep(.hrms-standard-table .p-tag) {
+    font-weight: 400;
+}
+
+.location-stacked-cell {
+    display: grid;
+    gap: 0.12rem;
+    font-weight: 400;
+}
+
+.location-stacked-cell small {
+    color: var(--hrms-text-muted);
+    font-size: var(--hrms-font-size-xs);
+    font-weight: 400;
+}
+
+@media (max-width: 1200px) {
+    :deep(.app-filter-bar__fields),
+    :deep(.app-filter-bar__actions) {
+        flex-wrap: wrap;
+    }
+}
+
+
+/* Final Company-standard Location toolbar and table corrections. */
+.location-filter-bar {
+    margin-bottom: 0;
+}
+
+.location-filter-bar :deep(.app-filter-bar__fields) {
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    gap: 0.45rem;
+    overflow: hidden;
+}
+
+.location-filter-bar :deep(.app-filter-bar__actions) {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+    white-space: nowrap;
+}
+
+.location-filter-bar :deep(.app-filter-field) {
+    flex: 1 1 8.5rem;
+    min-width: 7.5rem;
+    max-width: 10.5rem;
+}
+
+.location-filter-bar :deep(.app-filter-field--search) {
+    flex: 1.35 1 12rem;
+    min-width: 11rem;
+    max-width: 15rem;
+}
+
+.location-filter-bar :deep(.p-inputtext),
+.location-filter-bar :deep(.p-select),
+.location-filter-bar :deep(.p-button) {
+    min-height: var(--hrms-control-height);
+}
+
+.location-filter-bar :deep(.p-select-label),
+.location-filter-bar :deep(.p-inputtext) {
+    font-size: var(--hrms-font-size-sm);
+}
+
+.location-filter-bar :deep(.p-button-icon-only),
+.location-filter-bar :deep(.p-button:not(:has(.p-button-label))) {
+    width: var(--hrms-control-height);
+    min-width: var(--hrms-control-height);
+    padding-inline: 0;
+}
+
+.location-name-only {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--hrms-text);
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.location-table-shell :deep(.p-datatable-tbody > tr > td),
+.location-table-shell :deep(.p-datatable-tbody > tr > td *) {
+    font-weight: 400;
+}
+
+.location-table-shell :deep(.p-datatable-thead > tr > th),
+.location-table-shell :deep(.p-datatable-thead > tr > th *) {
+    font-weight: 700;
+}
+
+@media (max-width: 1280px) {
+    .location-filter-bar :deep(.app-filter-bar__fields) {
+        flex-wrap: wrap;
+        overflow: visible;
+    }
+
+    .location-filter-bar :deep(.app-filter-bar__actions) {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 760px) {
+    .location-filter-bar :deep(.app-filter-bar__fields) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
+    }
+
+    .location-filter-bar :deep(.app-filter-field),
+    .location-filter-bar :deep(.app-filter-field--search) {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .location-filter-bar :deep(.app-filter-bar__actions) {
+        width: 100%;
+        justify-content: flex-start;
     }
 }
 

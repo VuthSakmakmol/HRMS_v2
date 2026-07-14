@@ -257,6 +257,16 @@ const router = createRouter({
                     },
                 },
 
+                {
+                    path: "organization/exit-reasons",
+                    name: "organization-exit-reasons",
+                    component: () => import("@/modules/exitReason/views/ExitReasonListView.vue"),
+                    meta: {
+                        titleKey: "nav.exitReasons",
+                        permissionCode: "ORGANIZATION.EXIT_REASON.VIEW",
+                    },
+                },
+
 
             ],
         },

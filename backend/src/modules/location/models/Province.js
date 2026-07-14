@@ -45,14 +45,6 @@ const provinceSchema = new Schema(
             set: normalizeText,
         },
 
-        shortName: {
-            type: String,
-            trim: true,
-            maxlength: 80,
-            set: normalizeText,
-            default: "",
-        },
-
         description: {
             type: String,
             trim: true,
